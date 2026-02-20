@@ -1,0 +1,26 @@
+TableTogether is a meal planning and nutrition tracking app for households.
+
+HEALTHKIT USAGE:
+- Reads: weight, height, biological sex, date of birth (for BMR/TDEE estimates)
+- Writes: dietary energy, protein, carbohydrates, fat (from user-confirmed meal logs)
+- HealthKit data is used solely for personal health management, never for marketing or advertising
+- Users must explicitly connect to Apple Health; the app is fully functional without it
+
+NUTRITION ESTIMATES:
+- Sourced from USDA FoodData Central (public domain, lab-verified) and Open Food Facts (ODbL community database)
+- AI parsing uses Apple's on-device FoundationModels framework (iOS 26+) with regex fallback — no data leaves the device
+- All estimates are labelled "Quick Estimate" with per-ingredient transparency ("How did we estimate?")
+- A nutrition disclaimer is accessible via Settings > About > Nutrition Disclaimer
+
+DATA PRIVACY:
+- Shared data (recipes, meal plans, grocery lists) uses CloudKit Shared Database
+- Personal data (meal logs, nutrition targets, insights) uses CloudKit Private Database — encrypted and never accessible to other household members
+- No personal health information is stored in shared iCloud containers
+- Food search queries to USDA/Open Food Facts are anonymous (food name only, no user identifiers)
+
+NO ACCOUNT REQUIRED:
+- The app uses CloudKit with the user's Apple ID. There is no separate account creation, login, or password.
+
+TESTING:
+- Toggle "Demo Data" in Settings to see sample recipes, meal plans, and household members
+- The "Describe it" meal logging feature can be tested with any food description (e.g. "two eggs on toast with butter")

@@ -1,0 +1,12 @@
+{
+  "images" : [
+    {
+      "filename" : "front-marketing.png",
+      "idiom" : "tv-marketing"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

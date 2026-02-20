@@ -1,0 +1,57 @@
+default_platform(:ios)
+
+platform :ios do
+  desc "Push App Store metadata to App Store Connect"
+  lane :metadata do
+    deliver(
+      skip_binary_upload: true,
+      skip_screenshots: true,
+      force: true,
+      metadata_path: "./fastlane/metadata",
+      app_version: "1.0.0",
+      submit_for_review: false,
+      automatic_release: false,
+      precheck_include_in_app_purchases: false,
+      run_precheck_before_submit: false
+    )
+  end
+
+  desc "Validate metadata without uploading"
+  lane :validate_metadata do
+    deliver(
+      skip_binary_upload: true,
+      skip_screenshots: true,
+      force: true,
+      metadata_path: "./fastlane/metadata",
+      app_version: "1.0.0",
+      submit_for_review: false,
+      verify_only: true
+    )
+  end
+
+  desc "Capture App Store screenshots from simulators"
+  lane :capture_app_screenshots do
+    sh("../scripts/capture_screenshots.sh")
+  end
+
+  desc "Upload screenshots to App Store Connect"
+  lane :upload_screenshots do
+    deliver(
+      skip_binary_upload: true,
+      skip_metadata: true,
+      overwrite_screenshots: true,
+      screenshots_path: "./fastlane/screenshots",
+      force: true,
+      submit_for_review: false,
+      automatic_release: false,
+      precheck_include_in_app_purchases: false,
+      run_precheck_before_submit: false
+    )
+  end
+
+  desc "Capture and upload App Store screenshots"
+  lane :screenshots do
+    capture_app_screenshots
+    upload_screenshots
+  end
+end

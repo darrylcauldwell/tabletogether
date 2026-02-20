@@ -1,0 +1,94 @@
+# Xcode
+build/
+*.pbxuser
+!default.pbxuser
+*.mode1v3
+!default.mode1v3
+*.mode2v3
+!default.mode2v3
+*.perspectivev3
+!default.perspectivev3
+xcuserdata/
+*.xccheckout
+*.moved-aside
+DerivedData/
+*.hmap
+*.ipa
+*.xcarchive
+*.xcworkspace
+!default.xcworkspace
+
+# Swift Package Manager
+.build/
+.swiftpm/
+Packages/
+Package.resolved
+
+# CocoaPods
+Pods/
+
+# Carthage
+Carthage/Build/
+
+# fastlane
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/**/*.png
+fastlane/screenshots-tvos/**/*.png
+fastlane/test_output
+fastlane/README.md
+
+# Claude AI references
+.claude/
+claude.md
+**/claude.md
+CLAUDE.md
+**/CLAUDE.md
+
+# Certificates and provisioning profiles
+*.cer
+*.p12
+*.certSigningRequest
+*.mobileprovision
+
+# API keys
+fastlane/api_key.json
+fastlane/AuthKey_*.p8
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Thumbnails
+._*
+
+# Files that might appear in the root of a volume
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+# Directories potentially created on remote AFP share
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.aenigmap
+
+# Python scripts (build automation, not source)
+regenerate_project.py
+regenerate_tvos_project.py
+generate_tvos_icons.py
+
+# Export options
+ExportOptions*.plist
+
+# Local documentation
+APP_SPECIFICATION.md
+APP_STORE_CONNECT_SETUP.md
+AppStoreMetadata.md
+TableTogether-Marketing.md

@@ -1,0 +1,32 @@
+TableTogether is a meal planner for people who share a kitchen.
+
+Plan your week. Cook with confidence. Track nutrition on your own terms. Everything syncs across your household via iCloud — but your personal data stays personal.
+
+PLAN TOGETHER
+Drag recipes onto a visual week planner. Smart suggestions learn your household's favourites and gently surface new ideas. Copy last week's plan or start fresh.
+
+RECIPES — THREE WAYS IN
+Build recipes by hand. Import from any recipe website. Or describe what you have and let AI generate a recipe — choose your cuisine, cooking style, time, and dietary needs.
+
+COOK STEP BY STEP
+Full-screen Cooking Mode with large text, a built-in timer, and an ingredient checklist. Designed for messy hands and busy kitchens.
+
+SHOP SMARTER
+Mark what's already in your pantry. Everything else flows into a shopping list organised by aisle — ready when you are.
+
+DESCRIBE WHAT YOU ATE
+Type a meal in plain language. On-device AI parses the ingredients, then resolves nutrition from USDA FoodData Central and Open Food Facts. See exactly how each estimate was calculated. Tap any ingredient to refine the match.
+
+PRIVATE INSIGHTS
+Your meal logs, targets, and trends are personal — never shared with your household. Weekly patterns shown without judgment. No streaks. No scores. Just information.
+
+Optionally connect Apple Health to sync body metrics and log dietary macros automatically.
+
+WORKS EVERYWHERE
+iPhone, iPad, and Mac for planning, cooking, and logging. Apple TV as a calm ambient display showing today's meals — like a kitchen whiteboard in the living room.
+
+SWITCHING FROM PAPRIKA?
+Import your full recipe library from Paprika 3 in one step.
+
+—
+Nutrition estimates are approximate, sourced from USDA FoodData Central and Open Food Facts. Not a substitute for professional dietary advice. Consult a healthcare provider before making dietary changes.
