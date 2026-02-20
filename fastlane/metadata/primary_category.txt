@@ -1,1 +1,1 @@
-MZGenre.FoodAndDrink
+FOOD_AND_DRINK
