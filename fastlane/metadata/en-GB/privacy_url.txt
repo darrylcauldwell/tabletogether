@@ -1,1 +1,1 @@
-https://support.dreamfold.dev/tabletogether/privacy
+https://github.com/darrylcauldwell/tabletogether/blob/main/PRIVACY.md

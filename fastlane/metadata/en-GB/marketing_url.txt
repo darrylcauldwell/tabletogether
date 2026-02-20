@@ -1,1 +1,1 @@
-https://support.dreamfold.dev/tabletogether
+https://github.com/darrylcauldwell/tabletogether
