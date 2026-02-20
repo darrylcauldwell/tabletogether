@@ -1,0 +1,14 @@
+Welcome to TableTogether.
+
+Plan meals together. Cook step by step. Log nutrition privately.
+
+- Visual week planner with drag-and-drop
+- Recipe import from URLs and Paprika 3
+- AI recipe generation from your ingredients
+- Full-screen Cooking Mode with timer
+- Pantry check and auto-generated shopping lists
+- "Describe it" meal logging with nutrition estimates
+- Private insights dashboard
+- Apple Health and Calendar sync
+- Household sharing via iCloud
+- Apple TV ambient view

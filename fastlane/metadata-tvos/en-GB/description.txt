@@ -1,0 +1,38 @@
+TableTogether brings your household together with effortless meal planning while respecting personal privacy.
+
+PLAN TOGETHER, COOK WITH CONFIDENCE
+Share recipes and weekly meal plans with family or housemates in real-time. Drag recipes onto a visual week planner, copy last week's plan, or start fresh. Smart suggestions learn your household's favourites and surface new ideas.
+
+RECIPES — THREE WAYS IN
+• Build recipes by hand with full ingredient and macro tracking
+• Import from any recipe website with automatic parsing
+• Generate custom recipes with AI based on ingredients you have, cooking style, time available, and dietary needs
+
+GROCERY LISTS THAT THINK
+Mark what's already in your pantry. TableTogether intelligently aggregates ingredients across all planned meals and creates shopping lists organised by aisle. See which meals need each ingredient.
+
+COOKING MODE
+Full-screen step-by-step guidance with large text, ingredient checklist, and built-in timer. Designed for messy hands and busy kitchens.
+
+PERSONAL NUTRITION TRACKING (OPTIONAL)
+Log meals privately — never shared with your household. Three ways to log:
+• Select from planned meals
+• "Describe what you ate" with on-device AI estimation
+• Manual macro entry
+
+Track daily and weekly macro trends with calm, judgment-free insights. Set personal nutrition goals or skip tracking entirely. Connect Apple Health to write nutrition data automatically.
+
+YOUR KITCHEN ON YOUR TV
+Display today's meals on Apple TV like a kitchen whiteboard. See what's cooking, who's eating, and when to start preparing. No personal data — just shared meal plans.
+
+REAL-TIME HOUSEHOLD SYNC
+Collaborate seamlessly via iCloud. Multiple people can plan, edit recipes, and check off grocery items simultaneously. No hierarchy — everyone has equal access.
+
+PRIVACY FIRST
+TableTogether respects one principle: food is shared, bodies are not. Recipes and meal plans sync across your household. Personal nutrition logs, goals, and insights stay private to you — encrypted in your personal iCloud storage.
+
+WORKS EVERYWHERE
+iPhone, iPad, Mac, and Apple TV. Plan on iPad, cook on iPhone, shop with your watch, display on TV.
+
+—
+Nutrition estimates sourced from USDA FoodData Central and Open Food Facts. Not a substitute for professional dietary advice. Consult a healthcare provider before making dietary changes.

@@ -5,7 +5,12 @@
 
 ## Overview
 
-TableTogether is a meal planning and nutrition tracking app for households. This privacy policy explains what data we collect, how we use it, and how we protect your privacy.
+TableTogether is a meal planning and nutrition tracking app for households, available on iPhone, iPad, Mac, and Apple TV. This privacy policy explains what data we collect, how we use it, and how we protect your privacy.
+
+### Platform-Specific Privacy
+
+- **iPhone, iPad, Mac:** Full access to both shared household features (recipes, meal plans, grocery lists) and private personal features (nutrition logs, health data, insights)
+- **Apple TV:** Displays only shared household data (today's meal plan). No personal nutrition data, meal logs, or health information is accessible on Apple TV
 
 ## Our Commitment
 
@@ -111,6 +116,7 @@ When you join or create a household:
 - Personal meal logs, health data, and nutrition targets are **never** shared
 - Any household member can add, edit, or delete shared recipes and meal plans
 - There are no "admins" or permission levels — all members are equal
+- **Apple TV app:** Displays only shared household meal plans for the day. No personal data, meal logs, or nutrition information is shown on Apple TV
 
 ## Data Deletion
 
