@@ -16,9 +16,9 @@ struct TableTogetherApp: App {
     static let isScreenshotMode: Bool = ProcessInfo.processInfo.arguments.contains("--screenshot-mode")
 
     /// The tab to display when in screenshot mode (e.g. "plan", "recipes", "grocery", "log", "insights", "pantryCheck")
-    static let screenshotTab: String? = {
+    static let screenshotScreen: String? = {
         let args = ProcessInfo.processInfo.arguments
-        guard let index = args.firstIndex(of: "--screenshot-tab"),
+        guard let index = args.firstIndex(of: "--screenshot-screen"),
               index + 1 < args.count else { return nil }
         return args[index + 1]
     }()

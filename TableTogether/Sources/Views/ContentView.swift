@@ -48,7 +48,7 @@ struct ContentView: View {
 
 struct CompactNavigationView: View {
     @State private var selectedTab: Tab = {
-        guard let tabName = TableTogetherApp.screenshotTab else { return .plan }
+        guard let tabName = TableTogetherApp.screenshotScreen else { return .plan }
         switch tabName {
         case "plan": return .plan
         case "recipes": return .recipes
@@ -129,7 +129,7 @@ enum SidebarMode {
 
 struct RegularNavigationView: View {
     @State private var selectedSection: SidebarSection? = {
-        guard let tabName = TableTogetherApp.screenshotTab else { return .plan }
+        guard let tabName = TableTogetherApp.screenshotScreen else { return .plan }
         switch tabName {
         case "plan": return .plan
         case "recipes": return .recipes

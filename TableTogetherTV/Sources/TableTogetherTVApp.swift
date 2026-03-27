@@ -20,9 +20,9 @@ import os.log
 private let isScreenshotMode: Bool = ProcessInfo.processInfo.arguments.contains("--screenshot-mode")
 
 /// The tab to display when in screenshot mode
-private let screenshotTab: String? = {
+private let screenshotScreen: String? = {
     let args = ProcessInfo.processInfo.arguments
-    guard let index = args.firstIndex(of: "--screenshot-tab"),
+    guard let index = args.firstIndex(of: "--screenshot-screen"),
           index + 1 < args.count else { return nil }
     return args[index + 1]
 }()
@@ -36,7 +36,7 @@ struct TableTogetherTVApp: App {
 
     @State private var selectedTab: TVTab = {
         // Set initial tab from screenshot argument if provided
-        if let tabName = screenshotTab {
+        if let tabName = screenshotScreen {
             switch tabName {
             case "today": return .today
             case "thisWeek": return .thisWeek
