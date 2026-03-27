@@ -386,7 +386,6 @@ private struct TimerDisplay: View {
     let timer: CookingTimer
 
     @State private var timeRemaining: TimeInterval = 0
-    private let updateTimer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
 
     private var isExpired: Bool { timeRemaining <= 0 }
 
@@ -414,11 +413,14 @@ private struct TimerDisplay: View {
             RoundedRectangle(cornerRadius: TVTheme.CornerRadius.medium)
                 .fill(isExpired ? TVTheme.Colors.positive.opacity(0.2) : TVTheme.Colors.glassBackground)
         )
-        .onReceive(updateTimer) { _ in
-            timeRemaining = timer.targetDate.timeIntervalSinceNow
-        }
         .onAppear {
             timeRemaining = timer.targetDate.timeIntervalSinceNow
+        }
+        .task {
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(1))
+                timeRemaining = timer.targetDate.timeIntervalSinceNow
+            }
         }
     }
 }

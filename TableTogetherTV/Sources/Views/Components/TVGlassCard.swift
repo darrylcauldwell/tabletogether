@@ -182,7 +182,6 @@ struct TVCountdownTimer: View {
     let label: String
 
     @State private var timeRemaining: TimeInterval = 0
-    private let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
 
     private var formattedTime: String {
         if timeRemaining <= 0 {
@@ -218,11 +217,14 @@ struct TVCountdownTimer: View {
                 .foregroundStyle(urgencyColor)
                 .monospacedDigit()
         }
-        .onReceive(timer) { _ in
-            timeRemaining = targetDate.timeIntervalSinceNow
-        }
         .onAppear {
             timeRemaining = targetDate.timeIntervalSinceNow
+        }
+        .task {
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(1))
+                timeRemaining = targetDate.timeIntervalSinceNow
+            }
         }
     }
 }

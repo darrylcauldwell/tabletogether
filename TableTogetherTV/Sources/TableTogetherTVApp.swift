@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import os.log
 
 // MARK: - TableTogether tvOS App
 //
@@ -77,7 +78,7 @@ struct TableTogetherTVApp: App {
             )
         } catch {
             // Fallback to local-only if CloudKit unavailable
-            print("CloudKit unavailable, using local storage: \(error)")
+            AppLogger.cloudKit.error("CloudKit unavailable, using local storage: \(error)")
 
             let localConfig = ModelConfiguration(
                 schema: schema,
@@ -91,7 +92,7 @@ struct TableTogetherTVApp: App {
                     configurations: [localConfig]
                 )
             } catch {
-                print("Failed to create model container: \(error)")
+                AppLogger.swiftData.error("Failed to create model container: \(error)")
                 self.modelContainer = nil
             }
         }
@@ -216,7 +217,7 @@ struct WeekView: View {
             let plans = try modelContext.fetch(descriptor)
             weekPlan = plans.first
         } catch {
-            print("Error loading week plan: \(error)")
+            AppLogger.swiftData.error("Error loading week plan: \(error)")
         }
     }
 }

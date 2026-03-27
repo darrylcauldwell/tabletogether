@@ -22,8 +22,6 @@ struct AmbientView: View {
     @State private var showingRecipeView = false
     @State private var currentTime = Date()
 
-    private let timer = Timer.publish(every: 60, on: .main, in: .common).autoconnect()
-
     private var today: DayOfWeek {
         let weekday = Calendar.current.component(.weekday, from: Date())
         // Convert Sunday=1...Saturday=7 to Monday=1...Sunday=7
@@ -118,8 +116,11 @@ struct AmbientView: View {
         .onAppear {
             loadTodaysMeals()
         }
-        .onReceive(timer) { _ in
-            currentTime = Date()
+        .task {
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(60))
+                currentTime = Date()
+            }
         }
     }
 
@@ -279,7 +280,7 @@ struct AmbientView: View {
                 todaySlots = plan.slots(for: today)
             }
         } catch {
-            print("Error loading week plan: \(error)")
+            AppLogger.swiftData.error("Error loading week plan: \(error)")
         }
     }
 }
@@ -291,8 +292,6 @@ struct AmbientView: View {
 struct InspirationModeView: View {
     @Query private var recipes: [Recipe]
     @State private var currentRecipeIndex = 0
-
-    private let transitionTimer = Timer.publish(every: 15, on: .main, in: .common).autoconnect()
 
     private var currentRecipe: Recipe? {
         guard !recipes.isEmpty else { return nil }
@@ -360,9 +359,12 @@ struct InspirationModeView: View {
                 )
             }
         }
-        .onReceive(transitionTimer) { _ in
-            withAnimation(TVTheme.Animation.crossfade) {
-                currentRecipeIndex += 1
+        .task {
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(15))
+                withAnimation(TVTheme.Animation.crossfade) {
+                    currentRecipeIndex += 1
+                }
             }
         }
     }
