@@ -1,0 +1,184 @@
+name: iOS CI
+
+on:
+  push:
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Validate
+    runs-on: macos-26
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode_26.2.app/Contents/Developer
+
+      # --- MARKETING_VERSION consistency ---
+      - name: Check MARKETING_VERSION consistency
+        run: |
+          VERSIONS=$(grep "MARKETING_VERSION" TableTogether.xcodeproj/project.pbxproj | sed 's/.*= //' | sed 's/;.*//' | sort -u)
+          COUNT=$(echo "$VERSIONS" | wc -l | tr -d ' ')
+          if [ "$COUNT" -gt 1 ]; then
+            echo "::error::Multiple MARKETING_VERSION values found:"
+            echo "$VERSIONS"
+            exit 1
+          fi
+          echo "All iOS targets at MARKETING_VERSION = $(echo "$VERSIONS" | tr -d ' ')"
+
+          TV_VERSIONS=$(grep "MARKETING_VERSION" TableTogetherTV.xcodeproj/project.pbxproj | sed 's/.*= //' | sed 's/;.*//' | sort -u)
+          TV_COUNT=$(echo "$TV_VERSIONS" | wc -l | tr -d ' ')
+          if [ "$TV_COUNT" -gt 1 ]; then
+            echo "::error::Multiple tvOS MARKETING_VERSION values found:"
+            echo "$TV_VERSIONS"
+            exit 1
+          fi
+          echo "All tvOS targets at MARKETING_VERSION = $(echo "$TV_VERSIONS" | tr -d ' ')"
+
+      # --- App Store metadata limits ---
+      - name: Validate metadata character limits
+        run: |
+          if [ -x scripts/validate_metadata.sh ]; then
+            scripts/validate_metadata.sh
+          else
+            echo "validate_metadata.sh not found — skipping"
+          fi
+
+      # --- Build iOS ---
+      - name: Build iOS
+        run: |
+          xcodebuild build \
+            -project TableTogether.xcodeproj \
+            -scheme TableTogether \
+            -destination 'generic/platform=iOS Simulator' \
+            -configuration Debug \
+            CODE_SIGNING_ALLOWED=NO \
+            -quiet
+
+      # --- Build tvOS ---
+      - name: Build tvOS
+        run: |
+          xcodebuild build \
+            -project TableTogetherTV.xcodeproj \
+            -scheme TableTogetherTV \
+            -destination 'generic/platform=tvOS Simulator' \
+            -configuration Debug \
+            CODE_SIGNING_ALLOWED=NO \
+            -quiet
+
+  deploy-ios:
+    name: Deploy iOS to TestFlight
+    runs-on: macos-26
+    needs: validate
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode_26.2.app/Contents/Developer
+
+      - name: Install fastlane
+        run: bundle install --jobs 4 --retry 3
+
+      - name: Create temporary keychain
+        run: |
+          security create-keychain -p "" build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain -p "" build.keychain
+          security set-keychain-settings -t 3600 -u build.keychain
+
+      - name: Install distribution certificate
+        env:
+          DIST_CERT_P12_BASE64: ${{ secrets.DIST_CERT_P12_BASE64 }}
+          DIST_CERT_PASSWORD: ${{ secrets.DIST_CERT_PASSWORD }}
+        run: |
+          echo "$DIST_CERT_P12_BASE64" | base64 --decode > /tmp/certificate.p12
+          security import /tmp/certificate.p12 \
+            -k build.keychain \
+            -P "$DIST_CERT_PASSWORD" \
+            -T /usr/bin/codesign \
+            -T /usr/bin/security
+          security set-key-partition-list -S apple-tool:,apple: -s -k "" build.keychain
+          rm /tmp/certificate.p12
+
+      - name: Write App Store Connect API key
+        env:
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+        run: echo "$ASC_KEY_P8" | base64 --decode > "$GITHUB_WORKSPACE/AuthKey_CI.p8"
+
+      - name: Deploy iOS to TestFlight
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_PATH: ${{ github.workspace }}/AuthKey_CI.p8
+        run: bundle exec fastlane ios beta
+
+      - name: Cleanup keychain
+        if: always()
+        run: |
+          security delete-keychain build.keychain || true
+          rm -f "$GITHUB_WORKSPACE/AuthKey_CI.p8"
+
+  deploy-tvos:
+    name: Deploy tvOS to TestFlight
+    runs-on: macos-26
+    needs: validate
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode_26.2.app/Contents/Developer
+
+      - name: Install fastlane
+        run: bundle install --jobs 4 --retry 3
+
+      - name: Create temporary keychain
+        run: |
+          security create-keychain -p "" build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain -p "" build.keychain
+          security set-keychain-settings -t 3600 -u build.keychain
+
+      - name: Install distribution certificate
+        env:
+          DIST_CERT_P12_BASE64: ${{ secrets.DIST_CERT_P12_BASE64 }}
+          DIST_CERT_PASSWORD: ${{ secrets.DIST_CERT_PASSWORD }}
+        run: |
+          echo "$DIST_CERT_P12_BASE64" | base64 --decode > /tmp/certificate.p12
+          security import /tmp/certificate.p12 \
+            -k build.keychain \
+            -P "$DIST_CERT_PASSWORD" \
+            -T /usr/bin/codesign \
+            -T /usr/bin/security
+          security set-key-partition-list -S apple-tool:,apple: -s -k "" build.keychain
+          rm /tmp/certificate.p12
+
+      - name: Write App Store Connect API key
+        env:
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+        run: echo "$ASC_KEY_P8" | base64 --decode > "$GITHUB_WORKSPACE/AuthKey_CI.p8"
+
+      - name: Deploy tvOS to TestFlight
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_PATH: ${{ github.workspace }}/AuthKey_CI.p8
+        run: bundle exec fastlane appletvos beta
+
+      - name: Cleanup keychain
+        if: always()
+        run: |
+          security delete-keychain build.keychain || true
+          rm -f "$GITHUB_WORKSPACE/AuthKey_CI.p8"

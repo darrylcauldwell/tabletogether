@@ -1,0 +1,39 @@
+# Deliverfile - Fastlane deliver configuration
+
+# App Store Connect API Key is passed via Fastfile's api_key parameter
+# (locally from api_key.json, in CI from environment variables)
+
+# App metadata
+app_identifier("dev.dreamfold.tabletogether")
+
+# Upload screenshots
+skip_screenshots(false)
+overwrite_screenshots(true)
+screenshots_path("./fastlane/screenshots")
+
+# Skip binary upload (we use xcodebuild for that)
+skip_binary_upload(true)
+
+# Skip app version update (managed via xcodebuild)
+skip_app_version_update(true)
+
+# Don't automatically submit for review
+submit_for_review(false)
+
+# Force overwrite remote metadata
+force(true)
+
+# Metadata path
+metadata_path("./fastlane/metadata")
+
+# App rating configuration
+app_rating_config_path("./fastlane/rating_config.json")
+
+# Copyright
+copyright("2026 Darryl Cauldwell")
+
+# Categories
+primary_category("FOOD_AND_DRINK")
+
+# Precheck - disable before first submission (no live version to compare)
+run_precheck_before_submit(false)
