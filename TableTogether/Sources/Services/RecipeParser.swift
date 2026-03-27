@@ -150,12 +150,13 @@ protocol RecipeParserProtocol {
 /// - Falls back to basic HTML parsing if JSON-LD is not available
 /// - Suggests archetypes based on recipe characteristics (time, title keywords)
 @MainActor
-final class BasicRecipeParser: RecipeParserProtocol, ObservableObject {
+@Observable
+final class BasicRecipeParser: RecipeParserProtocol {
 
-    // MARK: - Published Properties
+    // MARK: - Observable Properties
 
-    @Published var isLoading = false
-    @Published var error: RecipeParserError?
+    var isLoading = false
+    var error: RecipeParserError?
 
     // MARK: - Private Properties
 

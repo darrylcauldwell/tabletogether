@@ -1,6 +1,5 @@
 import Foundation
 import CloudKit
-import Combine
 import SwiftUI
 
 /// Manages personal data in CloudKit's private database.
@@ -16,15 +15,16 @@ import SwiftUI
 /// - Eventual consistency with CloudKit
 /// - No conflicts shown to user (last write wins)
 @MainActor
-final class PrivateDataManager: ObservableObject {
+@Observable
+final class PrivateDataManager {
 
-    // MARK: - Published State
+    // MARK: - State
 
-    @Published private(set) var settings: PersonalSettings = PersonalSettings()
-    @Published private(set) var mealLogs: [PrivateMealLog] = []
-    @Published private(set) var isLoading: Bool = false
-    @Published private(set) var lastSyncDate: Date?
-    @Published private(set) var syncError: SyncError?
+    private(set) var settings: PersonalSettings = PersonalSettings()
+    private(set) var mealLogs: [PrivateMealLog] = []
+    private(set) var isLoading: Bool = false
+    private(set) var lastSyncDate: Date?
+    private(set) var syncError: SyncError?
 
     /// Represents a sync error that can be displayed to the user
     struct SyncError: Identifiable, Equatable {

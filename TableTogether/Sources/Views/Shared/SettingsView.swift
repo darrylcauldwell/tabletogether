@@ -30,9 +30,9 @@ struct SettingsView: View {
     @State private var showingRemoveContactConfirmation = false
     @State private var contactToRemove: User?
 
-    @StateObject private var demoDataManager = DemoDataManager()
-    @StateObject private var paprikaImporter = PaprikaImporter()
-    @StateObject private var healthService = HealthKitService.shared
+    @State private var demoDataManager = DemoDataManager()
+    @State private var paprikaImporter = PaprikaImporter()
+    @State private var healthService = HealthKitService.shared
 
     @State private var showingPaprikaFilePicker = false
     @Query private var households: [Household]
@@ -569,7 +569,7 @@ private enum HealthMeasurementSystem {
 // MARK: - HealthKit Settings Row
 
 struct HealthKitSettingsRow: View {
-    @ObservedObject var healthService: HealthKitService
+    var healthService: HealthKitService
     var privateDataManager: PrivateDataManager?
 
     @State private var weightText = ""
@@ -980,7 +980,7 @@ struct IngredientDatabaseView: View {
 // MARK: - Demo Data Toggle Row
 
 struct DemoDataToggleRow: View {
-    @ObservedObject var demoDataManager: DemoDataManager
+    var demoDataManager: DemoDataManager
     @Binding var showingConfirmation: Bool
 
     var body: some View {
@@ -1034,7 +1034,7 @@ struct DemoDataToggleRow: View {
 // MARK: - Paprika Import Row
 
 struct PaprikaImportRow: View {
-    @ObservedObject var importer: PaprikaImporter
+    var importer: PaprikaImporter
     @Binding var showingFilePicker: Bool
 
     var body: some View {

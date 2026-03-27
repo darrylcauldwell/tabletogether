@@ -13,8 +13,8 @@ struct SmartLogSection: View {
 
     @Query private var households: [Household]
 
-    @StateObject private var parser = NaturalLanguageMealParser()
-    @StateObject private var resolver = IngredientResolverService()
+    @State private var parser = NaturalLanguageMealParser()
+    @State private var resolver = IngredientResolverService()
 
     @State private var isParsing = false
     @State private var showAssumptions = false

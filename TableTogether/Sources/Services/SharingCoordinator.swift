@@ -15,7 +15,6 @@ import SwiftData
 import SwiftUI
 import CloudKit
 import Observation
-import Combine
 
 // MARK: - Sync Status
 
@@ -82,6 +81,7 @@ struct HouseholdChange: Identifiable {
 /// - Tracks recent changes from other household members
 /// - Provides share management for household invitations
 @Observable
+@MainActor
 final class SharingCoordinator {
 
     // MARK: - Properties
@@ -103,7 +103,7 @@ final class SharingCoordinator {
 
     /// Network monitor for connectivity tracking
     private var networkMonitor: NetworkMonitor?
-    private var cancellables = Set<AnyCancellable>()
+    private var networkMonitoringTask: Task<Void, Never>?
 
     // MARK: - Initialization
 
@@ -119,27 +119,38 @@ final class SharingCoordinator {
     private func setupNetworkMonitoring() {
         networkMonitor = NetworkMonitor.shared
 
-        // Observe network connectivity changes
-        NetworkMonitor.shared.$isConnected
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] isConnected in
-                guard let self = self else { return }
-                if !isConnected {
-                    self.syncStatus = .offline
-                    AppLogger.sharing.notice("Sync status changed to offline")
-                } else if self.syncStatus == .offline {
-                    // Network restored - attempt sync
-                    self.syncStatus = .syncing
-                    AppLogger.sharing.notice("Network restored, attempting sync")
-                    self.refreshSync()
-                }
-            }
-            .store(in: &cancellables)
-
         // Set initial status based on current network state
         syncStatus = NetworkMonitor.shared.isConnected ? .synced : .offline
         if NetworkMonitor.shared.isConnected {
             lastSyncDate = Date()
+        }
+
+        // Observe network connectivity changes using withObservationTracking
+        networkMonitoringTask = Task { [weak self] in
+            var previousIsConnected = NetworkMonitor.shared.isConnected
+            while !Task.isCancelled {
+                let isConnected = await withCheckedContinuation { continuation in
+                    withObservationTracking {
+                        _ = NetworkMonitor.shared.isConnected
+                    } onChange: {
+                        Task { @MainActor in
+                            continuation.resume(returning: NetworkMonitor.shared.isConnected)
+                        }
+                    }
+                }
+                guard let self = self, !Task.isCancelled else { break }
+                if isConnected != previousIsConnected {
+                    previousIsConnected = isConnected
+                    if !isConnected {
+                        self.syncStatus = .offline
+                        AppLogger.sharing.notice("Sync status changed to offline")
+                    } else if self.syncStatus == .offline {
+                        self.syncStatus = .syncing
+                        AppLogger.sharing.notice("Network restored, attempting sync")
+                        self.refreshSync()
+                    }
+                }
+            }
         }
     }
 

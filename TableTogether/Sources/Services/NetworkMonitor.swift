@@ -1,29 +1,30 @@
 import Foundation
 import Network
-import Combine
+import Observation
 
 /// Monitors network connectivity using NWPathMonitor.
 /// Provides a shared instance for app-wide network status observation.
 @MainActor
-final class NetworkMonitor: ObservableObject {
+@Observable
+final class NetworkMonitor {
 
     // MARK: - Shared Instance
 
     static let shared = NetworkMonitor()
 
-    // MARK: - Published State
+    // MARK: - Observed State
 
     /// Whether the device currently has network connectivity
-    @Published private(set) var isConnected: Bool = true
+    private(set) var isConnected: Bool = true
 
     /// Whether the connection is expensive (cellular/hotspot)
-    @Published private(set) var isExpensive: Bool = false
+    private(set) var isExpensive: Bool = false
 
     /// Whether the connection is constrained (low data mode)
-    @Published private(set) var isConstrained: Bool = false
+    private(set) var isConstrained: Bool = false
 
     /// The current network interface type
-    @Published private(set) var connectionType: ConnectionType = .unknown
+    private(set) var connectionType: ConnectionType = .unknown
 
     // MARK: - Connection Type
 

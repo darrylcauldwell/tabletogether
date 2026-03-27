@@ -88,13 +88,14 @@ struct GeneratedRecipe: Identifiable, Equatable {
 /// Service for generating recipes based on user preferences.
 /// Uses on-device generation when available, with a fallback for older devices.
 @MainActor
-final class RecipeGeneratorService: ObservableObject {
+@Observable
+final class RecipeGeneratorService {
 
-    // MARK: - Published State
+    // MARK: - Observable State
 
-    @Published private(set) var isGenerating: Bool = false
-    @Published private(set) var generatedRecipes: [GeneratedRecipe] = []
-    @Published var errorMessage: String?
+    private(set) var isGenerating: Bool = false
+    private(set) var generatedRecipes: [GeneratedRecipe] = []
+    var errorMessage: String?
 
     // MARK: - Generation Status
 
@@ -105,7 +106,7 @@ final class RecipeGeneratorService: ObservableObject {
         case error(String)
     }
 
-    @Published private(set) var status: GenerationStatus = .idle
+    private(set) var status: GenerationStatus = .idle
 
     // MARK: - Device Capabilities
 

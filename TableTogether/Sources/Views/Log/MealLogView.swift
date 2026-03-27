@@ -1,6 +1,5 @@
 import SwiftUI
 import SwiftData
-import Combine
 
 /// Dedicated meal logging tab.
 /// Shows a prominent "Log a Meal" button, today's meals, and recent days.
@@ -16,16 +15,12 @@ struct MealLogView: View {
     @State private var logToEdit: PrivateMealLog?
     @State private var logToDelete: PrivateMealLog?
     @State private var showDeleteConfirmation = false
-    /// Incremented to force re-render after log status changes.
-    /// Needed because @Environment doesn't observe ObservableObject changes.
-    @State private var logVersion: Int = 0
 
     private var currentUser: User? {
         users.first
     }
 
     private var weeklyLogs: [PrivateMealLog] {
-        _ = logVersion // Force SwiftUI dependency on log changes
         return privateDataManager?.mealLogs ?? []
     }
 
@@ -147,9 +142,6 @@ struct MealLogView: View {
                 if let manager = privateDataManager, let user = currentUser {
                     await manager.syncPlannedMeals(slots: mealSlots, currentUser: user)
                 }
-            }
-            .onReceive(privateDataManager?.objectWillChange.eraseToAnyPublisher() ?? Empty<Void, Never>().eraseToAnyPublisher()) { _ in
-                logVersion += 1
             }
         }
     }

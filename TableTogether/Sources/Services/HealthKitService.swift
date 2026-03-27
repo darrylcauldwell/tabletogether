@@ -19,31 +19,32 @@ import SwiftUI
 /// Note: All health data is personal and private. This service respects
 /// the app's principle that "Food is shared. Bodies are not."
 @MainActor
-final class HealthKitService: ObservableObject {
+@Observable
+final class HealthKitService {
     static let shared = HealthKitService()
 
     private let healthStore = HKHealthStore()
 
-    // MARK: - Published Properties
+    // MARK: - Observable Properties
 
-    @Published private(set) var isAuthorized = false
-    @Published private(set) var authorizationStatus: HKAuthorizationStatus = .notDetermined
+    private(set) var isAuthorized = false
+    private(set) var authorizationStatus: HKAuthorizationStatus = .notDetermined
 
-    @Published private(set) var latestWeight: Double? // in kg
-    @Published private(set) var latestHeight: Double? // in cm
-    @Published private(set) var biologicalSex: HKBiologicalSex?
-    @Published private(set) var dateOfBirth: Date?
+    private(set) var latestWeight: Double? // in kg
+    private(set) var latestHeight: Double? // in cm
+    private(set) var biologicalSex: HKBiologicalSex?
+    private(set) var dateOfBirth: Date?
 
-    @Published private(set) var isLoading = false
-    @Published private(set) var errorMessage: String?
+    private(set) var isLoading = false
+    private(set) var errorMessage: String?
 
     // MARK: - Manual Fallback Properties
 
     /// Manual values loaded from PersonalSettings when HealthKit data is unavailable
-    @Published var manualWeightKg: Double?
-    @Published var manualHeightCm: Double?
-    @Published var manualAge: Int?
-    @Published var manualBiologicalSex: String?
+    var manualWeightKg: Double?
+    var manualHeightCm: Double?
+    var manualAge: Int?
+    var manualBiologicalSex: String?
 
     // MARK: - Computed Properties
 

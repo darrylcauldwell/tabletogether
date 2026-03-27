@@ -8,7 +8,8 @@ import FoundationModels
 /// Primary: Apple Intelligence via Foundation Models framework (iOS 26+)
 /// Fallback: Regex-based parsing (splits on "with"/"and"/commas, matches quantities and units)
 @MainActor
-final class NaturalLanguageMealParser: ObservableObject {
+@Observable
+final class NaturalLanguageMealParser {
 
     // MARK: - Public API
 

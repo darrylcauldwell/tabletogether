@@ -10,7 +10,8 @@ import SwiftData
 /// 4. Calculate macros via GramConversionService
 /// 5. Offline fallback: MealEstimatorService food database
 @MainActor
-final class IngredientResolverService: ObservableObject {
+@Observable
+final class IngredientResolverService {
 
     private let estimator = MealEstimatorService()
 

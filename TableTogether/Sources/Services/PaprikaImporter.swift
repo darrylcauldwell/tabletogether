@@ -64,12 +64,13 @@ enum PaprikaImportError: LocalizedError {
 // MARK: - Paprika Importer
 
 @MainActor
-final class PaprikaImporter: ObservableObject {
+@Observable
+final class PaprikaImporter {
 
-    @Published var isImporting = false
-    @Published var progress: String = ""
-    @Published var result: PaprikaImportResult?
-    @Published var errorMessage: String?
+    var isImporting = false
+    var progress: String = ""
+    var result: PaprikaImportResult?
+    var errorMessage: String?
 
     /// Main entry point: import recipes from a .paprikarecipes file URL.
     func importRecipes(from url: URL, context: ModelContext, household: Household?) async {

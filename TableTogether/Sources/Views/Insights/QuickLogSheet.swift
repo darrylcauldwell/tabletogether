@@ -18,8 +18,8 @@ struct QuickLogSheet: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.privateDataManager) private var privateDataManager
     @Environment(\.dismiss) private var dismiss
-    @StateObject private var healthService = HealthKitService.shared
-    @StateObject private var estimator = MealEstimatorService()
+    @State private var healthService = HealthKitService.shared
+    @State private var estimator = MealEstimatorService()
 
     @Query private var recipes: [Recipe]
     @Query private var mealSlots: [MealSlot]

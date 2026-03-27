@@ -5,18 +5,20 @@ import SwiftUI
 /// Manages the demo data lifecycle for testing and demonstration purposes.
 /// Demo data can be toggled on/off in Settings and uses predictable UUIDs for clean identification.
 @MainActor
-final class DemoDataManager: ObservableObject {
+@Observable
+final class DemoDataManager {
 
     // MARK: - Published State
 
     /// Toggle state persisted in UserDefaults
+    @ObservationIgnored
     @AppStorage("isDemoDataEnabled") var isDemoDataEnabled: Bool = false
 
     /// Whether an operation is currently in progress
-    @Published private(set) var isLoading: Bool = false
+    private(set) var isLoading: Bool = false
 
     /// Error message if the last operation failed
-    @Published var errorMessage: String?
+    var errorMessage: String?
 
     // MARK: - Dependencies
 

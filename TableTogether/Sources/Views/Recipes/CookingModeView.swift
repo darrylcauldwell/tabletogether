@@ -1,6 +1,5 @@
 import SwiftUI
 import SwiftData
-import Combine
 
 /// Full-screen cooking mode for step-by-step recipe guidance
 struct CookingModeView: View {
@@ -15,7 +14,7 @@ struct CookingModeView: View {
     @State private var timerSeconds: Int = 0
     @State private var timerRunning: Bool = false
     @State private var showingTimerPicker: Bool = false
-    @State private var timerCancellable: AnyCancellable?
+    @State private var timerTask: Task<Void, Never>?
 
     private var instructions: [String] {
         recipe.instructions
@@ -407,15 +406,16 @@ struct CookingModeView: View {
 
     private func startTimer() {
         // Cancel any existing timer first
-        timerCancellable?.cancel()
+        timerTask?.cancel()
 
-        // Create a new timer that fires every second
-        timerCancellable = Timer.publish(every: 1, on: .main, in: .common)
-            .autoconnect()
-            .sink { [self] _ in
+        // Create a new async timer task
+        timerTask = Task { @MainActor in
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(1))
+                guard !Task.isCancelled else { break }
                 guard timerSeconds > 0 else {
                     timerRunning = false
-                    return
+                    break
                 }
                 timerSeconds -= 1
                 if timerSeconds == 0 {
@@ -423,11 +423,12 @@ struct CookingModeView: View {
                     // Could add haptic/sound notification here
                 }
             }
+        }
     }
 
     private func stopTimer() {
-        timerCancellable?.cancel()
-        timerCancellable = nil
+        timerTask?.cancel()
+        timerTask = nil
     }
 }
 

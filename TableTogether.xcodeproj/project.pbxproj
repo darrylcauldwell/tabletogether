@@ -66,6 +66,10 @@
 		5812C2215AB15D1F9ACC2AAB /* RecipeEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84CFB74AF24B576AAB8C05FC /* RecipeEditorView.swift */; };
 		B20850F3A3195E78B6726676 /* RecipeGeneratorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39A834D5E290588EABE3B109 /* RecipeGeneratorView.swift */; };
 		035B9E1DEEC35B42B7DE80D2 /* RecipeImportSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 143F6C29214E568E9F480E70 /* RecipeImportSheet.swift */; };
+		AA11BB22CC33DD44EE55FF01 /* CookbookScannerSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA11BB22CC33DD44EE55FF05 /* CookbookScannerSheet.swift */; };
+		AA11BB22CC33DD44EE55FF02 /* CookbookScannerComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA11BB22CC33DD44EE55FF06 /* CookbookScannerComponents.swift */; };
+		AA11BB22CC33DD44EE55FF03 /* CookbookTextParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA11BB22CC33DD44EE55FF07 /* CookbookTextParser.swift */; };
+		AA11BB22CC33DD44EE55FF04 /* CookbookScannerService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA11BB22CC33DD44EE55FF08 /* CookbookScannerService.swift */; };
 		B68945829D3D5E319C9D30A7 /* RecipeLibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DBFA590460F57E8A39192E4 /* RecipeLibraryView.swift */; };
 		A6C8A0C843B257119FE37428 /* CalendarSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B9F5940A8EB5B1A8097DB6B /* CalendarSettingsView.swift */; };
 		78753B5D3E785BD786611C59 /* Components.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99DF474AA40F57A2962F8733 /* Components.swift */; };
@@ -152,6 +156,10 @@
 		84CFB74AF24B576AAB8C05FC /* RecipeEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TableTogether/Sources/Views/Recipes/RecipeEditorView.swift"; sourceTree = "<group>"; };
 		39A834D5E290588EABE3B109 /* RecipeGeneratorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TableTogether/Sources/Views/Recipes/RecipeGeneratorView.swift"; sourceTree = "<group>"; };
 		143F6C29214E568E9F480E70 /* RecipeImportSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TableTogether/Sources/Views/Recipes/RecipeImportSheet.swift"; sourceTree = "<group>"; };
+		AA11BB22CC33DD44EE55FF05 /* CookbookScannerSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TableTogether/Sources/Views/Recipes/CookbookScannerSheet.swift"; sourceTree = "<group>"; };
+		AA11BB22CC33DD44EE55FF06 /* CookbookScannerComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TableTogether/Sources/Views/Recipes/CookbookScannerComponents.swift"; sourceTree = "<group>"; };
+		AA11BB22CC33DD44EE55FF07 /* CookbookTextParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TableTogether/Sources/Services/CookbookTextParser.swift"; sourceTree = "<group>"; };
+		AA11BB22CC33DD44EE55FF08 /* CookbookScannerService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TableTogether/Sources/Services/CookbookScannerService.swift"; sourceTree = "<group>"; };
 		9DBFA590460F57E8A39192E4 /* RecipeLibraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TableTogether/Sources/Views/Recipes/RecipeLibraryView.swift"; sourceTree = "<group>"; };
 		1B9F5940A8EB5B1A8097DB6B /* CalendarSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TableTogether/Sources/Views/Settings/CalendarSettingsView.swift"; sourceTree = "<group>"; };
 		99DF474AA40F57A2962F8733 /* Components.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TableTogether/Sources/Views/Shared/Components.swift"; sourceTree = "<group>"; };
@@ -250,6 +258,10 @@
 				84CFB74AF24B576AAB8C05FC /* RecipeEditorView.swift */,
 				39A834D5E290588EABE3B109 /* RecipeGeneratorView.swift */,
 				143F6C29214E568E9F480E70 /* RecipeImportSheet.swift */,
+				AA11BB22CC33DD44EE55FF05 /* CookbookScannerSheet.swift */,
+				AA11BB22CC33DD44EE55FF06 /* CookbookScannerComponents.swift */,
+				AA11BB22CC33DD44EE55FF07 /* CookbookTextParser.swift */,
+				AA11BB22CC33DD44EE55FF08 /* CookbookScannerService.swift */,
 				9DBFA590460F57E8A39192E4 /* RecipeLibraryView.swift */,
 				1B9F5940A8EB5B1A8097DB6B /* CalendarSettingsView.swift */,
 				99DF474AA40F57A2962F8733 /* Components.swift */,
@@ -400,6 +412,10 @@
 				5812C2215AB15D1F9ACC2AAB /* RecipeEditorView.swift in Sources */,
 				B20850F3A3195E78B6726676 /* RecipeGeneratorView.swift in Sources */,
 				035B9E1DEEC35B42B7DE80D2 /* RecipeImportSheet.swift in Sources */,
+				AA11BB22CC33DD44EE55FF01 /* CookbookScannerSheet.swift in Sources */,
+				AA11BB22CC33DD44EE55FF02 /* CookbookScannerComponents.swift in Sources */,
+				AA11BB22CC33DD44EE55FF03 /* CookbookTextParser.swift in Sources */,
+				AA11BB22CC33DD44EE55FF04 /* CookbookScannerService.swift in Sources */,
 				B68945829D3D5E319C9D30A7 /* RecipeLibraryView.swift in Sources */,
 				A6C8A0C843B257119FE37428 /* CalendarSettingsView.swift in Sources */,
 				78753B5D3E785BD786611C59 /* Components.swift in Sources */,
@@ -446,7 +462,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				MARKETING_VERSION = 1.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
@@ -465,13 +481,14 @@
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
-				SWIFT_VERSION = 5.0;
+				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				CODE_SIGN_ENTITLEMENTS = "TableTogether/TableTogether.entitlements";
 				INFOPLIST_KEY_NSCalendarsUsageDescription = "TableTogether adds meal plans to your calendar so you know when to start cooking.";
 				INFOPLIST_KEY_NSCalendarsFullAccessUsageDescription = "TableTogether adds meal plans to your calendar so you know when to start cooking.";
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "TableTogether reads your nutrition data to help track your meals and dietary goals.";
 				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "TableTogether saves your meal nutrition data to help you track your dietary intake.";
+				INFOPLIST_KEY_NSCameraUsageDescription = "TableTogether uses your camera to scan cookbook pages and import recipes.";
 				INFOPLIST_KEY_CFBundleURLTypes = (
 					{
 						CFBundleTypeRole = Editor;
@@ -504,7 +521,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				MARKETING_VERSION = 1.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
@@ -520,7 +537,7 @@
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
+				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VALIDATE_PRODUCT = YES;
 				CODE_SIGN_ENTITLEMENTS = "TableTogether/TableTogether.entitlements";
@@ -528,6 +545,7 @@
 				INFOPLIST_KEY_NSCalendarsFullAccessUsageDescription = "TableTogether adds meal plans to your calendar so you know when to start cooking.";
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "TableTogether reads your nutrition data to help track your meals and dietary goals.";
 				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "TableTogether saves your meal nutrition data to help you track your dietary intake.";
+				INFOPLIST_KEY_NSCameraUsageDescription = "TableTogether uses your camera to scan cookbook pages and import recipes.";
 				INFOPLIST_KEY_CFBundleURLTypes = (
 					{
 						CFBundleTypeRole = Editor;

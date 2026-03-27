@@ -576,7 +576,7 @@ struct SyncErrorBanner: View {
 
 /// A banner showing when the device is offline
 struct OfflineBanner: View {
-    @ObservedObject var networkMonitor: NetworkMonitor
+    var networkMonitor: NetworkMonitor
 
     @ScaledMetric(relativeTo: .subheadline) private var padding: CGFloat = 16
     @ScaledMetric(relativeTo: .subheadline) private var spacing: CGFloat = 8

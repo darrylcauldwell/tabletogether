@@ -48,7 +48,8 @@ struct CalendarEventMapping: Codable, Equatable {
 /// Note: Calendar sync is a personal feature. Event mappings are stored locally
 /// and not shared between household members.
 @MainActor
-final class CalendarService: ObservableObject {
+@Observable
+final class CalendarService {
     static let shared = CalendarService()
 
     private let eventStore = EKEventStore()
@@ -57,16 +58,16 @@ final class CalendarService: ObservableObject {
     private let settingsKey = "CalendarSettings"
     private let mappingsKey = "CalendarEventMappings"
 
-    // MARK: - Published Properties
+    // MARK: - Observable Properties
 
-    @Published private(set) var isAuthorized = false
-    @Published private(set) var authorizationStatus: EKAuthorizationStatus = .notDetermined
-    @Published private(set) var availableCalendars: [EKCalendar] = []
-    @Published private(set) var selectedCalendar: EKCalendar?
-    @Published private(set) var settings: CalendarSettings
-    @Published private(set) var isLoading = false
-    @Published private(set) var errorMessage: String?
-    @Published private(set) var syncedEventCount: Int = 0
+    private(set) var isAuthorized = false
+    private(set) var authorizationStatus: EKAuthorizationStatus = .notDetermined
+    private(set) var availableCalendars: [EKCalendar] = []
+    private(set) var selectedCalendar: EKCalendar?
+    private(set) var settings: CalendarSettings
+    private(set) var isLoading = false
+    private(set) var errorMessage: String?
+    private(set) var syncedEventCount: Int = 0
 
     // MARK: - Private State
 

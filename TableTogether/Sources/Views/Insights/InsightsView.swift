@@ -12,7 +12,7 @@ import HealthKit
 struct InsightsView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.privateDataManager) private var privateDataManager
-    @StateObject private var healthService = HealthKitService.shared
+    @State private var healthService = HealthKitService.shared
 
     @Query private var users: [User]
     @Query private var recipes: [Recipe]
@@ -378,7 +378,7 @@ struct EmptyInsightsView: View {
 
 /// Card for connecting to Apple Health and displaying synced body metrics
 struct HealthKitCard: View {
-    @ObservedObject var healthService: HealthKitService
+    var healthService: HealthKitService
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -522,7 +522,7 @@ struct HealthMetricRow: View {
 
 /// Shows estimated daily calorie needs based on HealthKit data
 struct CalorieEstimateCard: View {
-    @ObservedObject var healthService: HealthKitService
+    var healthService: HealthKitService
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {

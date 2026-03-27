@@ -8,7 +8,7 @@ struct RecipeGeneratorView: View {
     @Environment(\.dismiss) private var dismiss
 
     @Query private var households: [Household]
-    @StateObject private var generatorService = RecipeGeneratorService()
+    @State private var generatorService = RecipeGeneratorService()
 
     // Form state
     @State private var prompt = RecipeGeneratorPrompt()

@@ -9,6 +9,7 @@ import SwiftUI
 /// all household data (recipes, meal plans, groceries) with participants.
 /// All participants have equal readWrite access — no owner hierarchy.
 @Observable
+@MainActor
 final class CloudSharingManager {
 
     // MARK: - Properties

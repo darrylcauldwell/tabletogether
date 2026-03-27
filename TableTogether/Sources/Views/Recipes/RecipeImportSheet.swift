@@ -8,7 +8,7 @@ struct RecipeImportSheet: View {
     @Environment(\.dismiss) private var dismiss
 
     @Query private var households: [Household]
-    @StateObject private var parser = RecipeParser()
+    @State private var parser = RecipeParser()
 
     @State private var urlString = ""
     @State private var parsedRecipe: ParsedRecipe?

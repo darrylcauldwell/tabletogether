@@ -24,7 +24,8 @@ struct MealEstimate {
 /// Estimates macro nutrients from a natural language meal description.
 /// All computation is local and synchronous — nothing leaves the device.
 @MainActor
-final class MealEstimatorService: ObservableObject {
+@Observable
+final class MealEstimatorService {
 
     // MARK: - Public API
 
@@ -329,7 +330,7 @@ final class MealEstimatorService: ObservableObject {
     // Per-serving macros for common foods
     // Values are approximate and based on typical UK portion sizes
 
-    static let foodDatabase: [FoodEntry] = [
+    nonisolated static let foodDatabase: [FoodEntry] = [
 
         // MARK: Bread & Bakery
 

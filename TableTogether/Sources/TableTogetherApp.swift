@@ -24,8 +24,8 @@ struct TableTogetherApp: App {
     }()
 
     @State private var modelContainerError: ModelContainerError?
-    @StateObject private var privateDataManager = PrivateDataManager()
-    @StateObject private var calendarService = CalendarService.shared
+    @State private var privateDataManager = PrivateDataManager()
+    @State private var calendarService = CalendarService.shared
     @AppStorage("appearanceMode") private var appearanceMode: Int = AppearanceMode.system.rawValue
 
     /// Cloud sharing manager for household sharing
