@@ -647,6 +647,154 @@ struct SuggestionMemoryTests {
     }
 }
 
+// MARK: - CookbookTextParser Tests
+
+@Suite("CookbookTextParser Tests")
+struct CookbookTextParserTests {
+    @Test("Parses recipe with section headers")
+    func parsesWithSectionHeaders() {
+        let text = """
+        Spaghetti Carbonara
+        Serves 4
+
+        Ingredients
+        400g spaghetti
+        200g pancetta
+        4 egg yolks
+        100g Parmesan, finely grated
+
+        Method
+        1. Cook the spaghetti in salted boiling water.
+        2. Fry the pancetta until crisp.
+        3. Mix egg yolks with Parmesan.
+        """
+
+        let result = CookbookTextParser.parse(text)
+        #expect(result.title == "Spaghetti Carbonara")
+        #expect(result.ingredients.count == 4)
+        #expect(result.instructions.count == 3)
+    }
+
+    @Test("Parses recipe without headers using heuristics")
+    func parsesWithHeuristics() {
+        let text = """
+        Quick Omelette
+        3 eggs
+        1 tbsp butter
+        50g cheese, grated
+        Beat the eggs and season well.
+        Melt butter in a pan over medium heat.
+        Pour in the eggs and cook until set.
+        """
+
+        let result = CookbookTextParser.parse(text)
+        #expect(result.title == "Quick Omelette")
+        #expect(result.ingredients.count >= 2)
+        #expect(result.instructions.count >= 1)
+    }
+
+    @Test("Returns untitled for empty text")
+    func emptyTextReturnsUntitled() {
+        let result = CookbookTextParser.parse("")
+        #expect(result.title == "Untitled Recipe")
+        #expect(result.ingredients.isEmpty)
+        #expect(result.instructions.isEmpty)
+    }
+
+    @Test("Ingredient line detection identifies quantities")
+    func ingredientLineDetection() {
+        #expect(CookbookTextParser.isIngredientLine("2 cups flour"))
+        #expect(CookbookTextParser.isIngredientLine("100g butter"))
+        #expect(CookbookTextParser.isIngredientLine("1/2 tsp salt"))
+        #expect(!CookbookTextParser.isIngredientLine("1. Preheat the oven"))
+        #expect(!CookbookTextParser.isIngredientLine("Mix everything together"))
+    }
+
+    @Test("Parses ingredient with quantity and unit")
+    func parsesIngredientQuantityAndUnit() {
+        let ingredient = CookbookTextParser.parseIngredientLine("250g plain flour")
+        #expect(ingredient != nil)
+        #expect(ingredient?.quantity == 250)
+        #expect(ingredient?.unit == .gram)
+        #expect(ingredient?.name == "plain flour")
+    }
+
+    @Test("Parses ingredient with preparation note")
+    func parsesIngredientWithPrepNote() {
+        let ingredient = CookbookTextParser.parseIngredientLine("2 cloves garlic, minced")
+        #expect(ingredient != nil)
+        #expect(ingredient?.quantity == 2)
+        #expect(ingredient?.unit == .clove)
+        #expect(ingredient?.name == "garlic")
+        #expect(ingredient?.preparationNote == "minced")
+    }
+
+    @Test("Parses unicode fractions")
+    func parsesUnicodeFractions() {
+        let ingredient = CookbookTextParser.parseIngredientLine("½ tsp salt")
+        #expect(ingredient != nil)
+        #expect(ingredient?.quantity == 0.5)
+        #expect(ingredient?.unit == .teaspoon)
+    }
+
+    @Test("Detects optional ingredients")
+    func detectsOptionalIngredients() {
+        let ingredient = CookbookTextParser.parseIngredientLine("1 tbsp fresh herbs (optional)")
+        #expect(ingredient != nil)
+        #expect(ingredient?.isOptional == true)
+    }
+
+    @Test("Parses mixed fractions")
+    func parsesMixedFractions() {
+        let ingredient = CookbookTextParser.parseIngredientLine("1 1/2 cups milk")
+        #expect(ingredient != nil)
+        #expect(ingredient?.quantity == 1.5)
+        #expect(ingredient?.unit == .cup)
+    }
+
+    @Test("Filters serves line from ingredients")
+    func filtersServesLine() {
+        let text = """
+        Simple Salad
+        Serves 2
+
+        Ingredients
+        100g lettuce
+        2 tomatoes
+
+        Method
+        Chop and combine.
+        """
+
+        let result = CookbookTextParser.parse(text)
+        let ingredientNames = result.ingredients.map { $0.name.lowercased() }
+        #expect(!ingredientNames.contains(where: { $0.contains("serves") }))
+    }
+
+    @Test("Cleans instruction step numbers")
+    func cleansInstructionNumbers() {
+        let text = """
+        Toast
+
+        Ingredients
+        2 slices bread
+        1 tbsp butter
+
+        Instructions
+        1. Toast the bread.
+        2) Spread butter on top.
+        Step 3: Serve immediately.
+        """
+
+        let result = CookbookTextParser.parse(text)
+        for instruction in result.instructions {
+            #expect(!instruction.hasPrefix("1."))
+            #expect(!instruction.hasPrefix("2)"))
+            #expect(!instruction.hasPrefix("Step"))
+        }
+    }
+}
+
 // MARK: - ArchetypeType Color Tests
 
 @Suite("ArchetypeType Color Tests")

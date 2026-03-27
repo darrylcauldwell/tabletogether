@@ -55,6 +55,9 @@ enum AppLogger {
 
     /// Logger for nutrition lookup and resolution
     static let nutrition = Logger(subsystem: subsystem, category: "Nutrition")
+
+    /// Logger for cookbook OCR scanning operations
+    static let scanner = Logger(subsystem: subsystem, category: "Scanner")
 }
 
 // MARK: - Logger Convenience Extensions
@@ -136,6 +139,7 @@ extension AppLogger {
         insights.debug("Insights logger test")
         network.debug("Network logger test")
         nutrition.debug("Nutrition logger test")
+        scanner.debug("Scanner logger test")
     }
 }
 #endif
