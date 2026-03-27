@@ -51,6 +51,16 @@ CLAUDE.md
 *.certSigningRequest
 *.mobileprovision
 
+# Secrets and credentials
+.env
+.env.*
+*.p8
+*.pem
+*.key
+credentials.json
+serviceAccountKey.json
+api_key.json
+
 # API keys
 fastlane/api_key.json
 fastlane/AuthKey_*.p8
