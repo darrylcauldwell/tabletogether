@@ -90,6 +90,11 @@
 		177F08EC4708ECD63DFE39E6 /* IngredientResolverService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8FE377BA6234BAB2ECBEC7A /* IngredientResolverService.swift */; };
 		C1D704B819396F3ED51E4192 /* NaturalLanguageMealParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0259A336595347B1EC341098 /* NaturalLanguageMealParser.swift */; };
 		ADEF631224BE1A3FD772D85C /* SmartLogSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AD700C8BE1344980AB40A39 /* SmartLogSection.swift */; };
+		BB11CC22DD33EE44FF550001 /* MealSlotComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB11CC22DD33EE44FF550005 /* MealSlotComponents.swift */; };
+		BB11CC22DD33EE44FF550002 /* RecipeGeneratorComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB11CC22DD33EE44FF550006 /* RecipeGeneratorComponents.swift */; };
+		BB11CC22DD33EE44FF550003 /* SettingsComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB11CC22DD33EE44FF550007 /* SettingsComponents.swift */; };
+		BB11CC22DD33EE44FF550004 /* MealLogComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB11CC22DD33EE44FF550008 /* MealLogComponents.swift */; };
+		BB11CC22DD33EE44FF550009 /* RecipeEditorComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB11CC22DD33EE44FF55000A /* RecipeEditorComponents.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -179,6 +184,11 @@
 		C8FE377BA6234BAB2ECBEC7A /* IngredientResolverService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TableTogether/Sources/Services/IngredientResolverService.swift"; sourceTree = "<group>"; };
 		0259A336595347B1EC341098 /* NaturalLanguageMealParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TableTogether/Sources/Services/NaturalLanguageMealParser.swift"; sourceTree = "<group>"; };
 		0AD700C8BE1344980AB40A39 /* SmartLogSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TableTogether/Sources/Views/Log/SmartLogSection.swift"; sourceTree = "<group>"; };
+		BB11CC22DD33EE44FF550005 /* MealSlotComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TableTogether/Sources/Views/Planning/MealSlotComponents.swift"; sourceTree = "<group>"; };
+		BB11CC22DD33EE44FF550006 /* RecipeGeneratorComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TableTogether/Sources/Views/Recipes/RecipeGeneratorComponents.swift"; sourceTree = "<group>"; };
+		BB11CC22DD33EE44FF550007 /* SettingsComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TableTogether/Sources/Views/Shared/SettingsComponents.swift"; sourceTree = "<group>"; };
+		BB11CC22DD33EE44FF550008 /* MealLogComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TableTogether/Sources/Views/Log/MealLogComponents.swift"; sourceTree = "<group>"; };
+		BB11CC22DD33EE44FF55000A /* RecipeEditorComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TableTogether/Sources/Views/Recipes/RecipeEditorComponents.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -277,6 +287,11 @@
 				C8FE377BA6234BAB2ECBEC7A /* IngredientResolverService.swift */,
 				0259A336595347B1EC341098 /* NaturalLanguageMealParser.swift */,
 				0AD700C8BE1344980AB40A39 /* SmartLogSection.swift */,
+				BB11CC22DD33EE44FF550005 /* MealSlotComponents.swift */,
+				BB11CC22DD33EE44FF550006 /* RecipeGeneratorComponents.swift */,
+				BB11CC22DD33EE44FF550007 /* SettingsComponents.swift */,
+				BB11CC22DD33EE44FF550008 /* MealLogComponents.swift */,
+				BB11CC22DD33EE44FF55000A /* RecipeEditorComponents.swift */,
 			);
 			path = .;
 			sourceTree = "<group>";
@@ -434,6 +449,11 @@
 				177F08EC4708ECD63DFE39E6 /* IngredientResolverService.swift in Sources */,
 				C1D704B819396F3ED51E4192 /* NaturalLanguageMealParser.swift in Sources */,
 				ADEF631224BE1A3FD772D85C /* SmartLogSection.swift in Sources */,
+				BB11CC22DD33EE44FF550001 /* MealSlotComponents.swift in Sources */,
+				BB11CC22DD33EE44FF550002 /* RecipeGeneratorComponents.swift in Sources */,
+				BB11CC22DD33EE44FF550003 /* SettingsComponents.swift in Sources */,
+				BB11CC22DD33EE44FF550004 /* MealLogComponents.swift in Sources */,
+				BB11CC22DD33EE44FF550009 /* RecipeEditorComponents.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
