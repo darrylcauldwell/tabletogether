@@ -54,4 +54,96 @@ platform :ios do
     capture_app_screenshots
     upload_screenshots
   end
+
+  desc "Complete App Store Connect setup - metadata only"
+  lane :complete_setup do
+    deliver(
+      skip_binary_upload: true,
+      skip_screenshots: true,
+      force: true,
+      metadata_path: "./fastlane/metadata",
+      app_version: "1.0.0",
+      submit_for_review: false,
+      automatic_release: false,
+      precheck_include_in_app_purchases: false,
+      run_precheck_before_submit: false
+    )
+  end
+
+  desc "Build and archive iOS app"
+  lane :build do
+    gym(
+      scheme: "TableTogether",
+      project: "TableTogether.xcodeproj",
+      export_method: "app-store",
+      output_directory: "./build/ios-upload",
+      output_name: "TableTogether",
+      clean: true,
+      include_bitcode: false,
+      xcargs: "-allowProvisioningUpdates"
+    )
+  end
+
+  desc "Upload iOS build to App Store Connect"
+  lane :upload_build do
+    pilot(
+      api_key_path: "./fastlane/api_key.json",
+      skip_waiting_for_build_processing: true,
+      ipa: "./build/ios-upload/TableTogether.ipa",
+      app_identifier: "dev.dreamfold.tabletogether"
+    )
+  end
+end
+
+platform :appletvos do
+  desc "Build and archive tvOS app"
+  lane :build do
+    gym(
+      scheme: "TableTogetherTV",
+      project: "TableTogetherTV.xcodeproj",
+      export_method: "app-store",
+      output_directory: "./build/tvos-upload",
+      output_name: "TableTogetherTV",
+      clean: true,
+      include_bitcode: false,
+      export_options: {
+        provisioningProfiles: {
+          "dev.dreamfold.tabletogether.tv" => "match AppStore dev.dreamfold.tabletogether.tv"
+        }
+      }
+    )
+  end
+
+  desc "Upload tvOS build to App Store Connect"
+  lane :upload_build do
+    pilot(
+      skip_waiting_for_build_processing: true,
+      ipa: "./build/tvos-upload/TableTogetherTV.ipa",
+      app_identifier: "dev.dreamfold.tabletogether.tv"
+    )
+  end
+
+  desc "Push tvOS metadata to App Store Connect"
+  lane :metadata do
+    deliver(
+      skip_binary_upload: true,
+      skip_screenshots: true,
+      force: true,
+      metadata_path: "./fastlane/metadata-tvos",
+      app_version: "1.0.0",
+      submit_for_review: false,
+      automatic_release: false,
+      precheck_include_in_app_purchases: false,
+      run_precheck_before_submit: false,
+      app_identifier: "dev.dreamfold.tabletogether.tv",
+      platform: "appletvos"
+    )
+  end
+
+  desc "Build, upload, and push metadata for tvOS"
+  lane :release do
+    build
+    upload_build
+    metadata
+  end
 end
