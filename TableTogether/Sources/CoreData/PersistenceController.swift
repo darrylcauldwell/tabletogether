@@ -151,8 +151,9 @@ final class PersistenceController {
             guard let self else { return }
 
             // Capture store references
-            if let store = description.cloudKitContainerOptions.flatMap({ options -> NSPersistentStore? in
-                self.container.persistentStoreCoordinator.persistentStore(for: description.url!)
+            if let url = description.url,
+               let store = description.cloudKitContainerOptions.flatMap({ _ -> NSPersistentStore? in
+                self.container.persistentStoreCoordinator.persistentStore(for: url)
             }) {
                 if description.cloudKitContainerOptions?.databaseScope == .shared {
                     self.sharedPersistentStore = store
@@ -166,6 +167,9 @@ final class PersistenceController {
             }
 
             loadedCount += 1
+            if loadedCount == storeCount {
+                self.storesLoaded = true
+            }
         }
 
         // Configure viewContext
@@ -318,9 +322,13 @@ final class PersistenceController {
 
     // MARK: - History Processing
 
+    /// Whether stores have finished loading.
+    private var storesLoaded = false
+
     @objc
     private nonisolated func processRemoteChanges(_ notification: Notification) {
         Task { @MainActor in
+            guard self.storesLoaded else { return }
             self.processHistory()
         }
     }
