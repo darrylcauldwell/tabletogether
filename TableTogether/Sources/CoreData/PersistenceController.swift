@@ -1,4 +1,4 @@
-import CoreData
+@preconcurrency import CoreData
 import CloudKit
 import SwiftUI
 import Observation
@@ -39,10 +39,10 @@ final class PersistenceController {
     let container: NSPersistentCloudKitContainer
 
     /// The private persistent store (owner's data).
-    private(set) var privatePersistentStore: NSPersistentStore!
+    private(set) var privatePersistentStore: NSPersistentStore?
 
     /// The shared persistent store (data shared by others).
-    private(set) var sharedPersistentStore: NSPersistentStore!
+    private(set) var sharedPersistentStore: NSPersistentStore?
 
     /// The CloudKit container for sharing operations.
     @ObservationIgnored
@@ -325,15 +325,17 @@ final class PersistenceController {
 
     private func processHistory() {
         let stores: [NSPersistentStore] = [privatePersistentStore, sharedPersistentStore].compactMap { $0 }
+        guard !stores.isEmpty else { return }
 
         for store in stores {
             guard let storeID = store.identifier else { continue }
             let token = lastHistoryTokens[storeID]
 
             let request = NSPersistentHistoryChangeRequest.fetchHistory(after: token)
-            let fetchRequest = NSPersistentHistoryTransaction.fetchRequest!
-            fetchRequest.predicate = NSPredicate(format: "author != %@", Self.appTransactionAuthor)
-            request.fetchRequest = fetchRequest
+            if let fetchRequest = NSPersistentHistoryTransaction.fetchRequest {
+                fetchRequest.predicate = NSPredicate(format: "author != %@", Self.appTransactionAuthor)
+                request.fetchRequest = fetchRequest
+            }
             request.affectedStores = [store]
 
             let context = newBackgroundContext()
