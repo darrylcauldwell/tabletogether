@@ -151,10 +151,16 @@ platform :appletvos do
       export_method: "app-store",
       project: "TableTogetherTV.xcodeproj",
       destination: "generic/platform=tvOS",
-      xcargs: "-allowProvisioningUpdates -authenticationKeyPath '#{File.expand_path(asc_key_path)}' -authenticationKeyID #{asc_key_id} -authenticationKeyIssuerID #{asc_issuer_id}",
+      skip_build_archive: false,
+      skip_archive: false,
+      xcargs: "-allowProvisioningUpdates -authenticationKeyPath '#{File.expand_path(asc_key_path)}' -authenticationKeyID #{asc_key_id} -authenticationKeyIssuerID #{asc_issuer_id} CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY='Apple Distribution' PROVISIONING_PROFILE_SPECIFIER='dev.dreamfold.tabletogether.tv AppStore' DEVELOPMENT_TEAM=N6BK2WX94Z",
       export_options: {
-        signingStyle: "automatic",
-        teamID: "N6BK2WX94Z"
+        signingStyle: "manual",
+        teamID: "N6BK2WX94Z",
+        signingCertificate: "Apple Distribution",
+        provisioningProfiles: {
+          "dev.dreamfold.tabletogether.tv" => "dev.dreamfold.tabletogether.tv AppStore"
+        }
       }
     )
 
