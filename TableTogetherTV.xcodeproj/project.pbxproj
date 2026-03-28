@@ -305,10 +305,12 @@
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
 				CODE_SIGN_ENTITLEMENTS = TableTogetherTV/TableTogetherTV.entitlements;
-				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_IDENTITY = "Apple Distribution";
+				CODE_SIGN_STYLE = Manual;
 				CURRENT_PROJECT_VERSION = 1;
 				VERSIONING_SYSTEM = "apple-generic";
 				DEVELOPMENT_TEAM = N6BK2WX94Z;
+				PROVISIONING_PROFILE_SPECIFIER = "dev.dreamfold.tabletogether.tv AppStore";
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
