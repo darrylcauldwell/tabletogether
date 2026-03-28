@@ -166,11 +166,6 @@ final class PersistenceController {
             }
 
             loadedCount += 1
-            if loadedCount == storeCount {
-                #if DEBUG
-                self.initializeSchemaIfNeeded()
-                #endif
-            }
         }
 
         // Configure viewContext
@@ -450,14 +445,13 @@ final class PersistenceController {
     // MARK: - Schema Initialization (Debug Only)
 
     #if DEBUG
-    private func initializeSchemaIfNeeded() {
-        // Only initialize schema during development to push the Core Data model to CloudKit
-        // This is a no-op in production builds
+    /// Pushes the Core Data model to CloudKit Development schema.
+    /// Call once after app launch (not during init — stores must be loaded first).
+    func initializeCloudKitSchemaIfNeeded() {
         do {
             try container.initializeCloudKitSchema(options: [])
-            AppLogger.swiftData.info("CloudKit schema initialized")
+            AppLogger.swiftData.info("CloudKit schema initialized successfully")
         } catch {
-            // Schema initialization failure is non-fatal — schema may already exist
             AppLogger.swiftData.warning("CloudKit schema initialization: \(error.localizedDescription)")
         }
     }
