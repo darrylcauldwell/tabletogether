@@ -1,17 +1,17 @@
 import SwiftUI
-import SwiftData
+import CoreData
 
 /// "Describe it" meal logging UI.
 /// Shows a text input for meal description, resolves ingredients,
 /// displays ingredient chips with alternates, and shows macro totals.
 struct SmartLogSection: View {
-    @Environment(\.modelContext) private var modelContext
+    @Environment(\.managedObjectContext) private var viewContext
 
     @Binding var mealDescription: String
     @Binding var resolvedIngredients: [ResolvedIngredient]
     @Binding var isSmartEstimate: Bool
 
-    @Query private var households: [Household]
+    @FetchRequest(sortDescriptors: []) private var households: FetchedResults<Household>
 
     @State private var parser = NaturalLanguageMealParser()
     @State private var resolver = IngredientResolverService()
@@ -263,7 +263,7 @@ struct SmartLogSection: View {
         let result = await parser.parse(description: mealDescription)
         let resolved = await resolver.resolve(
             ingredients: result.ingredients,
-            context: modelContext,
+            context: viewContext,
             household: household
         )
 
@@ -280,7 +280,7 @@ struct SmartLogSection: View {
 
         // Save the user's correction as an alias on the alternate food item
         alternate.foodItem.addAlias(ingredient.parsed.name.lowercased())
-        modelContext.saveWithLogging(context: "food alias")
+        viewContext.saveWithLogging(context: "food alias")
 
         // Rebuild the resolved ingredient with the alternate food item
         let grams = GramConversionService.convertToGrams(

@@ -1,13 +1,13 @@
 import SwiftUI
-import SwiftData
+import CoreData
 
 /// A sheet view for importing recipes from URLs.
 /// Displays URL input, parsed recipe preview, archetype selection, and confirm import button.
 struct RecipeImportSheet: View {
-    @Environment(\.modelContext) private var modelContext
+    @Environment(\.managedObjectContext) private var viewContext
     @Environment(\.dismiss) private var dismiss
 
-    @Query private var households: [Household]
+    @FetchRequest(sortDescriptors: []) private var households: FetchedResults<Household>
     @State private var parser = RecipeParser()
 
     @State private var urlString = ""
@@ -389,8 +389,9 @@ struct RecipeImportSheet: View {
     private func importRecipe() {
         guard let parsed = parsedRecipe else { return }
 
-        // Create the Recipe model
+        // Create the Recipe model (convenience init inserts into context)
         let recipe = Recipe(
+            context: viewContext,
             title: editableTitle,
             summary: parsed.summary,
             sourceURL: parsed.sourceURL,
@@ -405,6 +406,7 @@ struct RecipeImportSheet: View {
         let includedIngredients = editableIngredients.filter { $0.isIncluded }
         for (index, editable) in includedIngredients.enumerated() {
             let recipeIngredient = RecipeIngredient(
+                context: viewContext,
                 quantity: editable.original.quantity,
                 unit: editable.original.unit,
                 preparationNote: editable.original.preparationNote,
@@ -412,7 +414,7 @@ struct RecipeImportSheet: View {
                 order: index,
                 customName: editable.original.name
             )
-            recipe.recipeIngredients.append(recipeIngredient)
+            recipe.addToRecipeIngredients(recipeIngredient)
         }
 
         // Fetch and store image if available
@@ -426,9 +428,7 @@ struct RecipeImportSheet: View {
             }
         }
 
-        // Insert into context
         recipe.household = households.first
-        modelContext.insert(recipe)
 
         dismiss()
     }
@@ -469,5 +469,5 @@ struct ArchetypeSelectionChip: View {
 
 #Preview {
     RecipeImportSheet()
-        .modelContainer(for: [Recipe.self, RecipeIngredient.self, Ingredient.self], inMemory: true)
+        .environment(\.managedObjectContext, PersistenceController.preview.viewContext)
 }

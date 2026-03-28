@@ -1,6 +1,6 @@
 import Foundation
 import Compression
-import SwiftData
+import CoreData
 import SwiftUI
 import UniformTypeIdentifiers
 
@@ -73,7 +73,7 @@ final class PaprikaImporter {
     var errorMessage: String?
 
     /// Main entry point: import recipes from a .paprikarecipes file URL.
-    func importRecipes(from url: URL, context: ModelContext, household: Household?) async {
+    func importRecipes(from url: URL, context: NSManagedObjectContext, household: Household?) async {
         isImporting = true
         progress = "Reading file..."
         errorMessage = nil
@@ -95,8 +95,8 @@ final class PaprikaImporter {
             }
 
             // Fetch existing recipe titles for duplicate detection
-            let existingDescriptor = FetchDescriptor<Recipe>()
-            let existingRecipes = (try? context.fetch(existingDescriptor)) ?? []
+            let existingRequest = NSFetchRequest<Recipe>(entityName: "Recipe")
+            let existingRecipes = (try? context.fetch(existingRequest)) ?? []
             let existingTitles = Set(existingRecipes.map { $0.title.lowercased() })
 
             var imported = 0
@@ -118,9 +118,8 @@ final class PaprikaImporter {
                 }
 
                 // Create the Recipe
-                let recipe = buildRecipe(from: paprika)
+                let recipe = buildRecipe(from: paprika, context: context)
                 recipe.household = household
-                context.insert(recipe)
 
                 // Create RecipeIngredients from ingredient text
                 if let ingredientsText = paprika.ingredients {
@@ -132,6 +131,7 @@ final class PaprikaImporter {
                     for (order, line) in lines.enumerated() {
                         let parsed = parseIngredientLine(line)
                         let recipeIngredient = RecipeIngredient(
+                            context: context,
                             quantity: parsed.quantity,
                             unit: parsed.unit,
                             preparationNote: parsed.preparationNote,
@@ -139,7 +139,6 @@ final class PaprikaImporter {
                             customName: parsed.name
                         )
                         recipe.addIngredient(recipeIngredient)
-                        context.insert(recipeIngredient)
                     }
                 }
 
@@ -161,7 +160,7 @@ final class PaprikaImporter {
     // MARK: - Recipe Builder
 
     /// Converts a Paprika JSON record into a TableTogether Recipe.
-    private func buildRecipe(from paprika: PaprikaRecipeData) -> Recipe {
+    private func buildRecipe(from paprika: PaprikaRecipeData, context: NSManagedObjectContext) -> Recipe {
         let title = paprika.name ?? "Untitled"
 
         // Build summary from notes and description
@@ -208,6 +207,7 @@ final class PaprikaImporter {
         let isFavorite = (paprika.on_favorites ?? 0) != 0
 
         let recipe = Recipe(
+            context: context,
             title: title,
             summary: summary,
             sourceURL: sourceURL,

@@ -1,5 +1,5 @@
 import SwiftUI
-import SwiftData
+import CoreData
 import CloudKit
 
 @main
@@ -23,107 +23,40 @@ struct TableTogetherApp: App {
         return args[index + 1]
     }()
 
-    @State private var modelContainerError: ModelContainerError?
     @State private var privateDataManager = PrivateDataManager()
     @State private var calendarService = CalendarService.shared
     @AppStorage("appearanceMode") private var appearanceMode: Int = AppearanceMode.system.rawValue
 
-    /// Cloud sharing manager for household sharing
-    @State private var cloudSharingManager = CloudSharingManager()
-
     /// Deep link navigation state
     @State private var deepLinkMealSlotId: UUID?
 
-    private let modelContainer: ModelContainer?
+    private let persistenceController = PersistenceController.shared
 
     private var selectedColorScheme: ColorScheme? {
         (AppearanceMode(rawValue: appearanceMode) ?? .system).colorScheme
     }
 
-    init() {
-        // Note: MealLog is NOT in the shared schema - it's stored in CloudKit private database
-        // via PrivateDataManager. This ensures meal consumption data is never shared.
-        let schema = Schema([
-            Household.self,
-            FoodItem.self,
-            Ingredient.self,
-            RecipeIngredient.self,
-            Recipe.self,
-            MealArchetype.self,
-            MealSlot.self,
-            WeekPlan.self,
-            User.self,
-            GroceryItem.self,
-            SuggestionMemory.self
-        ])
-
-        // Try CloudKit-enabled configuration first
-        let cloudKitConfig = ModelConfiguration(
-            schema: schema,
-            isStoredInMemoryOnly: false,
-            cloudKitDatabase: .automatic
-        )
-
-        do {
-            self.modelContainer = try ModelContainer(
-                for: schema,
-                configurations: [cloudKitConfig]
-            )
-        } catch {
-            // If CloudKit fails, try local-only configuration
-            AppLogger.swiftData.warning("CloudKit ModelContainer failed: \(error.localizedDescription)")
-            AppLogger.swiftData.info("Attempting local-only configuration...")
-
-            let localConfig = ModelConfiguration(
-                schema: schema,
-                isStoredInMemoryOnly: false,
-                cloudKitDatabase: .none
-            )
-
-            do {
-                self.modelContainer = try ModelContainer(
-                    for: schema,
-                    configurations: [localConfig]
-                )
-                AppLogger.swiftData.notice("Local-only ModelContainer created successfully")
-            } catch {
-                AppLogger.swiftData.fault("Local ModelContainer also failed: \(error.localizedDescription)")
-                self.modelContainer = nil
-            }
-        }
-    }
-
     var body: some Scene {
         WindowGroup {
-            if let container = modelContainer {
-                ContentView()
-                    .modelContainer(container)
-                    .environment(\.privateDataManager, privateDataManager)
-                    .environment(\.calendarService, calendarService)
-                    .environment(\.cloudSharingManager, cloudSharingManager)
-                    .environment(\.deepLinkMealSlotId, $deepLinkMealSlotId)
-                    .preferredColorScheme(selectedColorScheme)
-                    .task {
-                        await initializeDataIfNeeded(container: container)
-                        if TableTogetherApp.isScreenshotMode {
-                            let demoManager = DemoDataManager()
-                            demoManager.configure(modelContext: container.mainContext, privateDataManager: privateDataManager)
-                            await demoManager.enableDemoData()
-                        } else {
-                            await cloudSharingManager.fetchExistingShare()
-                        }
+            ContentView()
+                .environment(\.managedObjectContext, persistenceController.viewContext)
+                .environment(\.privateDataManager, privateDataManager)
+                .environment(\.calendarService, calendarService)
+                .environment(\.deepLinkMealSlotId, $deepLinkMealSlotId)
+                .preferredColorScheme(selectedColorScheme)
+                .task {
+                    await initializeDataIfNeeded()
+                    if TableTogetherApp.isScreenshotMode {
+                        let demoManager = DemoDataManager()
+                        demoManager.configure(modelContext: persistenceController.viewContext, privateDataManager: privateDataManager)
+                        await demoManager.enableDemoData()
+                    } else {
+                        await persistenceController.fetchExistingShare()
                     }
-                    .onOpenURL { url in
-                        handleDeepLink(url)
-                    }
-            } else {
-                ModelContainerErrorView(
-                    onRetry: {
-                        // In a real app, we'd need to restart the app
-                        // For now, just show the error
-                    }
-                )
-            }
+                }
+                .onOpenURL { url in
+                    handleDeepLink(url)
+                }
         }
     }
 
@@ -147,22 +80,21 @@ struct TableTogetherApp: App {
 
     /// Initialize default data on first launch
     @MainActor
-    private func initializeDataIfNeeded(container: ModelContainer) async {
-        let context = container.mainContext
+    private func initializeDataIfNeeded() async {
+        let context = persistenceController.viewContext
 
         // Ensure a Household exists first — all new records will be linked to it
         let household = ensureHousehold(context: context)
 
         // Check if archetypes already exist
-        let archetypeDescriptor = FetchDescriptor<MealArchetype>()
-        let existingArchetypes = (try? context.fetch(archetypeDescriptor)) ?? []
+        let archetypeRequest = NSFetchRequest<MealArchetype>(entityName: "MealArchetype")
+        let existingArchetypes = (try? context.fetch(archetypeRequest)) ?? []
 
         if existingArchetypes.isEmpty {
             // Create system archetypes
-            let archetypes = MealArchetype.createSystemArchetypes()
+            let archetypes = MealArchetype.createSystemArchetypes(context: context)
             for archetype in archetypes {
                 archetype.household = household
-                context.insert(archetype)
             }
 
             do {
@@ -177,21 +109,17 @@ struct TableTogetherApp: App {
         let today = Date()
         let weekStart = WeekPlan.normalizeToMonday(today)
 
-        var weekPlanDescriptor = FetchDescriptor<WeekPlan>(
-            predicate: #Predicate<WeekPlan> { plan in
-                plan.weekStartDate == weekStart
-            }
-        )
-        weekPlanDescriptor.fetchLimit = 1
+        let weekPlanRequest = NSFetchRequest<WeekPlan>(entityName: "WeekPlan")
+        weekPlanRequest.predicate = NSPredicate(format: "weekStartDate == %@", weekStart as NSDate)
+        weekPlanRequest.fetchLimit = 1
 
-        let existingPlans = (try? context.fetch(weekPlanDescriptor)) ?? []
+        let existingPlans = (try? context.fetch(weekPlanRequest)) ?? []
 
         if existingPlans.isEmpty {
             // Create current week plan with default slots
-            let weekPlan = WeekPlan(weekStartDate: today)
-            weekPlan.createDefaultSlots(mealTypes: [.breakfast, .lunch, .dinner])
+            let weekPlan = WeekPlan(context: context, weekStartDate: today)
+            weekPlan.createDefaultSlots(context: context, mealTypes: [.breakfast, .lunch, .dinner])
             weekPlan.household = household
-            context.insert(weekPlan)
 
             do {
                 try context.save()
@@ -206,47 +134,46 @@ struct TableTogetherApp: App {
     /// and returns it for use when creating new records.
     @MainActor
     @discardableResult
-    private func ensureHousehold(context: ModelContext) -> Household {
-        let householdDescriptor = FetchDescriptor<Household>()
-        let existingHouseholds = (try? context.fetch(householdDescriptor)) ?? []
+    private func ensureHousehold(context: NSManagedObjectContext) -> Household {
+        let householdRequest = NSFetchRequest<Household>(entityName: "Household")
+        let existingHouseholds = (try? context.fetch(householdRequest)) ?? []
 
         let household: Household
         if let existing = existingHouseholds.first {
             household = existing
         } else {
-            household = Household(name: "My Household")
-            context.insert(household)
+            household = Household(context: context, name: "My Household")
             AppLogger.app.info("Created household")
         }
 
         // Link orphaned top-level records to household
         var linked = 0
 
-        for recipe in (try? context.fetch(FetchDescriptor<Recipe>())) ?? [] where recipe.household == nil {
+        for recipe in (try? context.fetch(NSFetchRequest<Recipe>(entityName: "Recipe"))) ?? [] where recipe.household == nil {
             recipe.household = household
             linked += 1
         }
-        for ingredient in (try? context.fetch(FetchDescriptor<Ingredient>())) ?? [] where ingredient.household == nil {
+        for ingredient in (try? context.fetch(NSFetchRequest<Ingredient>(entityName: "Ingredient"))) ?? [] where ingredient.household == nil {
             ingredient.household = household
             linked += 1
         }
-        for weekPlan in (try? context.fetch(FetchDescriptor<WeekPlan>())) ?? [] where weekPlan.household == nil {
+        for weekPlan in (try? context.fetch(NSFetchRequest<WeekPlan>(entityName: "WeekPlan"))) ?? [] where weekPlan.household == nil {
             weekPlan.household = household
             linked += 1
         }
-        for user in (try? context.fetch(FetchDescriptor<User>())) ?? [] where user.household == nil {
+        for user in (try? context.fetch(NSFetchRequest<User>(entityName: "User"))) ?? [] where user.household == nil {
             user.household = household
             linked += 1
         }
-        for archetype in (try? context.fetch(FetchDescriptor<MealArchetype>())) ?? [] where archetype.household == nil {
+        for archetype in (try? context.fetch(NSFetchRequest<MealArchetype>(entityName: "MealArchetype"))) ?? [] where archetype.household == nil {
             archetype.household = household
             linked += 1
         }
-        for memory in (try? context.fetch(FetchDescriptor<SuggestionMemory>())) ?? [] where memory.household == nil {
+        for memory in (try? context.fetch(NSFetchRequest<SuggestionMemory>(entityName: "SuggestionMemory"))) ?? [] where memory.household == nil {
             memory.household = household
             linked += 1
         }
-        for foodItem in (try? context.fetch(FetchDescriptor<FoodItem>())) ?? [] where foodItem.household == nil {
+        for foodItem in (try? context.fetch(NSFetchRequest<FoodItem>(entityName: "FoodItem"))) ?? [] where foodItem.household == nil {
             foodItem.household = household
             linked += 1
         }
@@ -262,88 +189,6 @@ struct TableTogetherApp: App {
 
         return household
     }
-}
-
-// MARK: - Model Container Error
-
-enum ModelContainerError: Error, LocalizedError {
-    case cloudKitFailed(underlying: Error)
-    case localFailed(underlying: Error)
-    case bothFailed(cloudKit: Error, local: Error)
-
-    var errorDescription: String? {
-        switch self {
-        case .cloudKitFailed(let error):
-            return "iCloud sync unavailable: \(error.localizedDescription)"
-        case .localFailed(let error):
-            return "Local storage failed: \(error.localizedDescription)"
-        case .bothFailed(let cloudKit, let local):
-            return "Storage unavailable. iCloud: \(cloudKit.localizedDescription), Local: \(local.localizedDescription)"
-        }
-    }
-}
-
-// MARK: - Error View
-
-struct ModelContainerErrorView: View {
-    let onRetry: () -> Void
-
-    var body: some View {
-        VStack(spacing: 24) {
-            Image(systemName: "exclamationmark.icloud.fill")
-                .font(.system(size: 64))
-                .foregroundStyle(Theme.Colors.textSecondary)
-
-            Text("Unable to Load Data")
-                .font(Theme.Typography.title2)
-                .foregroundStyle(Theme.Colors.textPrimary)
-
-            Text("TableTogether couldn't access its data storage. This might be due to iCloud being unavailable or a storage issue on your device.")
-                .font(Theme.Typography.body)
-                .foregroundStyle(Theme.Colors.textSecondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 32)
-
-            VStack(spacing: 12) {
-                Text("Try these steps:")
-                    .font(Theme.Typography.headline)
-                    .foregroundStyle(Theme.Colors.textPrimary)
-
-                VStack(alignment: .leading, spacing: 8) {
-                    Label("Check your internet connection", systemImage: "wifi")
-                    Label("Sign in to iCloud in Settings", systemImage: "icloud")
-                    Label("Ensure you have storage space", systemImage: "internaldrive")
-                    Label("Restart the app", systemImage: "arrow.clockwise")
-                }
-                .font(Theme.Typography.subheadline)
-                .foregroundStyle(Theme.Colors.textSecondary)
-            }
-            .padding()
-            #if os(iOS)
-            .background(Color(.secondarySystemBackground))
-            #else
-            .background(Color.secondary.opacity(0.1))
-            #endif
-            .clipShape(RoundedRectangle(cornerRadius: Theme.CornerRadius.standard))
-
-            Button(action: onRetry) {
-                Text("Retry")
-                    .font(Theme.Typography.headline)
-                    .foregroundStyle(.white)
-                    .padding(.horizontal, 32)
-                    .padding(.vertical, 12)
-                    .background(Theme.Colors.primary)
-                    .clipShape(RoundedRectangle(cornerRadius: Theme.CornerRadius.medium))
-            }
-        }
-        .padding()
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Theme.Colors.background)
-    }
-}
-
-#Preview("Error View") {
-    ModelContainerErrorView(onRetry: {})
 }
 
 // MARK: - Deep Link Environment Key
@@ -367,10 +212,9 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         _ application: UIApplication,
         userDidAcceptCloudKitShareWith cloudKitShareMetadata: CKShare.Metadata
     ) {
-        let container = CKContainer(identifier: "iCloud.dev.dreamfold.tabletogether")
         Task {
             do {
-                try await container.accept(cloudKitShareMetadata)
+                try await PersistenceController.shared.acceptShare(metadata: cloudKitShareMetadata)
                 AppLogger.sharing.info("Accepted CloudKit share invitation")
             } catch {
                 AppLogger.sharing.error("Failed to accept CloudKit share: \(error.localizedDescription)")
@@ -386,10 +230,9 @@ class MacAppDelegate: NSObject, NSApplicationDelegate {
         _ application: NSApplication,
         userDidAcceptCloudKitShareWith cloudKitShareMetadata: CKShare.Metadata
     ) {
-        let container = CKContainer(identifier: "iCloud.dev.dreamfold.tabletogether")
         Task {
             do {
-                try await container.accept(cloudKitShareMetadata)
+                try await PersistenceController.shared.acceptShare(metadata: cloudKitShareMetadata)
                 AppLogger.sharing.info("Accepted CloudKit share invitation (macOS)")
             } catch {
                 AppLogger.sharing.error("Failed to accept CloudKit share: \(error.localizedDescription)")

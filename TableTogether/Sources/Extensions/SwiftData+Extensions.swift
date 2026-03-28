@@ -1,9 +1,9 @@
-import SwiftData
+import CoreData
 import Foundation
 
-// MARK: - ModelContext Logging Extensions
+// MARK: - NSManagedObjectContext Logging Extensions
 
-extension ModelContext {
+extension NSManagedObjectContext {
     /// Saves the context with error logging.
     ///
     /// Use this instead of `try? save()` to ensure failures are logged.
@@ -25,15 +25,15 @@ extension ModelContext {
     /// Fetches data with error logging.
     ///
     /// - Parameters:
-    ///   - descriptor: The fetch descriptor
+    ///   - request: The fetch request
     ///   - context: A description of what's being fetched (for logging)
     /// - Returns: The fetched results, or empty array if fetch failed
-    func fetchWithLogging<T: PersistentModel>(
-        _ descriptor: FetchDescriptor<T>,
+    func fetchWithLogging<T: NSManagedObject>(
+        _ request: NSFetchRequest<T>,
         context: String = "data"
     ) -> [T] {
         do {
-            let results = try fetch(descriptor)
+            let results = try fetch(request)
             AppLogger.swiftData.debug("Fetch succeeded: \(context) (\(results.count) items)")
             return results
         } catch {
@@ -49,7 +49,7 @@ extension ModelContext {
     ///   - context: A description of what's being deleted (for logging)
     /// - Returns: `true` if delete and save succeeded, `false` otherwise
     @discardableResult
-    func deleteWithLogging<T: PersistentModel>(_ object: T, context: String = "item") -> Bool {
+    func deleteWithLogging(_ object: NSManagedObject, context: String = "item") -> Bool {
         delete(object)
         return saveWithLogging(context: "delete \(context)")
     }

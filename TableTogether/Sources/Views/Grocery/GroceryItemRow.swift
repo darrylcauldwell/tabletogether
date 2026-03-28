@@ -8,7 +8,7 @@ enum GroceryRowMode {
 
 /// A single grocery item row with checkbox, details, and swipe actions
 struct GroceryItemRow: View {
-    @Bindable var item: GroceryItem
+    @ObservedObject var item: GroceryItem
 
     var displayQuantity: Double? = nil
     var mode: GroceryRowMode = .shopping
@@ -37,7 +37,7 @@ struct GroceryItemRow: View {
 
     /// Source meals for this item
     private var sourceMeals: [MealSlot] {
-        item.sourceSlots
+        item.sourceSlotsArray
     }
 
     /// Whether this item comes from planned meals
@@ -290,8 +290,8 @@ struct GroceryItemRow: View {
                         Text(slotDescription(slot))
                             .font(.subheadline)
 
-                        if !slot.recipes.isEmpty {
-                            Text(slot.recipes.map(\.title).joined(separator: ", "))
+                        if !slot.recipesArray.isEmpty {
+                            Text(slot.recipesArray.map(\.title).joined(separator: ", "))
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                         } else if let customName = slot.customMealName {
@@ -319,7 +319,7 @@ struct GroceryItemRow: View {
 /// Sheet for editing a grocery item's details
 struct EditGroceryItemView: View {
     @Environment(\.dismiss) private var dismiss
-    @Bindable var item: GroceryItem
+    @ObservedObject var item: GroceryItem
 
     @State private var itemName: String = ""
     @State private var quantity: Double = 1

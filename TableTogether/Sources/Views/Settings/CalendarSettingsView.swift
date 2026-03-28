@@ -1,5 +1,5 @@
 import SwiftUI
-import SwiftData
+import CoreData
 import EventKit
 
 /// Settings view for configuring calendar sync.
@@ -12,7 +12,7 @@ import EventKit
 /// - Manually sync or clear events
 struct CalendarSettingsView: View {
     @Environment(\.calendarService) private var calendarService
-    @Environment(\.modelContext) private var modelContext
+    @Environment(\.managedObjectContext) private var viewContext
 
     @State private var showingCalendarPicker = false
     @State private var showingClearConfirmation = false
@@ -246,8 +246,8 @@ struct CalendarSettingsView: View {
         let weekStart = WeekPlan.normalizeToMonday(today)
 
         do {
-            let descriptor = FetchDescriptor<WeekPlan>()
-            let allPlans = try modelContext.fetch(descriptor)
+            let request = NSFetchRequest<WeekPlan>(entityName: "WeekPlan")
+            let allPlans = try viewContext.fetch(request)
             let plans = allPlans.filter { Calendar.current.isDate($0.weekStartDate, inSameDayAs: weekStart) }
 
             if let weekPlan = plans.first {

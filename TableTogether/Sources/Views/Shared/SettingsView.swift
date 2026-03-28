@@ -1,5 +1,5 @@
 import SwiftUI
-import SwiftData
+import CoreData
 import CloudKit
 
 // MARK: - App URLs
@@ -12,14 +12,13 @@ private enum AppURLs {
 }
 
 struct SettingsView: View {
-    @Environment(\.modelContext) private var modelContext
+    @Environment(\.managedObjectContext) private var viewContext
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.sharingCoordinator) private var sharingCoordinator
     @Environment(\.privateDataManager) private var privateDataManager
     @Environment(\.calendarService) private var calendarService
-    @Environment(\.cloudSharingManager) private var cloudSharingManager
+    private var persistenceController: PersistenceController { PersistenceController.shared }
 
-    @Query private var users: [User]
+    @FetchRequest(sortDescriptors: []) private var users: FetchedResults<User>
 
     @AppStorage("appearanceMode") private var appearanceMode: Int = AppearanceMode.system.rawValue
 
@@ -35,7 +34,7 @@ struct SettingsView: View {
     @State private var healthService = HealthKitService.shared
 
     @State private var showingPaprikaFilePicker = false
-    @Query private var households: [Household]
+    @FetchRequest(sortDescriptors: []) private var households: FetchedResults<Household>
 
     private var selectedAppearanceMode: AppearanceMode {
         AppearanceMode(rawValue: appearanceMode) ?? .system
@@ -71,16 +70,14 @@ struct SettingsView: View {
                 // MARK: - Household Section
                 Section {
                     // Sharing status
-                    if let manager = cloudSharingManager {
-                        if manager.isSharing {
-                            HStack {
-                                Image(systemName: "checkmark.icloud.fill")
-                                    .foregroundStyle(.green)
-                                Text("Sharing active")
-                                Spacer()
-                                Text("\(manager.participantCount) people")
-                                    .foregroundStyle(Theme.Colors.textSecondary)
-                            }
+                    if persistenceController.isSharing {
+                        HStack {
+                            Image(systemName: "checkmark.icloud.fill")
+                                .foregroundStyle(.green)
+                            Text("Sharing active")
+                            Spacer()
+                            Text("\(persistenceController.participantCount) people")
+                                .foregroundStyle(Theme.Colors.textSecondary)
                         }
                     }
 
@@ -108,7 +105,7 @@ struct SettingsView: View {
                     Button {
                         Task { await prepareSharingSheet() }
                     } label: {
-                        if cloudSharingManager?.isSharing == true {
+                        if persistenceController.isSharing {
                             Label("Manage Sharing", systemImage: "person.2.fill")
                         } else {
                             Label("Share Household", systemImage: "person.badge.plus")
@@ -196,7 +193,7 @@ struct SettingsView: View {
 
                 // MARK: - Data Section
                 Section("Data") {
-                    SyncStatusRow(coordinator: sharingCoordinator)
+                    SyncStatusRow()
 
                     DemoDataToggleRow(
                         demoDataManager: demoDataManager,
@@ -265,12 +262,13 @@ struct SettingsView: View {
             }
             #if os(iOS)
             .sheet(isPresented: $showingSharingSheet) {
-                if let share = sharingShare, let manager = cloudSharingManager {
+                if let share = sharingShare {
                     CloudSharingSheet(
                         share: share,
-                        container: manager.ckContainer,
+                        container: persistenceController.ckContainer,
+                        persistenceController: persistenceController,
                         onDismiss: {
-                            Task { await manager.fetchExistingShare() }
+                            Task { await persistenceController.fetchExistingShare() }
                         }
                     )
                 }
@@ -283,8 +281,8 @@ struct SettingsView: View {
             ) {
                 Button("Remove", role: .destructive) {
                     if let user = contactToRemove {
-                        modelContext.delete(user)
-                        modelContext.saveWithLogging(context: "remove trusted contact")
+                        viewContext.delete(user)
+                        viewContext.saveWithLogging(context: "remove trusted contact")
                     }
                     contactToRemove = nil
                 }
@@ -321,7 +319,7 @@ struct SettingsView: View {
                         Task {
                             await paprikaImporter.importRecipes(
                                 from: url,
-                                context: modelContext,
+                                context: viewContext,
                                 household: households.first
                             )
                         }
@@ -332,7 +330,7 @@ struct SettingsView: View {
             }
             .onAppear {
                 demoDataManager.configure(
-                    modelContext: modelContext,
+                    modelContext: viewContext,
                     privateDataManager: privateDataManager
                 )
             }
@@ -343,13 +341,11 @@ struct SettingsView: View {
 
     #if os(iOS)
     private func prepareSharingSheet() async {
-        guard let manager = cloudSharingManager else { return }
-
         do {
-            if let existing = manager.existingShare {
+            if let existing = persistenceController.existingShare {
                 sharingShare = existing
-            } else {
-                sharingShare = try await manager.createShare()
+            } else if let household = households.first {
+                sharingShare = try await persistenceController.shareHousehold(household)
             }
             showingSharingSheet = true
         } catch {
@@ -361,5 +357,5 @@ struct SettingsView: View {
 
 #Preview {
     SettingsView()
-        .modelContainer(for: User.self, inMemory: true)
+        .environment(\.managedObjectContext, PersistenceController.preview.viewContext)
 }

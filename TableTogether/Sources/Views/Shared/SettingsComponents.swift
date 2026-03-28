@@ -1,5 +1,5 @@
 import SwiftUI
-import SwiftData
+import CoreData
 import CloudKit
 
 // MARK: - Macro Goals Editor
@@ -533,42 +533,19 @@ struct HealthKitSettingsRow: View {
 // MARK: - Sync Status Row
 
 struct SyncStatusRow: View {
-    let coordinator: SharingCoordinator?
-
-    private var syncStatus: SyncStatus {
-        coordinator?.syncStatus ?? .offline
-    }
-
-    private var statusColor: Color {
-        switch syncStatus {
-        case .synced: return .green
-        case .syncing: return .blue
-        case .offline: return .orange
-        case .error: return .red
-        }
-    }
+    private let persistenceController = PersistenceController.shared
 
     var body: some View {
         HStack {
             Text("iCloud Sync")
             Spacer()
 
-            if syncStatus == .syncing {
-                ProgressView()
-                    .scaleEffect(0.8)
-                    .padding(.trailing, 4)
-            } else {
-                Image(systemName: syncStatus.iconName)
-                    .foregroundStyle(statusColor)
-            }
+            Image(systemName: persistenceController.isSharing ? "checkmark.icloud" : "icloud")
+                .foregroundStyle(persistenceController.isSharing ? .green : Theme.Colors.textSecondary)
 
-            Text(syncStatus.displayName)
+            Text(persistenceController.isSharing ? "Connected" : "Not Sharing")
                 .font(.subheadline)
                 .foregroundStyle(Theme.Colors.textSecondary)
-        }
-        .contentShape(Rectangle())
-        .onTapGesture {
-            coordinator?.refreshSync()
         }
     }
 }
@@ -597,7 +574,7 @@ struct DefaultArchetypesView: View {
 }
 
 struct IngredientDatabaseView: View {
-    @Query private var ingredients: [Ingredient]
+    @FetchRequest(sortDescriptors: []) private var ingredients: FetchedResults<Ingredient>
 
     var body: some View {
         List {

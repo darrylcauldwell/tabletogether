@@ -33,14 +33,14 @@ struct RecipeView: View {
     }
 
     private var totalSteps: Int {
-        recipe.instructions.count
+        recipe.instructionsList.count
     }
 
     private var currentInstruction: String {
-        guard currentStep < recipe.instructions.count else {
+        guard currentStep < recipe.instructionsList.count else {
             return "You're done! Enjoy your meal."
         }
-        return recipe.instructions[currentStep]
+        return recipe.instructionsList[currentStep]
     }
 
     private var isFirstStep: Bool { currentStep == 0 }

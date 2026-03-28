@@ -13,6 +13,7 @@ import UIKit
 struct CloudSharingSheet: UIViewControllerRepresentable {
     let share: CKShare
     let container: CKContainer
+    let persistenceController: PersistenceController
     var onDismiss: (() -> Void)?
 
     func makeUIViewController(context: Context) -> UICloudSharingController {
@@ -25,22 +26,31 @@ struct CloudSharingSheet: UIViewControllerRepresentable {
     func updateUIViewController(_ uiViewController: UICloudSharingController, context: Context) {}
 
     func makeCoordinator() -> Coordinator {
-        Coordinator(onDismiss: onDismiss)
+        Coordinator(persistenceController: persistenceController, onDismiss: onDismiss)
     }
 
     final class Coordinator: NSObject, UICloudSharingControllerDelegate {
+        let persistenceController: PersistenceController
         let onDismiss: (() -> Void)?
 
-        init(onDismiss: (() -> Void)?) {
+        init(persistenceController: PersistenceController, onDismiss: (() -> Void)?) {
+            self.persistenceController = persistenceController
             self.onDismiss = onDismiss
         }
 
         func cloudSharingControllerDidSaveShare(_ csc: UICloudSharingController) {
             AppLogger.sharing.info("Share saved successfully")
+            // Refresh share state
+            Task {
+                await persistenceController.fetchExistingShare()
+            }
         }
 
         func cloudSharingControllerDidStopSharing(_ csc: UICloudSharingController) {
             AppLogger.sharing.info("Sharing stopped")
+            Task {
+                await persistenceController.fetchExistingShare()
+            }
             onDismiss?()
         }
 

@@ -1,9 +1,9 @@
 import SwiftUI
-import SwiftData
+import CoreData
 
 /// Sheet view for manually adding a new grocery item
 struct AddGroceryItemView: View {
-    @Environment(\.modelContext) private var modelContext
+    @Environment(\.managedObjectContext) private var viewContext
     @Environment(\.dismiss) private var dismiss
 
     let weekPlan: WeekPlan?
@@ -14,7 +14,7 @@ struct AddGroceryItemView: View {
     @State private var selectedCategory: IngredientCategory = .other
     @State private var searchText = ""
 
-    @Query private var ingredients: [Ingredient]
+    @FetchRequest(sortDescriptors: []) private var ingredients: FetchedResults<Ingredient>
 
     /// Filtered ingredients based on search
     private var filteredIngredients: [Ingredient] {
@@ -206,6 +206,7 @@ struct AddGroceryItemView: View {
         let matchingIngredient = ingredients.first { $0.normalizedName == trimmedName.lowercased() }
 
         let newItem = GroceryItem.create(
+            context: viewContext,
             ingredient: matchingIngredient,
             customName: matchingIngredient == nil ? trimmedName : nil,
             quantity: quantity,
@@ -214,8 +215,7 @@ struct AddGroceryItemView: View {
             weekPlan: weekPlan
         )
 
-        modelContext.insert(newItem)
-        weekPlan.groceryItems.append(newItem)
+        weekPlan.addToGroceryItems(newItem)
         dismiss()
     }
 }
@@ -255,6 +255,7 @@ struct CategoryChip: View {
 extension GroceryItem {
     /// Factory method for creating grocery items with ingredient or custom name
     static func create(
+        context: NSManagedObjectContext,
         ingredient: Ingredient? = nil,
         customName: String? = nil,
         quantity: Double,
@@ -264,6 +265,7 @@ extension GroceryItem {
     ) -> GroceryItem {
         if let ingredient = ingredient {
             let item = GroceryItem(
+                context: context,
                 ingredient: ingredient,
                 quantity: quantity,
                 unit: unit,
@@ -274,6 +276,7 @@ extension GroceryItem {
             return item
         } else {
             let item = GroceryItem(
+                context: context,
                 customName: customName ?? "Unknown Item",
                 quantity: quantity,
                 unit: unit,
@@ -289,5 +292,5 @@ extension GroceryItem {
 
 #Preview {
     AddGroceryItemView(weekPlan: nil)
-        .modelContainer(for: [Ingredient.self, GroceryItem.self], inMemory: true)
+        .environment(\.managedObjectContext, PersistenceController.preview.viewContext)
 }

@@ -1,5 +1,5 @@
 import SwiftUI
-import SwiftData
+import CoreData
 import HealthKit
 
 /// Entry mode for the meal log sheet
@@ -15,15 +15,15 @@ enum LogEntryMode: Hashable {
 /// Note: Meal logs are stored in CloudKit private database, never shared.
 /// If connected to Apple Health, nutrition data is also written to HealthKit.
 struct QuickLogSheet: View {
-    @Environment(\.modelContext) private var modelContext
+    @Environment(\.managedObjectContext) private var viewContext
     @Environment(\.privateDataManager) private var privateDataManager
     @Environment(\.dismiss) private var dismiss
     @State private var healthService = HealthKitService.shared
     @State private var estimator = MealEstimatorService()
 
-    @Query private var recipes: [Recipe]
-    @Query private var mealSlots: [MealSlot]
-    @Query private var users: [User]
+    @FetchRequest(sortDescriptors: []) private var recipes: FetchedResults<Recipe>
+    @FetchRequest(sortDescriptors: []) private var mealSlots: FetchedResults<MealSlot>
+    @FetchRequest(sortDescriptors: []) private var users: FetchedResults<User>
 
     @State private var selectedMealType: MealType = .dinner
     @State private var searchText = ""
@@ -59,13 +59,13 @@ struct QuickLogSheet: View {
         var results: [(slot: MealSlot, recipe: Recipe)] = []
         for slot in mealSlots {
             guard slot.isPlanned,
-                  slot.assignedTo.contains(where: { $0.id == user.id }),
+                  slot.assignedToArray.contains(where: { $0.id == user.id }),
                   let weekPlan = slot.weekPlan else { continue }
 
             let slotDate = weekPlan.date(for: slot.dayOfWeek)
             guard calendar.startOfDay(for: slotDate) == today else { continue }
 
-            for recipe in slot.recipes {
+            for recipe in slot.recipesArray {
                 results.append((slot: slot, recipe: recipe))
             }
         }
@@ -156,7 +156,7 @@ struct QuickLogSheet: View {
                                             withAnimation(.easeInOut(duration: 0.2)) {
                                                 selectedRecipe = item.recipe
                                                 selectedMealType = item.slot.mealType
-                                                let assignedCount = max(item.slot.assignedTo.count, 1)
+                                                let assignedCount = max(item.slot.assignedToArray.count, 1)
                                                 servingsConsumed = Double(item.slot.servingsPlanned) / Double(assignedCount)
                                             }
                                         } label: {
@@ -824,5 +824,5 @@ struct DoubleServingsAdjuster: View {
 
 #Preview {
     QuickLogSheet()
-        .modelContainer(for: [Recipe.self], inMemory: true)
+        .environment(\.managedObjectContext, PersistenceController.preview.viewContext)
 }

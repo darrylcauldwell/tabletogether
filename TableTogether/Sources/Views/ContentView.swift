@@ -1,11 +1,11 @@
 import SwiftUI
-import SwiftData
+import CoreData
 
 struct ContentView: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
-    @Environment(\.modelContext) private var modelContext
-    @Query private var users: [User]
-    @Query private var households: [Household]
+    @Environment(\.managedObjectContext) private var viewContext
+    @FetchRequest(sortDescriptors: []) private var users: FetchedResults<User>
+    @FetchRequest(sortDescriptors: []) private var households: FetchedResults<Household>
 
     var body: some View {
         Group {
@@ -25,22 +25,20 @@ struct ContentView: View {
         guard users.isEmpty else { return }
 
         let household = households.first
-        let user = User(displayName: "Me", avatarEmoji: "", avatarColorHex: "34C759")
+        let user = User(context: viewContext, displayName: "Me", avatarEmoji: "", avatarColorHex: "34C759")
         user.household = household
-        modelContext.insert(user)
 
         // Archetypes are created by TableTogetherApp, but ensure they exist
-        let archetypeDescriptor = FetchDescriptor<MealArchetype>()
-        let existingArchetypes = (try? modelContext.fetch(archetypeDescriptor)) ?? []
+        let archetypeRequest = NSFetchRequest<MealArchetype>(entityName: "MealArchetype")
+        let existingArchetypes = (try? viewContext.fetch(archetypeRequest)) ?? []
         if existingArchetypes.isEmpty {
             for archetypeType in ArchetypeType.allCases {
-                let archetype = MealArchetype(systemType: archetypeType)
+                let archetype = MealArchetype(context: viewContext, systemType: archetypeType)
                 archetype.household = household
-                modelContext.insert(archetype)
             }
         }
 
-        try? modelContext.save()
+        try? viewContext.save()
     }
 }
 
@@ -301,11 +299,11 @@ enum SidebarSection: Hashable {
 #Preview("iPhone") {
     ContentView()
         .environment(\.horizontalSizeClass, .compact)
-        .modelContainer(for: [User.self, WeekPlan.self, Recipe.self, MealSlot.self, GroceryItem.self, MealArchetype.self], inMemory: true)
+        .environment(\.managedObjectContext, PersistenceController.preview.viewContext)
 }
 
 #Preview("iPad") {
     ContentView()
         .environment(\.horizontalSizeClass, .regular)
-        .modelContainer(for: [User.self, WeekPlan.self, Recipe.self, MealSlot.self, GroceryItem.self, MealArchetype.self], inMemory: true)
+        .environment(\.managedObjectContext, PersistenceController.preview.viewContext)
 }

@@ -1,5 +1,5 @@
 import SwiftUI
-import SwiftData
+import CoreData
 
 // MARK: - Date Range Preset
 
@@ -30,9 +30,9 @@ func sundayOfCurrentWeek() -> Date {
 /// Users mark items they already have at home. Remaining items flow to the shopping list.
 /// Supports date range selection to aggregate ingredients across multiple week plans.
 struct PantryCheckView: View {
-    @Environment(\.modelContext) private var modelContext
+    @Environment(\.managedObjectContext) private var viewContext
 
-    @Query private var weekPlans: [WeekPlan]
+    @FetchRequest(sortDescriptors: []) private var weekPlans: FetchedResults<WeekPlan>
 
     @AppStorage("groceryDatePreset") private var presetStorage: String = DateRangePreset.thisWeek.rawValue
     @State private var startDate: Date = mondayOfCurrentWeek()
@@ -135,7 +135,7 @@ struct PantryCheckView: View {
     /// Whether any relevant week plans have recipes planned
     private var hasPlannedRecipes: Bool {
         relevantWeekPlans.contains { plan in
-            plan.slots.contains { !$0.recipes.isEmpty }
+            plan.slotsArray.contains { !$0.recipesArray.isEmpty }
         }
     }
 
@@ -410,44 +410,44 @@ struct PantryCheckView: View {
     private func generateForNewPlans() {
         var generated = false
         for plan in relevantWeekPlans {
-            let hasDerivedItems = plan.groceryItems.contains { !$0.isManuallyAdded }
-            let hasRecipes = plan.slots.contains { !$0.recipes.isEmpty }
+            let hasDerivedItems = plan.groceryItemsArray.contains { !$0.isManuallyAdded }
+            let hasRecipes = plan.slotsArray.contains { !$0.recipesArray.isEmpty }
             if !hasDerivedItems && hasRecipes {
-                plan.generateGroceryList()
+                plan.generateGroceryList(context: viewContext)
                 generated = true
             }
         }
         if generated {
             if let plan = relevantWeekPlans.first {
-                plan.cleanupOrphanedGroceryItems(context: modelContext)
+                plan.cleanupOrphanedGroceryItems(context: viewContext)
             }
-            modelContext.saveWithLogging(context: "auto-generate for new week plans")
+            viewContext.saveWithLogging(context: "auto-generate for new week plans")
         }
     }
 
     private func generatePantryList() {
         for plan in relevantWeekPlans {
-            if plan.groceryItems.filter({ !$0.isManuallyAdded }).isEmpty {
-                plan.generateGroceryList()
+            if plan.groceryItemsArray.filter({ !$0.isManuallyAdded }).isEmpty {
+                plan.generateGroceryList(context: viewContext)
             }
         }
         if let plan = relevantWeekPlans.first {
-            plan.cleanupOrphanedGroceryItems(context: modelContext)
+            plan.cleanupOrphanedGroceryItems(context: viewContext)
         }
-        modelContext.saveWithLogging(context: "pantry list generation")
+        viewContext.saveWithLogging(context: "pantry list generation")
         pantryCheckComplete = false
         hasSeenPantryHint = false
     }
 
     private func regenerateAllLists() {
         for plan in relevantWeekPlans {
-            plan.generateGroceryList()
+            plan.generateGroceryList(context: viewContext)
         }
         // Clean up orphaned items left behind by the in-place update strategy
         if let plan = relevantWeekPlans.first {
-            plan.cleanupOrphanedGroceryItems(context: modelContext)
+            plan.cleanupOrphanedGroceryItems(context: viewContext)
         }
-        modelContext.saveWithLogging(context: "pantry list regeneration")
+        viewContext.saveWithLogging(context: "pantry list regeneration")
         pantryCheckComplete = false
     }
 
@@ -486,7 +486,7 @@ struct PantryCheckView: View {
         withAnimation {
             let group = itemGroupMap[item.id] ?? [item]
             for groupItem in group {
-                modelContext.delete(groupItem)
+                viewContext.delete(groupItem)
             }
         }
     }
@@ -658,5 +658,5 @@ private struct PantryDateRangeHeader: View {
     NavigationStack {
         PantryCheckView()
     }
-    .modelContainer(for: [WeekPlan.self, GroceryItem.self, Ingredient.self], inMemory: true)
+    .environment(\.managedObjectContext, PersistenceController.preview.viewContext)
 }

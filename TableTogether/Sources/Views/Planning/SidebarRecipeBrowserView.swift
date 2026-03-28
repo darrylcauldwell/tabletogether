@@ -1,17 +1,17 @@
 import SwiftUI
-import SwiftData
+import CoreData
 
 /// Sidebar recipe browser for iPad, showing a searchable, draggable list of recipes.
 /// Displayed when the user toggles the sidebar to "Recipes" mode while on the Plan section.
 struct SidebarRecipeBrowserView: View {
     @Binding var sidebarMode: SidebarMode
-    @Query(sort: \Recipe.title) private var recipes: [Recipe]
+    @FetchRequest(sortDescriptors: [SortDescriptor(\.title)]) private var recipes: FetchedResults<Recipe>
 
     @State private var searchText: String = ""
     @State private var selectedArchetype: ArchetypeType?
 
     private var filteredRecipes: [Recipe] {
-        var result = recipes
+        var result = Array(recipes)
 
         if !searchText.isEmpty {
             result = result.filter { $0.title.localizedCaseInsensitiveContains(searchText) }
@@ -161,5 +161,5 @@ struct SidebarRecipeRow: View {
 #Preview {
     SidebarRecipeBrowserView(sidebarMode: .constant(.recipeBrowser))
         .frame(width: 300)
-        .modelContainer(for: [Recipe.self, MealArchetype.self], inMemory: true)
+        .environment(\.managedObjectContext, PersistenceController.preview.viewContext)
 }

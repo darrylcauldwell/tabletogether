@@ -1,5 +1,5 @@
 import SwiftUI
-import SwiftData
+import CoreData
 import os.log
 
 // MARK: - TableTogether tvOS App
@@ -32,7 +32,7 @@ private let isDemoDataEnabled: Bool = UserDefaults.standard.bool(forKey: "isDemo
 
 @main
 struct TableTogetherTVApp: App {
-    private let modelContainer: ModelContainer?
+    private let persistenceController = PersistenceController.shared
 
     @State private var selectedTab: TVTab = {
         // Set initial tab from screenshot argument if provided
@@ -48,72 +48,18 @@ struct TableTogetherTVApp: App {
         return .today
     }()
 
-    init() {
-        // Shared schema with iOS app (read-only access)
-        // Note: MealLog and personal data are NOT included
-        let schema = Schema([
-            Household.self,
-            Ingredient.self,
-            RecipeIngredient.self,
-            Recipe.self,
-            MealArchetype.self,
-            MealSlot.self,
-            WeekPlan.self,
-            User.self,
-            GroceryItem.self,
-            SuggestionMemory.self
-        ])
-
-        // Connect to the same iCloud container as iOS
-        let cloudKitConfig = ModelConfiguration(
-            schema: schema,
-            isStoredInMemoryOnly: false,
-            cloudKitDatabase: .automatic
-        )
-
-        do {
-            self.modelContainer = try ModelContainer(
-                for: schema,
-                configurations: [cloudKitConfig]
-            )
-        } catch {
-            // Fallback to local-only if CloudKit unavailable
-            AppLogger.cloudKit.error("CloudKit unavailable, using local storage: \(error)")
-
-            let localConfig = ModelConfiguration(
-                schema: schema,
-                isStoredInMemoryOnly: false,
-                cloudKitDatabase: .none
-            )
-
-            do {
-                self.modelContainer = try ModelContainer(
-                    for: schema,
-                    configurations: [localConfig]
-                )
-            } catch {
-                AppLogger.swiftData.error("Failed to create model container: \(error)")
-                self.modelContainer = nil
-            }
-        }
-    }
-
     var body: some Scene {
         WindowGroup {
-            if let container = modelContainer {
-                TVContentView(selectedTab: $selectedTab)
-                    .modelContainer(container)
-                    .onAppear {
-                        // Seed demo data for screenshots if enabled
-                        if isDemoDataEnabled || isScreenshotMode {
-                            Task { @MainActor in
-                                TVDemoDataSeeder.seedDemoData(into: container.mainContext)
-                            }
+            TVContentView(selectedTab: $selectedTab)
+                .environment(\.managedObjectContext, persistenceController.viewContext)
+                .onAppear {
+                    // Seed demo data for screenshots if enabled
+                    if isDemoDataEnabled || isScreenshotMode {
+                        Task { @MainActor in
+                            TVDemoDataSeeder.seedDemoData(into: persistenceController.viewContext)
                         }
                     }
-            } else {
-                TVErrorView()
-            }
+                }
         }
     }
 }
@@ -179,7 +125,7 @@ struct TVContentView: View {
 // MARK: - Week View
 
 struct WeekView: View {
-    @Environment(\.modelContext) private var modelContext
+    @Environment(\.managedObjectContext) private var viewContext
     @State private var weekPlan: WeekPlan?
 
     private var days: [DayOfWeek] {
@@ -207,14 +153,11 @@ struct WeekView: View {
     private func loadWeekPlan() {
         let weekStart = WeekPlan.normalizeToMonday(Date())
 
-        let descriptor = FetchDescriptor<WeekPlan>(
-            predicate: #Predicate<WeekPlan> { plan in
-                plan.weekStartDate == weekStart
-            }
-        )
+        let request = NSFetchRequest<WeekPlan>(entityName: "WeekPlan")
+        request.predicate = NSPredicate(format: "weekStartDate == %@", weekStart as NSDate)
 
         do {
-            let plans = try modelContext.fetch(descriptor)
+            let plans = try viewContext.fetch(request)
             weekPlan = plans.first
         } catch {
             AppLogger.swiftData.error("Error loading week plan: \(error)")
@@ -277,7 +220,8 @@ struct DayColumn: View {
 // MARK: - Recipe Browser View
 
 struct RecipeBrowserView: View {
-    @Query(sort: \Recipe.title) private var recipes: [Recipe]
+    @FetchRequest(sortDescriptors: [NSSortDescriptor(keyPath: \Recipe.title, ascending: true)])
+    private var recipes: FetchedResults<Recipe>
     @State private var selectedRecipe: Recipe?
     @State private var showingRecipeDetail = false
 
@@ -416,4 +360,5 @@ struct TVErrorView: View {
 
 #Preview("TV Content") {
     TVContentView(selectedTab: .constant(.today))
+        .environment(\.managedObjectContext, PersistenceController.preview.viewContext)
 }

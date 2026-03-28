@@ -434,38 +434,18 @@ struct ServingsAdjuster: View {
 
 // MARK: - Sync Status Indicator
 
-/// A small indicator showing the current sync status
+/// A small indicator showing CloudKit sync status
 struct SyncStatusIndicator: View {
-    let status: SyncStatus
+    let isSharing: Bool
 
     var body: some View {
         HStack(spacing: 6) {
-            Image(systemName: status.iconName)
+            Image(systemName: isSharing ? "checkmark.icloud" : "icloud")
                 .font(.caption)
-                .foregroundStyle(iconColor)
-                .symbolEffect(.pulse, options: .repeating, isActive: status == .syncing)
-
-            if status != .synced {
-                Text(status.displayName)
-                    .font(.caption)
-                    .foregroundStyle(Theme.Colors.textSecondary)
-            }
+                .foregroundStyle(isSharing ? .green.opacity(0.8) : Theme.Colors.textSecondary)
         }
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("Sync status: \(status.displayName)")
-    }
-
-    private var iconColor: Color {
-        switch status {
-        case .synced:
-            return .green.opacity(0.8)
-        case .syncing:
-            return Theme.Colors.primary
-        case .offline:
-            return Theme.Colors.textSecondary
-        case .error:
-            return .orange
-        }
+        .accessibilityLabel("Sync status: \(isSharing ? "Connected" : "Not sharing")")
     }
 }
 

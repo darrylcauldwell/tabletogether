@@ -1,12 +1,12 @@
 import SwiftUI
-import SwiftData
+import CoreData
 
 // MARK: - MealSlotView
 
 /// Individual meal slot showing archetype badge, recipe card, and assigned users.
 /// Supports drop destination for drag and drop recipe assignment.
 struct MealSlotView: View {
-    @Bindable var slot: MealSlot
+    @ObservedObject var slot: MealSlot
     let isCompact: Bool
     let onTapped: () -> Void
     let onRecipeDropped: (String) -> Void  // Receives recipe UUID string
@@ -54,8 +54,8 @@ struct MealSlotView: View {
             )
 
             // Assigned users row
-            if !slot.assignedTo.isEmpty {
-                AssignedUsersRow(users: slot.assignedTo, isCompact: isCompact)
+            if !slot.assignedToArray.isEmpty {
+                AssignedUsersRow(users: slot.assignedToArray, isCompact: isCompact)
             }
         }
         .padding(isCompact ? 12 : 8)
@@ -78,7 +78,7 @@ struct MealSlotView: View {
         }
         #endif
         .onTapGesture {
-            if slot.recipes.isEmpty && slot.customMealName == nil {
+            if slot.recipesArray.isEmpty && slot.customMealName == nil {
                 showingRecipePicker = true
             } else {
                 showingSlotEditor = true
@@ -99,8 +99,8 @@ struct MealSlotView: View {
         var parts: [String] = []
         parts.append("\(slot.mealType.displayName) on \(slot.dayOfWeek.displayName)")
 
-        if !slot.recipes.isEmpty {
-            parts.append(slot.recipes.map(\.title).joined(separator: " and "))
+        if !slot.recipesArray.isEmpty {
+            parts.append(slot.recipesArray.map(\.title).joined(separator: " and "))
         } else if let customName = slot.customMealName {
             parts.append(customName)
         } else {
@@ -111,8 +111,8 @@ struct MealSlotView: View {
             parts.append(archetype.name)
         }
 
-        if !slot.assignedTo.isEmpty {
-            let names = slot.assignedTo.prefix(3).map { $0.displayName }.joined(separator: ", ")
+        if !slot.assignedToArray.isEmpty {
+            let names = slot.assignedToArray.prefix(3).map { $0.displayName }.joined(separator: ", ")
             parts.append("Assigned to \(names)")
         }
 
@@ -120,14 +120,14 @@ struct MealSlotView: View {
     }
 
     private var slotAccessibilityHint: String {
-        if slot.recipes.isEmpty && slot.customMealName == nil {
+        if slot.recipesArray.isEmpty && slot.customMealName == nil {
             return "Double tap to add a meal"
         }
         return "Double tap to edit"
     }
 
     private var hasContent: Bool {
-        !slot.recipes.isEmpty || slot.customMealName != nil
+        !slot.recipesArray.isEmpty || slot.customMealName != nil
     }
 
     private var slotBorderColor: Color {
@@ -182,7 +182,9 @@ private struct MealSlotViewPreview: View {
             }
         }
         .task {
+            let context = PersistenceController.preview.viewContext
             slot = MealSlot(
+                context: context,
                 dayOfWeek: .monday,
                 mealType: .dinner,
                 servingsPlanned: 4
@@ -193,5 +195,5 @@ private struct MealSlotViewPreview: View {
 
 #Preview {
     MealSlotViewPreview()
-        .modelContainer(for: [MealSlot.self, WeekPlan.self, Recipe.self, User.self, MealArchetype.self], inMemory: true)
+        .environment(\.managedObjectContext, PersistenceController.preview.viewContext)
 }

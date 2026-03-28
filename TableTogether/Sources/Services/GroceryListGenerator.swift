@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import CoreData
 import Observation
 
 // MARK: - Grocery List Generator
@@ -26,22 +27,22 @@ final class GroceryListGenerator {
     ///
     /// - Parameter weekPlan: The week plan to generate the grocery list from
     /// - Returns: An array of `GroceryItem` objects grouped by category
-    func generateGroceryList(from weekPlan: WeekPlan) -> [GroceryItem] {
+    func generateGroceryList(from weekPlan: WeekPlan, context: NSManagedObjectContext) -> [GroceryItem] {
         // Collect all recipe ingredients from planned slots
         var ingredientAggregation: [UUID: IngredientAggregation] = [:]
 
-        for slot in weekPlan.slots {
+        for slot in weekPlan.slotsArray {
             // Skip slots without recipes or that are explicitly skipped
-            guard !slot.isSkipped, !slot.recipes.isEmpty else {
+            guard !slot.isSkipped, !slot.recipesArray.isEmpty else {
                 continue
             }
 
-            for recipe in slot.recipes {
+            for recipe in slot.recipesArray {
                 // Calculate serving multiplier
                 let servingMultiplier = Double(slot.servingsPlanned) / Double(max(recipe.servings, 1))
 
                 // Process each recipe ingredient
-                for recipeIngredient in recipe.recipeIngredients {
+                for recipeIngredient in recipe.recipeIngredientsArray {
                     // Skip if ingredient is nil
                     guard let ingredient = recipeIngredient.ingredient else { continue }
 
@@ -69,13 +70,14 @@ final class GroceryListGenerator {
         // Convert aggregations to GroceryItems
         var groceryItems = ingredientAggregation.values.map { aggregation -> GroceryItem in
             let item = GroceryItem(
+                context: context,
                 ingredient: aggregation.ingredient,
                 quantity: aggregation.totalQuantity,
                 unit: aggregation.unit,
                 weekPlan: weekPlan
             )
             // Add source slots for tracking which meals need this item
-            item.sourceSlots = aggregation.sourceSlots
+            item.sourceSlots = NSSet(array: aggregation.sourceSlots)
             return item
         }
 

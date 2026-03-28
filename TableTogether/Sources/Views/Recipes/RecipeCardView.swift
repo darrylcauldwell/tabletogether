@@ -1,5 +1,5 @@
 import SwiftUI
-import SwiftData
+import CoreData
 
 /// A card view displaying a recipe preview with image, title, archetypes, and time estimate.
 /// Used in both grid and list layouts within RecipeLibraryView.
@@ -37,7 +37,7 @@ struct RecipeCardView: View {
             parts.append(time)
         }
 
-        parts.append("\(recipe.servings) servings")
+        parts.append("\(Int(recipe.servings)) servings")
 
         if !recipe.suggestedArchetypes.isEmpty {
             let archetypes = recipe.suggestedArchetypes.prefix(2).map { $0.displayName }.joined(separator: " and ")
@@ -155,7 +155,7 @@ struct RecipeCardView: View {
                     HStack(spacing: 4) {
                         Image(systemName: "person.2")
                             .font(.caption2)
-                        Text("\(recipe.servings) servings")
+                        Text("\(Int(recipe.servings)) servings")
                             .font(.caption)
                     }
                 }
@@ -213,6 +213,7 @@ struct RecipeCardView: View {
 // MARK: - Preview
 
 private struct RecipeCardGridPreview: View {
+    @Environment(\.managedObjectContext) private var viewContext
     @State private var recipe: Recipe?
 
     var body: some View {
@@ -227,6 +228,7 @@ private struct RecipeCardGridPreview: View {
         }
         .task {
             recipe = Recipe(
+                context: viewContext,
                 title: "Chicken Stir Fry with Vegetables",
                 summary: "A quick and healthy stir fry",
                 servings: 4,
@@ -240,6 +242,7 @@ private struct RecipeCardGridPreview: View {
 }
 
 private struct RecipeCardListPreview: View {
+    @Environment(\.managedObjectContext) private var viewContext
     @State private var recipe: Recipe?
 
     var body: some View {
@@ -253,6 +256,7 @@ private struct RecipeCardListPreview: View {
         }
         .task {
             recipe = Recipe(
+                context: viewContext,
                 title: "Spaghetti Carbonara",
                 summary: "Classic Italian pasta dish",
                 servings: 4,
@@ -267,10 +271,10 @@ private struct RecipeCardListPreview: View {
 
 #Preview("Grid Style") {
     RecipeCardGridPreview()
-        .modelContainer(for: Recipe.self, inMemory: true)
+        .environment(\.managedObjectContext, PersistenceController.preview.viewContext)
 }
 
 #Preview("List Style") {
     RecipeCardListPreview()
-        .modelContainer(for: Recipe.self, inMemory: true)
+        .environment(\.managedObjectContext, PersistenceController.preview.viewContext)
 }

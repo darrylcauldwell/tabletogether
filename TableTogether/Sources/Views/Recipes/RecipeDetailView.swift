@@ -1,14 +1,14 @@
 import SwiftUI
-import SwiftData
+import CoreData
 
 /// Full recipe detail view with hero image, servings adjuster, macro summary,
 /// scaled ingredients, instructions, and action buttons.
 struct RecipeDetailView: View {
-    @Environment(\.modelContext) private var modelContext
+    @Environment(\.managedObjectContext) private var viewContext
     @Environment(\.dismiss) private var dismiss
     @Environment(\.openURL) private var openURL
 
-    @Bindable var recipe: Recipe
+    @ObservedObject var recipe: Recipe
 
     @State private var adjustedServings: Int
     @State private var isMacroExpanded = false
@@ -18,7 +18,7 @@ struct RecipeDetailView: View {
 
     init(recipe: Recipe) {
         self.recipe = recipe
-        _adjustedServings = State(initialValue: recipe.servings)
+        _adjustedServings = State(initialValue: Int(recipe.servings))
     }
 
     var body: some View {
@@ -310,11 +310,11 @@ struct RecipeDetailView: View {
                     IngredientRow(
                         ingredient: ingredient,
                         servings: adjustedServings,
-                        baseServings: recipe.servings
+                        baseServings: Int(recipe.servings)
                     )
                 }
 
-                if recipe.recipeIngredients.isEmpty {
+                if recipe.recipeIngredientsArray.isEmpty {
                     Text("No ingredients added yet.")
                         .font(.body)
                         .foregroundColor(.appTextSecondary)
@@ -339,13 +339,13 @@ struct RecipeDetailView: View {
             }
 
             VStack(alignment: .leading, spacing: 16) {
-                if recipe.instructions.isEmpty {
+                if recipe.instructionsList.isEmpty {
                     Text("No instructions added yet.")
                         .font(.body)
                         .foregroundColor(.appTextSecondary)
                         .italic()
                 } else {
-                    ForEach(Array(recipe.instructions.enumerated()), id: \.offset) { index, instruction in
+                    ForEach(Array(recipe.instructionsList.enumerated()), id: \.offset) { index, instruction in
                         InstructionStepView(stepNumber: index + 1, text: instruction)
                     }
                 }
@@ -519,6 +519,7 @@ struct AddToPlanSheet: View {
 // MARK: - Preview
 
 private struct RecipeDetailPreviewContent: View {
+    @Environment(\.managedObjectContext) private var viewContext
     @State private var recipe: Recipe?
 
     var body: some View {
@@ -533,6 +534,7 @@ private struct RecipeDetailPreviewContent: View {
         }
         .task {
             let newRecipe = Recipe(
+                context: viewContext,
                 title: "Chicken Stir Fry with Vegetables",
                 summary: "A quick and healthy stir fry packed with colorful vegetables and tender chicken.",
                 servings: 4,
@@ -551,15 +553,15 @@ private struct RecipeDetailPreviewContent: View {
             )
 
             let ingredients = [
-                RecipeIngredient(quantity: 1, unit: .kilogram, order: 0, customName: "Chicken breast"),
-                RecipeIngredient(quantity: 2, unit: .tablespoon, order: 1, customName: "Soy sauce"),
-                RecipeIngredient(quantity: 1, unit: .tablespoon, order: 2, customName: "Sesame oil"),
-                RecipeIngredient(quantity: 2, unit: .cup, order: 3, customName: "Broccoli florets"),
-                RecipeIngredient(quantity: 1, unit: .piece, preparationNote: "sliced", order: 4, customName: "Bell pepper"),
-                RecipeIngredient(quantity: 3, unit: .clove, preparationNote: "minced", order: 5, customName: "Garlic")
+                RecipeIngredient(context: viewContext, quantity: 1, unit: .kilogram, order: 0, customName: "Chicken breast"),
+                RecipeIngredient(context: viewContext, quantity: 2, unit: .tablespoon, order: 1, customName: "Soy sauce"),
+                RecipeIngredient(context: viewContext, quantity: 1, unit: .tablespoon, order: 2, customName: "Sesame oil"),
+                RecipeIngredient(context: viewContext, quantity: 2, unit: .cup, order: 3, customName: "Broccoli florets"),
+                RecipeIngredient(context: viewContext, quantity: 1, unit: .piece, preparationNote: "sliced", order: 4, customName: "Bell pepper"),
+                RecipeIngredient(context: viewContext, quantity: 3, unit: .clove, preparationNote: "minced", order: 5, customName: "Garlic")
             ]
 
-            ingredients.forEach { newRecipe.recipeIngredients.append($0) }
+            ingredients.forEach { newRecipe.addToRecipeIngredients($0) }
             recipe = newRecipe
         }
     }
@@ -567,5 +569,5 @@ private struct RecipeDetailPreviewContent: View {
 
 #Preview {
     RecipeDetailPreviewContent()
-        .modelContainer(for: [Recipe.self, RecipeIngredient.self, Ingredient.self], inMemory: true)
+        .environment(\.managedObjectContext, PersistenceController.preview.viewContext)
 }

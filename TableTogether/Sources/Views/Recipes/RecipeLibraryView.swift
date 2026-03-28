@@ -1,13 +1,13 @@
 import SwiftUI
-import SwiftData
+import CoreData
 
 /// The main recipe library view displaying all recipes in the user's collection.
 /// Supports search, filtering by archetype, and toggle between grid and list views.
 struct RecipeLibraryView: View {
-    @Environment(\.modelContext) private var modelContext
+    @Environment(\.managedObjectContext) private var viewContext
 
-    @Query(sort: \Recipe.title)
-    private var recipes: [Recipe]
+    @FetchRequest(sortDescriptors: [SortDescriptor(\.title)])
+    private var recipes: FetchedResults<Recipe>
 
     @State private var searchText = ""
     @State private var selectedArchetypes: Set<ArchetypeType> = []
@@ -34,14 +34,14 @@ struct RecipeLibraryView: View {
     // MARK: - Filtered and Sorted Recipes
 
     private var filteredRecipes: [Recipe] {
-        var result = recipes
+        var result = Array(recipes)
 
         // Apply search filter
         if !searchText.isEmpty {
             result = result.filter { recipe in
                 recipe.title.localizedCaseInsensitiveContains(searchText) ||
                 (recipe.summary?.localizedCaseInsensitiveContains(searchText) ?? false) ||
-                recipe.tags.contains { $0.localizedCaseInsensitiveContains(searchText) }
+                recipe.tagsList.contains { $0.localizedCaseInsensitiveContains(searchText) }
             }
         }
 
@@ -57,7 +57,7 @@ struct RecipeLibraryView: View {
         case .title:
             result.sort { $0.title.localizedCompare($1.title) == .orderedAscending }
         case .recent:
-            result.sort { $0.createdAt > $1.createdAt }
+            result.sort { ($0.createdAt ?? .distantPast) > ($1.createdAt ?? .distantPast) }
         case .mostCooked:
             result.sort { $0.timesCooked > $1.timesCooked }
         case .favorite:
@@ -378,7 +378,7 @@ struct RecipeLibraryView: View {
     }
 
     private func deleteRecipe(_ recipe: Recipe) {
-        modelContext.delete(recipe)
+        viewContext.delete(recipe)
     }
 }
 
@@ -386,5 +386,5 @@ struct RecipeLibraryView: View {
 
 #Preview {
     RecipeLibraryView()
-        .modelContainer(for: Recipe.self, inMemory: true)
+        .environment(\.managedObjectContext, PersistenceController.preview.viewContext)
 }

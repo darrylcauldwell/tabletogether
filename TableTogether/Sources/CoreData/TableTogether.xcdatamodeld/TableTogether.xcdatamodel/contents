@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="23507" systemVersion="24D81" minimumToolsVersion="Automatic" sourceLanguage="Swift" usedWithCloudKit="YES" userDefinedModelVersionIdentifier="">
+    <entity name="Household" representedClassName="Household" syncable="YES">
+        <attribute name="createdAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="name" attributeType="String" defaultValueString="My Household"/>
+        <relationship name="archetypes" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="MealArchetype" inverseName="household" inverseEntity="MealArchetype"/>
+        <relationship name="foodItems" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="FoodItem" inverseName="household" inverseEntity="FoodItem"/>
+        <relationship name="ingredients" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Ingredient" inverseName="household" inverseEntity="Ingredient"/>
+        <relationship name="memories" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="SuggestionMemory" inverseName="household" inverseEntity="SuggestionMemory"/>
+        <relationship name="recipes" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Recipe" inverseName="household" inverseEntity="Recipe"/>
+        <relationship name="users" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="User" inverseName="household" inverseEntity="User"/>
+        <relationship name="weekPlans" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="WeekPlan" inverseName="household" inverseEntity="WeekPlan"/>
+    </entity>
+    <entity name="User" representedClassName="User" syncable="YES">
+        <attribute name="avatarColorHex" attributeType="String" defaultValueString="#8FBC8F"/>
+        <attribute name="avatarEmoji" attributeType="String" defaultValueString="😊"/>
+        <attribute name="cloudKitRecordID" optional="YES" attributeType="String"/>
+        <attribute name="createdAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="displayName" attributeType="String" defaultValueString=""/>
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <relationship name="assignedMealSlots" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="MealSlot" inverseName="assignedTo" inverseEntity="MealSlot"/>
+        <relationship name="checkedGroceryItems" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="GroceryItem" inverseName="checkedBy" inverseEntity="GroceryItem"/>
+        <relationship name="createdRecipes" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Recipe" inverseName="createdBy" inverseEntity="Recipe"/>
+        <relationship name="household" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Household" inverseName="users" inverseEntity="Household"/>
+        <relationship name="modifiedMealSlots" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="MealSlot" inverseName="modifiedBy" inverseEntity="MealSlot"/>
+    </entity>
+    <entity name="Recipe" representedClassName="Recipe" syncable="YES">
+        <attribute name="cookTimeMinutes" optional="YES" attributeType="Integer 32" usesScalarValueType="YES"/>
+        <attribute name="createdAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="imageData" optional="YES" attributeType="Binary" allowsExternalBinaryDataStorage="YES"/>
+        <attribute name="instructions" optional="YES" attributeType="Transformable" valueTransformerName="NSSecureUnarchiveFromDataTransformer"/>
+        <attribute name="isFavorite" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="lastCookedDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="modifiedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="prepTimeMinutes" optional="YES" attributeType="Integer 32" usesScalarValueType="YES"/>
+        <attribute name="servings" attributeType="Integer 32" defaultValueString="4" usesScalarValueType="YES"/>
+        <attribute name="sourceURL" optional="YES" attributeType="URI"/>
+        <attribute name="suggestedArchetypesRaw" optional="YES" attributeType="Transformable" valueTransformerName="NSSecureUnarchiveFromDataTransformer"/>
+        <attribute name="summary" optional="YES" attributeType="String"/>
+        <attribute name="tags" optional="YES" attributeType="Transformable" valueTransformerName="NSSecureUnarchiveFromDataTransformer"/>
+        <attribute name="timesCooked" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="title" attributeType="String" defaultValueString=""/>
+        <relationship name="createdBy" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="User" inverseName="createdRecipes" inverseEntity="User"/>
+        <relationship name="household" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Household" inverseName="recipes" inverseEntity="Household"/>
+        <relationship name="mealSlots" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="MealSlot" inverseName="recipes" inverseEntity="MealSlot"/>
+        <relationship name="recipeIngredients" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="RecipeIngredient" inverseName="recipe" inverseEntity="RecipeIngredient"/>
+        <relationship name="suggestionMemory" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="SuggestionMemory" inverseName="recipe" inverseEntity="SuggestionMemory"/>
+    </entity>
+    <entity name="RecipeIngredient" representedClassName="RecipeIngredient" syncable="YES">
+        <attribute name="customName" optional="YES" attributeType="String"/>
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="isOptional" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="order" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="preparationNote" optional="YES" attributeType="String"/>
+        <attribute name="quantity" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="unitRaw" attributeType="String" defaultValueString="gram"/>
+        <relationship name="ingredient" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Ingredient" inverseName="recipeIngredients" inverseEntity="Ingredient"/>
+        <relationship name="recipe" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Recipe" inverseName="recipeIngredients" inverseEntity="Recipe"/>
+    </entity>
+    <entity name="Ingredient" representedClassName="Ingredient" syncable="YES">
+        <attribute name="caloriesPer100g" optional="YES" attributeType="Double" usesScalarValueType="NO"/>
+        <attribute name="carbsPer100g" optional="YES" attributeType="Double" usesScalarValueType="NO"/>
+        <attribute name="categoryRaw" attributeType="String" defaultValueString="other"/>
+        <attribute name="createdAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="defaultUnitRaw" attributeType="String" defaultValueString="gram"/>
+        <attribute name="fatPer100g" optional="YES" attributeType="Double" usesScalarValueType="NO"/>
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="isUserCreated" attributeType="Boolean" defaultValueString="YES" usesScalarValueType="YES"/>
+        <attribute name="modifiedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="name" attributeType="String" defaultValueString=""/>
+        <attribute name="normalizedName" attributeType="String" defaultValueString=""/>
+        <attribute name="proteinPer100g" optional="YES" attributeType="Double" usesScalarValueType="NO"/>
+        <relationship name="groceryItems" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="GroceryItem" inverseName="ingredient" inverseEntity="GroceryItem"/>
+        <relationship name="household" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Household" inverseName="ingredients" inverseEntity="Household"/>
+        <relationship name="recipeIngredients" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="RecipeIngredient" inverseName="ingredient" inverseEntity="RecipeIngredient"/>
+    </entity>
+    <entity name="FoodItem" representedClassName="FoodItem" syncable="YES">
+        <attribute name="brandOwner" optional="YES" attributeType="String"/>
+        <attribute name="caloriesPer100g" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="carbsPer100g" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="commonPortionsData" optional="YES" attributeType="Binary"/>
+        <attribute name="createdAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="dataType" attributeType="String" defaultValueString=""/>
+        <attribute name="displayName" attributeType="String" defaultValueString=""/>
+        <attribute name="fatPer100g" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="fdcId" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="fiberPer100g" optional="YES" attributeType="Double" usesScalarValueType="NO"/>
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="normalizedName" attributeType="String" defaultValueString=""/>
+        <attribute name="proteinPer100g" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="sodiumMgPer100g" optional="YES" attributeType="Double" usesScalarValueType="NO"/>
+        <attribute name="sugarPer100g" optional="YES" attributeType="Double" usesScalarValueType="NO"/>
+        <attribute name="usdaDescription" attributeType="String" defaultValueString=""/>
+        <attribute name="userAliases" optional="YES" attributeType="Transformable" valueTransformerName="NSSecureUnarchiveFromDataTransformer"/>
+        <relationship name="household" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Household" inverseName="foodItems" inverseEntity="Household"/>
+    </entity>
+    <entity name="MealSlot" representedClassName="MealSlot" syncable="YES">
+        <attribute name="createdAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="customMealName" optional="YES" attributeType="String"/>
+        <attribute name="dayOfWeekRaw" attributeType="Integer 16" defaultValueString="1" usesScalarValueType="YES"/>
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="isSkipped" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="mealTypeRaw" attributeType="String" defaultValueString="dinner"/>
+        <attribute name="modifiedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="notes" optional="YES" attributeType="String"/>
+        <attribute name="servingsPlanned" attributeType="Integer 32" defaultValueString="2" usesScalarValueType="YES"/>
+        <relationship name="archetype" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="MealArchetype" inverseName="mealSlots" inverseEntity="MealArchetype"/>
+        <relationship name="assignedTo" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="User" inverseName="assignedMealSlots" inverseEntity="User"/>
+        <relationship name="groceryItems" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="GroceryItem" inverseName="sourceSlots" inverseEntity="GroceryItem"/>
+        <relationship name="modifiedBy" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="User" inverseName="modifiedMealSlots" inverseEntity="User"/>
+        <relationship name="recipes" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Recipe" inverseName="mealSlots" inverseEntity="Recipe"/>
+        <relationship name="weekPlan" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="WeekPlan" inverseName="slots" inverseEntity="WeekPlan"/>
+    </entity>
+    <entity name="WeekPlan" representedClassName="WeekPlan" syncable="YES">
+        <attribute name="createdAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="householdNote" optional="YES" attributeType="String"/>
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="modifiedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="statusRaw" attributeType="String" defaultValueString="draft"/>
+        <attribute name="weekStartDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <relationship name="groceryItems" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="GroceryItem" inverseName="weekPlan" inverseEntity="GroceryItem"/>
+        <relationship name="household" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Household" inverseName="weekPlans" inverseEntity="Household"/>
+        <relationship name="slots" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="MealSlot" inverseName="weekPlan" inverseEntity="MealSlot"/>
+    </entity>
+    <entity name="MealArchetype" representedClassName="MealArchetype" syncable="YES">
+        <attribute name="archetypeDescription" attributeType="String" defaultValueString=""/>
+        <attribute name="colorHex" attributeType="String" defaultValueString="#8FBC8F"/>
+        <attribute name="icon" attributeType="String" defaultValueString="circle.fill"/>
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="isUserCreated" attributeType="Boolean" defaultValueString="YES" usesScalarValueType="YES"/>
+        <attribute name="name" attributeType="String" defaultValueString=""/>
+        <attribute name="systemTypeRaw" optional="YES" attributeType="String"/>
+        <relationship name="household" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Household" inverseName="archetypes" inverseEntity="Household"/>
+        <relationship name="mealSlots" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="MealSlot" inverseName="archetype" inverseEntity="MealSlot"/>
+    </entity>
+    <entity name="GroceryItem" representedClassName="GroceryItem" syncable="YES">
+        <attribute name="categoryRaw" attributeType="String" defaultValueString="other"/>
+        <attribute name="checkedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="createdAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="customName" optional="YES" attributeType="String"/>
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="isChecked" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="isInPantry" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="isManuallyAdded" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="pantryChecked" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="quantity" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="unitRaw" attributeType="String" defaultValueString="piece"/>
+        <relationship name="checkedBy" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="User" inverseName="checkedGroceryItems" inverseEntity="User"/>
+        <relationship name="ingredient" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Ingredient" inverseName="groceryItems" inverseEntity="Ingredient"/>
+        <relationship name="sourceSlots" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="MealSlot" inverseName="groceryItems" inverseEntity="MealSlot"/>
+        <relationship name="weekPlan" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="WeekPlan" inverseName="groceryItems" inverseEntity="WeekPlan"/>
+    </entity>
+    <entity name="SuggestionMemory" representedClassName="SuggestionMemory" syncable="YES">
+        <attribute name="averageRating" optional="YES" attributeType="Double" usesScalarValueType="NO"/>
+        <attribute name="familiarityRaw" attributeType="String" defaultValueString="new"/>
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="lastCookedDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="lastSuggestedDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="suggestionDeclined" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="timesCooked" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <relationship name="household" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Household" inverseName="memories" inverseEntity="Household"/>
+        <relationship name="recipe" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Recipe" inverseName="suggestionMemory" inverseEntity="Recipe"/>
+    </entity>
+    <configuration name="Private" usedWithCloudKit="YES">
+        <memberEntity name="Household"/>
+        <memberEntity name="User"/>
+        <memberEntity name="Recipe"/>
+        <memberEntity name="RecipeIngredient"/>
+        <memberEntity name="Ingredient"/>
+        <memberEntity name="FoodItem"/>
+        <memberEntity name="MealSlot"/>
+        <memberEntity name="WeekPlan"/>
+        <memberEntity name="MealArchetype"/>
+        <memberEntity name="GroceryItem"/>
+        <memberEntity name="SuggestionMemory"/>
+    </configuration>
+    <configuration name="Shared" usedWithCloudKit="YES">
+        <memberEntity name="Household"/>
+        <memberEntity name="User"/>
+        <memberEntity name="Recipe"/>
+        <memberEntity name="RecipeIngredient"/>
+        <memberEntity name="Ingredient"/>
+        <memberEntity name="FoodItem"/>
+        <memberEntity name="MealSlot"/>
+        <memberEntity name="WeekPlan"/>
+        <memberEntity name="MealArchetype"/>
+        <memberEntity name="GroceryItem"/>
+        <memberEntity name="SuggestionMemory"/>
+    </configuration>
+</model>

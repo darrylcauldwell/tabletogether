@@ -335,7 +335,7 @@ final class CalendarService {
 
         var errors: [Error] = []
 
-        for slot in weekPlan.slots {
+        for slot in weekPlan.slotsArray {
             do {
                 try await syncMealSlot(slot, weekPlan: weekPlan)
             } catch {
@@ -424,14 +424,14 @@ final class CalendarService {
     private func buildEventNotes(for slot: MealSlot) -> String {
         var notes: [String] = []
 
-        for recipe in slot.recipes {
+        for recipe in slot.recipesArray {
             notes.append("Recipe: \(recipe.title)")
 
             var timeInfo: [String] = []
-            if let prep = recipe.prepTimeMinutes {
+            if let prep = recipe.prepTimeMinutesOptional {
                 timeInfo.append("Prep: \(prep) min")
             }
-            if let cook = recipe.cookTimeMinutes {
+            if let cook = recipe.cookTimeMinutesOptional {
                 timeInfo.append("Cook: \(cook) min")
             }
             if !timeInfo.isEmpty {
@@ -440,8 +440,8 @@ final class CalendarService {
             notes.append("")
         }
 
-        if !slot.assignedTo.isEmpty {
-            let names = slot.assignedTo.map { $0.displayName }.joined(separator: ", ")
+        if !slot.assignedToArray.isEmpty {
+            let names = slot.assignedToArray.map { $0.displayName }.joined(separator: ", ")
             notes.append("Assigned to: \(names)")
         }
 
@@ -492,10 +492,10 @@ final class CalendarService {
     /// Calculate event duration based on meal type and recipe time.
     private func calculateDuration(for slot: MealSlot) -> Int {
         // Sum total time across all recipes
-        if !slot.recipes.isEmpty {
+        if !slot.recipesArray.isEmpty {
             var totalTime = 0
-            for recipe in slot.recipes {
-                totalTime += (recipe.prepTimeMinutes ?? 0) + (recipe.cookTimeMinutes ?? 0)
+            for recipe in slot.recipesArray {
+                totalTime += (recipe.prepTimeMinutesOptional ?? 0) + (recipe.cookTimeMinutesOptional ?? 0)
             }
             if totalTime > 0 {
                 return totalTime
@@ -515,13 +515,13 @@ final class CalendarService {
     private func calculateContentHash(for slot: MealSlot) -> Int {
         var hasher = Hasher()
         hasher.combine(slot.displayTitle)
-        for recipe in slot.recipes {
+        for recipe in slot.recipesArray {
             hasher.combine(recipe.id)
         }
         hasher.combine(slot.notes)
         hasher.combine(slot.dayOfWeek)
         hasher.combine(slot.mealType)
-        hasher.combine(slot.assignedTo.map { $0.id })
+        hasher.combine(slot.assignedToArray.map { $0.id })
         hasher.combine(settings.reminderMinutesBefore)
         return hasher.finalize()
     }

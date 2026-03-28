@@ -1,5 +1,5 @@
 import SwiftUI
-import SwiftData
+import CoreData
 
 // MARK: - SuggestionTrayView
 
@@ -230,13 +230,15 @@ private struct SuggestionTrayPreviewWrapper: View {
 
 #Preview {
     SuggestionTrayPreviewWrapper()
-        .modelContainer(for: [Recipe.self, SuggestionMemory.self], inMemory: true)
+        .environment(\.managedObjectContext, PersistenceController.preview.viewContext)
 }
 
 struct SuggestionTrayView_WithContentPreview: PreviewProvider {
     static var previews: some View {
+        let context = PersistenceController.preview.viewContext
         let sampleRecipes: [Recipe] = (1...6).map { i in
             Recipe(
+                context: context,
                 title: "Recipe \(i)",
                 summary: "A delicious recipe",
                 servings: 4,
@@ -253,6 +255,6 @@ struct SuggestionTrayView_WithContentPreview: PreviewProvider {
             familiarRecipes: Array(sampleRecipes.prefix(4)),
             newRecipes: Array(sampleRecipes.suffix(2))
         )
-        .modelContainer(for: [Recipe.self, SuggestionMemory.self], inMemory: true)
+        .environment(\.managedObjectContext, PersistenceController.preview.viewContext)
     }
 }

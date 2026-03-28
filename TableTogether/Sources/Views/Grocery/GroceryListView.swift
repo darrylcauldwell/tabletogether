@@ -1,13 +1,13 @@
 import SwiftUI
-import SwiftData
+import CoreData
 
 /// Shopping list interface — shows all items still needed across all week plans.
 /// Items are aggregated by ingredient so the same item from multiple weeks shows once with combined quantity.
 /// Users check off items while shopping. Manual items can be added here.
 struct GroceryListView: View {
-    @Environment(\.modelContext) private var modelContext
+    @Environment(\.managedObjectContext) private var viewContext
 
-    @Query private var weekPlans: [WeekPlan]
+    @FetchRequest(sortDescriptors: []) private var weekPlans: FetchedResults<WeekPlan>
 
     @State private var showingAddItem = false
     @State private var checkedItemsExpanded = false
@@ -302,7 +302,7 @@ struct GroceryListView: View {
         withAnimation {
             let group = itemGroupMap[item.id] ?? [item]
             for groupItem in group {
-                modelContext.delete(groupItem)
+                viewContext.delete(groupItem)
             }
         }
     }
@@ -375,5 +375,5 @@ private struct ShoppingProgressHeader: View {
 
 #Preview {
     GroceryListView()
-        .modelContainer(for: [WeekPlan.self, GroceryItem.self, Ingredient.self], inMemory: true)
+        .environment(\.managedObjectContext, PersistenceController.preview.viewContext)
 }

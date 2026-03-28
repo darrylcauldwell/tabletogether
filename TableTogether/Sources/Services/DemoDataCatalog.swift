@@ -1,5 +1,5 @@
 import Foundation
-import SwiftData
+import CoreData
 
 /// Static catalog containing all demo data definitions.
 /// All demo data uses predictable UUIDs starting with "DE000000-" for easy identification and removal.

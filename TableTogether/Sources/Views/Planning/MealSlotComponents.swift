@@ -1,5 +1,5 @@
 import SwiftUI
-import SwiftData
+import CoreData
 
 // MARK: - MealTypeIndicator
 
@@ -91,9 +91,9 @@ struct SlotContentView: View {
 
     var body: some View {
         Group {
-            if !slot.recipes.isEmpty {
+            if !slot.recipesArray.isEmpty {
                 // Show recipe card(s)
-                RecipeSlotCard(recipes: slot.recipes, servings: slot.servingsPlanned, isCompact: isCompact)
+                RecipeSlotCard(recipes: slot.recipesArray, servings: Int(slot.servingsPlanned), isCompact: isCompact)
             } else if let customName = slot.customMealName, !customName.isEmpty {
                 // Show custom meal name
                 CustomMealCard(name: customName, isCompact: isCompact)
@@ -353,17 +353,17 @@ struct UserAvatarView: View {
 
 /// Sheet for picking a recipe to assign to a slot
 struct RecipePickerSheet: View {
-    @Bindable var slot: MealSlot
-    @Environment(\.modelContext) private var modelContext
+    @ObservedObject var slot: MealSlot
+    @Environment(\.managedObjectContext) private var viewContext
     @Environment(\.dismiss) private var dismiss
 
-    @Query(sort: \Recipe.title) private var recipes: [Recipe]
+    @FetchRequest(sortDescriptors: [SortDescriptor(\.title)]) private var recipes: FetchedResults<Recipe>
     @State private var searchText: String = ""
     @State private var customMealName: String = ""
 
     private var filteredRecipes: [Recipe] {
         if searchText.isEmpty {
-            return recipes
+            return Array(recipes)
         }
         return recipes.filter { $0.title.localizedCaseInsensitiveContains(searchText) }
     }
@@ -377,7 +377,7 @@ struct RecipePickerSheet: View {
                             if !customMealName.isEmpty {
                                 slot.customMealName = customMealName
                                 slot.modifiedAt = Date()
-                                modelContext.saveWithLogging(context: "custom meal name")
+                                viewContext.saveWithLogging(context: "custom meal name")
                                 dismiss()
                             }
                         }
@@ -386,9 +386,9 @@ struct RecipePickerSheet: View {
                 Section("Recipes") {
                     ForEach(filteredRecipes) { recipe in
                         Button {
-                            slot.recipes.append(recipe)
+                            slot.addToRecipes(recipe)
                             slot.modifiedAt = Date()
-                            modelContext.saveWithLogging(context: "recipe selection")
+                            viewContext.saveWithLogging(context: "recipe selection")
                             dismiss()
                         } label: {
                             RecipeRowView(recipe: recipe)

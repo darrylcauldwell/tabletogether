@@ -1,5 +1,5 @@
 import SwiftUI
-import SwiftData
+import CoreData
 
 /// Dedicated meal logging tab.
 /// Shows a prominent "Log a Meal" button, today's meals, and recent days.
@@ -7,9 +7,9 @@ import SwiftData
 /// All meal log data is personal and stored in CloudKit private database.
 struct MealLogView: View {
     @Environment(\.privateDataManager) private var privateDataManager
-    @Query private var recipes: [Recipe]
-    @Query private var mealSlots: [MealSlot]
-    @Query private var users: [User]
+    @FetchRequest(sortDescriptors: []) private var recipes: FetchedResults<Recipe>
+    @FetchRequest(sortDescriptors: []) private var mealSlots: FetchedResults<MealSlot>
+    @FetchRequest(sortDescriptors: []) private var users: FetchedResults<User>
 
     @State private var showQuickLogSheet = false
     @State private var logToEdit: PrivateMealLog?
@@ -25,7 +25,7 @@ struct MealLogView: View {
     }
 
     private var recipeLookup: SimpleRecipeLookup {
-        SimpleRecipeLookup(recipes: recipes)
+        SimpleRecipeLookup(recipes: Array(recipes))
     }
 
     private var todayLogs: [PrivateMealLog] {
@@ -140,7 +140,7 @@ struct MealLogView: View {
                 await privateDataManager?.fetchCurrentWeekLogs()
                 // Auto-populate from plan
                 if let manager = privateDataManager, let user = currentUser {
-                    await manager.syncPlannedMeals(slots: mealSlots, currentUser: user)
+                    await manager.syncPlannedMeals(slots: Array(mealSlots), currentUser: user)
                 }
             }
         }
@@ -360,5 +360,5 @@ struct MealLogView: View {
 
 #Preview {
     MealLogView()
-        .modelContainer(for: [Recipe.self, MealSlot.self, User.self], inMemory: true)
+        .environment(\.managedObjectContext, PersistenceController.preview.viewContext)
 }

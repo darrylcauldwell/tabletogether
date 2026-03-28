@@ -1,5 +1,5 @@
 import SwiftUI
-import SwiftData
+import CoreData
 #if os(iOS)
 import PhotosUI
 #endif
@@ -7,10 +7,10 @@ import PhotosUI
 /// A view for creating or editing recipes with title, summary, ingredients, instructions,
 /// archetype selection, and photo picker.
 struct RecipeEditorView: View {
-    @Environment(\.modelContext) private var modelContext
+    @Environment(\.managedObjectContext) private var viewContext
     @Environment(\.dismiss) private var dismiss
 
-    @Query private var households: [Household]
+    @FetchRequest(sortDescriptors: []) private var households: FetchedResults<Household>
 
     // The recipe being edited, or nil for creating a new recipe
     let recipe: Recipe?
@@ -79,13 +79,13 @@ struct RecipeEditorView: View {
         // Initialize state from recipe or defaults
         _title = State(initialValue: recipe?.title ?? "")
         _summary = State(initialValue: recipe?.summary ?? "")
-        _servings = State(initialValue: recipe?.servings ?? 4)
-        _prepTimeMinutes = State(initialValue: recipe?.prepTimeMinutes.map { String($0) } ?? "")
-        _cookTimeMinutes = State(initialValue: recipe?.cookTimeMinutes.map { String($0) } ?? "")
+        _servings = State(initialValue: recipe.map { Int($0.servings) } ?? 4)
+        _prepTimeMinutes = State(initialValue: recipe.flatMap { $0.prepTimeMinutes > 0 ? String($0.prepTimeMinutes) : nil } ?? "")
+        _cookTimeMinutes = State(initialValue: recipe.flatMap { $0.cookTimeMinutes > 0 ? String($0.cookTimeMinutes) : nil } ?? "")
         _editableIngredients = State(initialValue: recipe?.sortedIngredients.map { EditableIngredientItem(from: $0) } ?? [])
-        _instructions = State(initialValue: recipe?.instructions ?? [])
+        _instructions = State(initialValue: recipe?.instructionsList ?? [])
         _selectedArchetypes = State(initialValue: Set(recipe?.suggestedArchetypes ?? []))
-        _tags = State(initialValue: recipe?.tags ?? [])
+        _tags = State(initialValue: recipe?.tagsList ?? [])
         _imageData = State(initialValue: recipe?.imageData)
     }
 
@@ -517,9 +517,9 @@ struct RecipeEditorView: View {
             // Update existing recipe
             existingRecipe.title = title
             existingRecipe.summary = summary.isEmpty ? nil : summary
-            existingRecipe.servings = servings
-            existingRecipe.prepTimeMinutes = Int(prepTimeMinutes)
-            existingRecipe.cookTimeMinutes = Int(cookTimeMinutes)
+            existingRecipe.servings = Int32(servings)
+            existingRecipe.prepTimeMinutes = Int32(Int(prepTimeMinutes) ?? 0)
+            existingRecipe.cookTimeMinutes = Int32(Int(cookTimeMinutes) ?? 0)
             existingRecipe.instructions = instructions
             existingRecipe.suggestedArchetypes = Array(selectedArchetypes)
             existingRecipe.tags = tags
@@ -528,14 +528,15 @@ struct RecipeEditorView: View {
 
             // Update ingredients
             // Remove old ingredients
-            for ingredient in existingRecipe.recipeIngredients {
-                modelContext.delete(ingredient)
+            for ingredient in existingRecipe.recipeIngredientsArray {
+                viewContext.delete(ingredient)
             }
-            existingRecipe.recipeIngredients.removeAll()
+            existingRecipe.recipeIngredients = NSSet()
 
             // Add updated ingredients
             for (index, editable) in editableIngredients.enumerated() {
                 let recipeIngredient = RecipeIngredient(
+                    context: viewContext,
                     quantity: editable.quantity,
                     unit: editable.unit,
                     preparationNote: editable.preparationNote.isEmpty ? nil : editable.preparationNote,
@@ -543,11 +544,12 @@ struct RecipeEditorView: View {
                     order: index,
                     customName: editable.name
                 )
-                existingRecipe.recipeIngredients.append(recipeIngredient)
+                existingRecipe.addToRecipeIngredients(recipeIngredient)
             }
         } else {
             // Create new recipe
             let newRecipe = Recipe(
+                context: viewContext,
                 title: title,
                 summary: summary.isEmpty ? nil : summary,
                 servings: servings,
@@ -562,6 +564,7 @@ struct RecipeEditorView: View {
             // Add ingredients
             for (index, editable) in editableIngredients.enumerated() {
                 let recipeIngredient = RecipeIngredient(
+                    context: viewContext,
                     quantity: editable.quantity,
                     unit: editable.unit,
                     preparationNote: editable.preparationNote.isEmpty ? nil : editable.preparationNote,
@@ -569,11 +572,10 @@ struct RecipeEditorView: View {
                     order: index,
                     customName: editable.name
                 )
-                newRecipe.recipeIngredients.append(recipeIngredient)
+                newRecipe.addToRecipeIngredients(recipeIngredient)
             }
 
             newRecipe.household = households.first
-            modelContext.insert(newRecipe)
         }
 
         dismiss()
@@ -581,7 +583,7 @@ struct RecipeEditorView: View {
 
     private func deleteRecipe() {
         if let recipe = recipe {
-            modelContext.delete(recipe)
+            viewContext.delete(recipe)
         }
         dismiss()
     }
@@ -669,10 +671,11 @@ struct RecipeEditorView: View {
     NavigationStack {
         RecipeEditorView(recipe: nil)
     }
-    .modelContainer(for: [Recipe.self, RecipeIngredient.self, Ingredient.self], inMemory: true)
+    .environment(\.managedObjectContext, PersistenceController.preview.viewContext)
 }
 
 private struct RecipeEditorEditPreview: View {
+    @Environment(\.managedObjectContext) private var viewContext
     @State private var recipe: Recipe?
 
     var body: some View {
@@ -687,6 +690,7 @@ private struct RecipeEditorEditPreview: View {
         }
         .task {
             let newRecipe = Recipe(
+                context: viewContext,
                 title: "Test Recipe",
                 summary: "A test recipe for preview",
                 servings: 4,
@@ -697,12 +701,12 @@ private struct RecipeEditorEditPreview: View {
             )
 
             let ingredients = [
-                RecipeIngredient(quantity: 2, unit: .cup, order: 0, customName: "Flour"),
-                RecipeIngredient(quantity: 1, unit: .cup, order: 1, customName: "Sugar"),
-                RecipeIngredient(quantity: 2, unit: .piece, order: 2, customName: "Eggs")
+                RecipeIngredient(context: viewContext, quantity: 2, unit: .cup, order: 0, customName: "Flour"),
+                RecipeIngredient(context: viewContext, quantity: 1, unit: .cup, order: 1, customName: "Sugar"),
+                RecipeIngredient(context: viewContext, quantity: 2, unit: .piece, order: 2, customName: "Eggs")
             ]
 
-            ingredients.forEach { newRecipe.recipeIngredients.append($0) }
+            ingredients.forEach { newRecipe.addToRecipeIngredients($0) }
             recipe = newRecipe
         }
     }
@@ -710,5 +714,5 @@ private struct RecipeEditorEditPreview: View {
 
 #Preview("Edit Mode") {
     RecipeEditorEditPreview()
-        .modelContainer(for: [Recipe.self, RecipeIngredient.self, Ingredient.self], inMemory: true)
+        .environment(\.managedObjectContext, PersistenceController.preview.viewContext)
 }

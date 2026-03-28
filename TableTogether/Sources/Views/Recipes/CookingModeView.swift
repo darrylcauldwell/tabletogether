@@ -1,5 +1,5 @@
 import SwiftUI
-import SwiftData
+import CoreData
 
 /// Full-screen cooking mode for step-by-step recipe guidance
 struct CookingModeView: View {
@@ -17,7 +17,7 @@ struct CookingModeView: View {
     @State private var timerTask: Task<Void, Never>?
 
     private var instructions: [String] {
-        recipe.instructions
+        recipe.instructionsList
     }
 
     private var currentStep: String {
@@ -316,7 +316,7 @@ struct CookingModeView: View {
                         .foregroundColor(isChecked ? .gray : .white)
                         .strikethrough(isChecked)
 
-                    Text(ingredient.formattedScaledQuantity(for: servings, baseServings: recipe.servings))
+                    Text(ingredient.formattedScaledQuantity(for: servings, baseServings: Int(recipe.servings)))
                         .font(.caption)
                         .foregroundColor(.gray)
                 }
@@ -515,6 +515,7 @@ struct TimerPickerSheet: View {
 // MARK: - Preview
 
 private struct CookingModePreview: View {
+    @Environment(\.managedObjectContext) private var viewContext
     @State private var recipe: Recipe?
 
     var body: some View {
@@ -524,6 +525,7 @@ private struct CookingModePreview: View {
             ProgressView("Loading...")
                 .task {
                     recipe = Recipe(
+                        context: viewContext,
                         title: "Spaghetti Carbonara",
                         servings: 4,
                         prepTimeMinutes: 15,
@@ -545,5 +547,5 @@ private struct CookingModePreview: View {
 
 #Preview {
     CookingModePreview()
-        .modelContainer(for: Recipe.self, inMemory: true)
+        .environment(\.managedObjectContext, PersistenceController.preview.viewContext)
 }

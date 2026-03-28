@@ -1,5 +1,5 @@
 import SwiftUI
-import SwiftData
+import CoreData
 
 // MARK: - Ingredient Editor Row
 

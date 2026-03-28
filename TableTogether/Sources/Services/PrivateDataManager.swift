@@ -322,7 +322,7 @@ final class PrivateDataManager {
         // Filter to slots from today and yesterday where current user is assigned
         let relevantSlots = slots.filter { slot in
             guard slot.isPlanned,
-                  slot.assignedTo.contains(where: { $0.id == currentUser.id }) else {
+                  slot.assignedToArray.contains(where: { $0.id == currentUser.id }) else {
                 return false
             }
 
@@ -339,7 +339,7 @@ final class PrivateDataManager {
             guard !alreadyLogged else { continue }
 
             // Calculate per-person servings
-            let assignedCount = max(slot.assignedTo.count, 1)
+            let assignedCount = max(slot.assignedToArray.count, 1)
             let perPersonServings = Double(slot.servingsPlanned) / Double(assignedCount)
 
             let slotDate: Date
@@ -352,7 +352,7 @@ final class PrivateDataManager {
             let log = PrivateMealLog(
                 date: slotDate,
                 mealType: slot.mealType,
-                recipeID: slot.recipes.first?.id,
+                recipeID: slot.recipesArray.first?.id,
                 mealSlotID: slot.id,
                 servingsConsumed: perPersonServings,
                 status: .planned

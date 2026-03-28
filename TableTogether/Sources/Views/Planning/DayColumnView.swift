@@ -1,5 +1,5 @@
 import SwiftUI
-import SwiftData
+import CoreData
 
 // MARK: - DayColumnView
 
@@ -172,7 +172,7 @@ struct EmptyMealSlotPlaceholder: View {
         }
         .padding()
     }
-    .modelContainer(for: [MealSlot.self, WeekPlan.self, Recipe.self], inMemory: true)
+    .environment(\.managedObjectContext, PersistenceController.preview.viewContext)
 }
 
 #Preview("Day Column - Compact") {
@@ -186,6 +186,6 @@ struct EmptyMealSlotPlaceholder: View {
         )
         .padding()
     }
-    .modelContainer(for: [MealSlot.self, WeekPlan.self, Recipe.self], inMemory: true)
+    .environment(\.managedObjectContext, PersistenceController.preview.viewContext)
     .environment(\.horizontalSizeClass, .compact)
 }

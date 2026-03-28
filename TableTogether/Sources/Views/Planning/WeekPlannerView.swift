@@ -1,20 +1,19 @@
 import SwiftUI
-import SwiftData
+import CoreData
 
 // MARK: - WeekPlannerView
 
 /// Main planning interface showing a week's meal plan with drag and drop support.
 /// Adapts layout for iPad (full week view) vs iPhone (scrollable day-by-day).
 struct WeekPlannerView: View {
-    @Environment(\.modelContext) private var modelContext
+    @Environment(\.managedObjectContext) private var viewContext
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
-    @Environment(\.sharingCoordinator) private var sharingCoordinator
 
-    @Query(sort: \WeekPlan.weekStartDate, order: .reverse) private var weekPlans: [WeekPlan]
-    @Query private var recipes: [Recipe]
-    @Query private var suggestionMemories: [SuggestionMemory]
-    @Query private var users: [User]
-    @Query private var households: [Household]
+    @FetchRequest(sortDescriptors: [SortDescriptor(\.weekStartDate, order: .reverse)]) private var weekPlans: FetchedResults<WeekPlan>
+    @FetchRequest(sortDescriptors: []) private var recipes: FetchedResults<Recipe>
+    @FetchRequest(sortDescriptors: []) private var suggestionMemories: FetchedResults<SuggestionMemory>
+    @FetchRequest(sortDescriptors: []) private var users: FetchedResults<User>
+    @FetchRequest(sortDescriptors: []) private var households: FetchedResults<Household>
 
     @State private var currentWeekStart: Date = WeekPlannerView.mondayOfCurrentWeek()
     @State private var isSuggestionTrayExpanded: Bool = true
@@ -38,13 +37,7 @@ struct WeekPlannerView: View {
                 onNextWeek: navigateToNextWeek
             )
 
-            // Recent Changes Banner
-            if let coordinator = sharingCoordinator, !coordinator.recentChanges.isEmpty {
-                RecentChangesBanner(
-                    changes: coordinator.recentChanges,
-                    isExpanded: $showingRecentChanges
-                )
-            }
+            // Recent Changes Banner (CloudKit sync is automatic via NSPersistentCloudKitContainer)
 
             Divider()
 
@@ -94,9 +87,9 @@ struct WeekPlannerView: View {
     private var suggestedFamiliarRecipes: [Recipe] {
         let engine = SuggestionEngine()
         let result = engine.suggestRecipes(
-            allRecipes: recipes,
+            allRecipes: Array(recipes),
             weekPlan: currentWeekPlan,
-            memory: suggestionMemories
+            memory: Array(suggestionMemories)
         )
         return result.familiarSuggestions
     }
@@ -104,9 +97,9 @@ struct WeekPlannerView: View {
     private var suggestedNewRecipes: [Recipe] {
         let engine = SuggestionEngine()
         let result = engine.suggestRecipes(
-            allRecipes: recipes,
+            allRecipes: Array(recipes),
             weekPlan: currentWeekPlan,
-            memory: suggestionMemories
+            memory: Array(suggestionMemories)
         )
         return result.newSuggestions
     }
@@ -139,6 +132,7 @@ struct WeekPlannerView: View {
         guard currentWeekPlan == nil else { return }
 
         let newPlan = WeekPlan(
+            context: viewContext,
             weekStartDate: currentWeekStart,
             householdNote: nil,
             status: .draft
@@ -148,18 +142,18 @@ struct WeekPlannerView: View {
         for day in DayOfWeek.allCases {
             for mealType in MealType.allCases {
                 let slot = MealSlot(
+                    context: viewContext,
                     dayOfWeek: day,
                     mealType: mealType,
                     servingsPlanned: 2
                 )
                 slot.weekPlan = newPlan
-                newPlan.slots.append(slot)
+                newPlan.addToSlots(slot)
             }
         }
 
         newPlan.household = households.first
-        modelContext.insert(newPlan)
-        modelContext.saveWithLogging(context: "new week plan")
+        viewContext.saveWithLogging(context: "new week plan")
     }
 
     private func handleSlotTapped(_ slot: MealSlot) {
@@ -172,10 +166,10 @@ struct WeekPlannerView: View {
               let recipe = recipes.first(where: { $0.id == uuid }) else {
             return
         }
-        slot.recipes.append(recipe)
+        slot.addToRecipes(recipe)
         slot.customMealName = nil
         slot.modifiedAt = Date()
-        modelContext.saveWithLogging(context: "recipe drop to slot")
+        viewContext.saveWithLogging(context: "recipe drop to slot")
     }
 
     private func copyFromLastWeek() {
@@ -183,8 +177,8 @@ struct WeekPlannerView: View {
               let previousPlan = weekPlans.first(where: { Calendar.current.isDate($0.weekStartDate, inSameDayAs: previousWeekStart) }),
               let currentPlan = currentWeekPlan else { return }
 
-        for previousSlot in previousPlan.slots {
-            if let currentSlot = currentPlan.slots.first(where: { $0.dayOfWeek == previousSlot.dayOfWeek && $0.mealType == previousSlot.mealType }) {
+        for previousSlot in previousPlan.slotsArray {
+            if let currentSlot = currentPlan.slotsArray.first(where: { $0.dayOfWeek == previousSlot.dayOfWeek && $0.mealType == previousSlot.mealType }) {
                 currentSlot.recipes = previousSlot.recipes
                 currentSlot.archetype = previousSlot.archetype
                 currentSlot.customMealName = previousSlot.customMealName
@@ -193,20 +187,20 @@ struct WeekPlannerView: View {
             }
         }
 
-        modelContext.saveWithLogging(context: "copy from last week")
+        viewContext.saveWithLogging(context: "copy from last week")
     }
 
     private func clearWeek() {
         guard let weekPlan = currentWeekPlan else { return }
 
-        for slot in weekPlan.slots {
-            slot.recipes = []
+        for slot in weekPlan.slotsArray {
+            slot.recipes = NSSet()
             slot.archetype = nil
             slot.customMealName = nil
             slot.modifiedAt = Date()
         }
 
-        modelContext.saveWithLogging(context: "clear week")
+        viewContext.saveWithLogging(context: "clear week")
     }
 }
 
@@ -372,7 +366,7 @@ struct WeekGridView: View {
     }
 
     private func slotsForDay(_ day: DayOfWeek) -> [MealSlot] {
-        weekPlan?.slots.filter { $0.dayOfWeek == day }.sorted { $0.mealType.rawValue < $1.mealType.rawValue } ?? []
+        weekPlan?.slotsArray.filter { $0.dayOfWeek == day }.sorted { $0.mealType.rawValue < $1.mealType.rawValue } ?? []
     }
 }
 
@@ -397,7 +391,7 @@ struct DayByDayView: View {
                                 day: day,
                                 weekStartDate: weekStartDate,
                                 isSelected: selectedDayIndex == index,
-                                hasContent: slotsForDay(day).contains { !$0.recipes.isEmpty || $0.customMealName != nil }
+                                hasContent: slotsForDay(day).contains { !$0.recipesArray.isEmpty || $0.customMealName != nil }
                             ) {
                                 withAnimation {
                                     selectedDayIndex = index
@@ -441,7 +435,7 @@ struct DayByDayView: View {
     }
 
     private func slotsForDay(_ day: DayOfWeek) -> [MealSlot] {
-        weekPlan?.slots.filter { $0.dayOfWeek == day }.sorted { $0.mealType.rawValue < $1.mealType.rawValue } ?? []
+        weekPlan?.slotsArray.filter { $0.dayOfWeek == day }.sorted { $0.mealType.rawValue < $1.mealType.rawValue } ?? []
     }
 }
 
@@ -519,97 +513,11 @@ struct WeekActionsBar: View {
     }
 }
 
-// MARK: - RecentChangesBanner
-
-/// Expandable banner showing recent changes from other household members
-struct RecentChangesBanner: View {
-    let changes: [HouseholdChange]
-    @Binding var isExpanded: Bool
-
-    var body: some View {
-        VStack(spacing: 0) {
-            // Header row
-            Button {
-                withAnimation(.easeInOut(duration: 0.2)) {
-                    isExpanded.toggle()
-                }
-            } label: {
-                HStack(spacing: 8) {
-                    Image(systemName: "person.2.fill")
-                        .foregroundColor(.orange)
-
-                    if let latestChange = changes.first {
-                        Text("\(latestChange.userName) \(latestChange.description)")
-                            .font(.subheadline)
-                            .foregroundColor(.primary)
-                            .lineLimit(1)
-
-                        Text(latestChange.timeAgo)
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-
-                    Spacer()
-
-                    if changes.count > 1 {
-                        Text("+\(changes.count - 1)")
-                            .font(.caption)
-                            .foregroundColor(.orange)
-                            .padding(.horizontal, 6)
-                            .padding(.vertical, 2)
-                            .background(Color.orange.opacity(0.15))
-                            .clipShape(Capsule())
-                    }
-
-                    Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
-                .padding(.horizontal)
-                .padding(.vertical, 8)
-                .background(Color.orange.opacity(0.1))
-            }
-            .buttonStyle(.plain)
-
-            // Expanded change list
-            if isExpanded {
-                VStack(spacing: 0) {
-                    ForEach(changes) { change in
-                        HStack(spacing: 8) {
-                            Circle()
-                                .fill(Color.orange)
-                                .frame(width: 6, height: 6)
-
-                            Text(change.userName)
-                                .font(.caption)
-                                .fontWeight(.medium)
-                                .foregroundColor(.primary)
-
-                            Text(change.description)
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-
-                            Spacer()
-
-                            Text(change.timeAgo)
-                                .font(.caption2)
-                                .foregroundColor(.secondary)
-                        }
-                        .padding(.horizontal)
-                        .padding(.vertical, 6)
-                    }
-                }
-                .background(Color.orange.opacity(0.05))
-            }
-        }
-    }
-}
-
 // MARK: - Preview
 
 #Preview {
     NavigationStack {
         WeekPlannerView()
     }
-    .modelContainer(for: [WeekPlan.self, Recipe.self, MealSlot.self, SuggestionMemory.self], inMemory: true)
+    .environment(\.managedObjectContext, PersistenceController.preview.viewContext)
 }

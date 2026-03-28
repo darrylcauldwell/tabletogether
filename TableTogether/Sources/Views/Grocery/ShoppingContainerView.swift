@@ -37,5 +37,5 @@ struct ShoppingContainerView: View {
     NavigationStack {
         ShoppingContainerView()
     }
-    .modelContainer(for: [WeekPlan.self, GroceryItem.self, Ingredient.self], inMemory: true)
+    .environment(\.managedObjectContext, PersistenceController.preview.viewContext)
 }

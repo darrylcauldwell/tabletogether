@@ -58,7 +58,7 @@ struct TVMealCard: View {
                             .lineLimit(2)
 
                         // Recipe info row
-                        if let recipe = mealSlot.recipes.first {
+                        if let recipe = mealSlot.recipesArray.first {
                             HStack(spacing: TVTheme.Spacing.md) {
                                 if let totalTime = recipe.totalTimeMinutes {
                                     TVTimeChip(minutes: totalTime)
@@ -73,14 +73,14 @@ struct TVMealCard: View {
                         }
 
                         // Assigned users
-                        if !mealSlot.assignedTo.isEmpty {
+                        if !mealSlot.assignedToArray.isEmpty {
                             HStack(spacing: -TVTheme.Spacing.sm) {
-                                ForEach(mealSlot.assignedTo.prefix(4)) { user in
+                                ForEach(mealSlot.assignedToArray.prefix(4)) { user in
                                     TVUserAvatar(user: user, size: 44, showName: false)
                                 }
 
-                                if mealSlot.assignedTo.count > 4 {
-                                    Text("+\(mealSlot.assignedTo.count - 4)")
+                                if mealSlot.assignedToArray.count > 4 {
+                                    Text("+\(mealSlot.assignedToArray.count - 4)")
                                         .font(TVTheme.Typography.subheadline)
                                         .foregroundStyle(TVTheme.Colors.textSecondary)
                                         .padding(.leading, TVTheme.Spacing.sm)
@@ -183,7 +183,7 @@ struct TVMealRow: View {
             Spacer()
 
             // Time indicator
-            if let recipe = mealSlot.recipes.first, let time = recipe.totalTimeMinutes {
+            if let recipe = mealSlot.recipesArray.first, let time = recipe.totalTimeMinutes {
                 Text("\(time) min")
                     .font(TVTheme.Typography.callout)
                     .foregroundStyle(TVTheme.Colors.textSecondary)

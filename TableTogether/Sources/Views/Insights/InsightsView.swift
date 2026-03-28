@@ -1,5 +1,5 @@
 import SwiftUI
-import SwiftData
+import CoreData
 import Charts
 import HealthKit
 
@@ -10,12 +10,12 @@ import HealthKit
 /// All meal logs and goals are stored in CloudKit private database
 /// and are never shared with other household members.
 struct InsightsView: View {
-    @Environment(\.modelContext) private var modelContext
+    @Environment(\.managedObjectContext) private var viewContext
     @Environment(\.privateDataManager) private var privateDataManager
     @State private var healthService = HealthKitService.shared
 
-    @Query private var users: [User]
-    @Query private var recipes: [Recipe]
+    @FetchRequest(sortDescriptors: []) private var users: FetchedResults<User>
+    @FetchRequest(sortDescriptors: []) private var recipes: FetchedResults<Recipe>
 
     @State private var showExpandedDailyView = false
     @State private var showHealthKitSection = false
@@ -37,7 +37,7 @@ struct InsightsView: View {
 
     /// Recipe lookup for macro calculations
     private var recipeLookup: SimpleRecipeLookup {
-        SimpleRecipeLookup(recipes: recipes)
+        SimpleRecipeLookup(recipes: Array(recipes))
     }
 
     var body: some View {
@@ -603,5 +603,5 @@ extension Color {
 
 #Preview {
     InsightsView()
-        .modelContainer(for: [User.self, Recipe.self], inMemory: true)
+        .environment(\.managedObjectContext, PersistenceController.preview.viewContext)
 }

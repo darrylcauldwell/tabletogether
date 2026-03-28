@@ -1,10 +1,10 @@
 import SwiftUI
-import SwiftData
+import CoreData
 
 /// Onboarding flow for first-time users
 struct OnboardingView: View {
-    @Environment(\.modelContext) private var modelContext
-    @Query private var households: [Household]
+    @Environment(\.managedObjectContext) private var viewContext
+    @FetchRequest(sortDescriptors: []) private var households: FetchedResults<Household>
     @Binding var isOnboardingComplete: Bool
 
     @State private var currentPage: Int = 0
@@ -251,21 +251,20 @@ struct OnboardingView: View {
 
         // Create the user
         let user = User(
+            context: viewContext,
             displayName: userName.isEmpty ? "Me" : userName,
             avatarEmoji: selectedEmoji,
             avatarColorHex: avatarColorHex
         )
         user.household = household
-        modelContext.insert(user)
 
         // Create default archetypes
         for archetypeType in ArchetypeType.allCases {
-            let archetype = MealArchetype(systemType: archetypeType)
+            let archetype = MealArchetype(context: viewContext, systemType: archetypeType)
             archetype.household = household
-            modelContext.insert(archetype)
         }
 
-        modelContext.saveWithLogging(context: "onboarding setup")
+        viewContext.saveWithLogging(context: "onboarding setup")
 
         // Mark onboarding as complete
         withAnimation {
@@ -307,5 +306,5 @@ struct FeatureRow: View {
 
 #Preview {
     OnboardingView(isOnboardingComplete: .constant(false))
-        .modelContainer(for: [User.self, MealArchetype.self], inMemory: true)
+        .environment(\.managedObjectContext, PersistenceController.preview.viewContext)
 }

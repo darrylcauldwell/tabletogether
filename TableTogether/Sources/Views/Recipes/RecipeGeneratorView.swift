@@ -1,13 +1,13 @@
 import SwiftUI
-import SwiftData
+import CoreData
 
 /// A view for generating recipes based on user preferences including
 /// ingredients, cooking style, time availability, and cuisine type.
 struct RecipeGeneratorView: View {
-    @Environment(\.modelContext) private var modelContext
+    @Environment(\.managedObjectContext) private var viewContext
     @Environment(\.dismiss) private var dismiss
 
-    @Query private var households: [Household]
+    @FetchRequest(sortDescriptors: []) private var households: FetchedResults<Household>
     @State private var generatorService = RecipeGeneratorService()
 
     // Form state
@@ -19,7 +19,7 @@ struct RecipeGeneratorView: View {
     @State private var showingResults = false
     @State private var selectedRecipe: GeneratedRecipe?
 
-    @Query private var existingIngredients: [Ingredient]
+    @FetchRequest(sortDescriptors: []) private var existingIngredients: FetchedResults<Ingredient>
 
     var body: some View {
         NavigationStack {
@@ -342,8 +342,9 @@ struct RecipeGeneratorView: View {
     }
 
     private func saveRecipe(_ generated: GeneratedRecipe) {
-        // Create a new Recipe from the generated recipe
+        // Create a new Recipe from the generated recipe (convenience init inserts into context)
         let recipe = Recipe(
+            context: viewContext,
             title: generated.title,
             summary: generated.summary,
             servings: generated.servings,
@@ -357,6 +358,7 @@ struct RecipeGeneratorView: View {
         // Add ingredients
         for (index, genIngredient) in generated.ingredients.enumerated() {
             let recipeIngredient = RecipeIngredient(
+                context: viewContext,
                 quantity: genIngredient.quantity,
                 unit: genIngredient.unit,
                 preparationNote: genIngredient.preparationNote,
@@ -364,11 +366,10 @@ struct RecipeGeneratorView: View {
                 order: index,
                 customName: genIngredient.name
             )
-            recipe.recipeIngredients.append(recipeIngredient)
+            recipe.addToRecipeIngredients(recipeIngredient)
         }
 
         recipe.household = households.first
-        modelContext.insert(recipe)
 
         showingResults = false
         dismiss()
@@ -379,5 +380,5 @@ struct RecipeGeneratorView: View {
 
 #Preview("Recipe Generator") {
     RecipeGeneratorView()
-        .modelContainer(for: [Recipe.self, RecipeIngredient.self, Ingredient.self], inMemory: true)
+        .environment(\.managedObjectContext, PersistenceController.preview.viewContext)
 }

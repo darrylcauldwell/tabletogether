@@ -1,5 +1,5 @@
 import SwiftUI
-import SwiftData
+import CoreData
 #if canImport(UIKit)
 import UIKit
 #endif
@@ -210,7 +210,9 @@ struct DragPreviewCard: View {
 // MARK: - Preview
 
 #Preview("Single Card") {
+    let context = PersistenceController.preview.viewContext
     let recipe = Recipe(
+        context: context,
         title: "Chicken Stir Fry with Vegetables",
         summary: "A quick and healthy dinner",
         servings: 4,
@@ -230,7 +232,9 @@ struct DragPreviewCard: View {
 }
 
 #Preview("New Recipe Card") {
+    let context = PersistenceController.preview.viewContext
     let recipe = Recipe(
+        context: context,
         title: "Thai Basil Chicken",
         summary: "An authentic Thai recipe",
         servings: 2,
@@ -247,19 +251,12 @@ struct DragPreviewCard: View {
 }
 
 #Preview("Row of Cards") {
+    let context = PersistenceController.preview.viewContext
+    let recipe = Recipe(context: context, title: "Sample Recipe", servings: 4)
     ScrollView(.horizontal, showsIndicators: false) {
         HStack(spacing: 12) {
-            ForEach(0..<5) { index in
-                let recipe = Recipe(
-                    title: "Recipe \(index + 1)",
-                    servings: 4,
-                    prepTimeMinutes: 10 + index * 5,
-                    cookTimeMinutes: 20 + index * 5,
-                    isFavorite: index == 0,
-                    timesCooked: index * 2
-                )
-                DraggableRecipeCard(recipe: recipe, isNew: index == 4)
-            }
+            DraggableRecipeCard(recipe: recipe)
+            DraggableRecipeCard(recipe: recipe, isNew: true)
         }
         .padding()
     }

@@ -1,5 +1,5 @@
 import SwiftUI
-import SwiftData
+import CoreData
 
 // MARK: - Ambient View ("What's for TableTogether?")
 //
@@ -13,8 +13,9 @@ import SwiftData
 // - Shows household presence
 
 struct AmbientView: View {
-    @Environment(\.modelContext) private var modelContext
-    @Query private var users: [User]
+    @Environment(\.managedObjectContext) private var viewContext
+    @FetchRequest(sortDescriptors: [NSSortDescriptor(keyPath: \User.displayName, ascending: true)])
+    private var users: FetchedResults<User>
 
     @State private var weekPlan: WeekPlan?
     @State private var todaySlots: [MealSlot] = []
@@ -108,7 +109,7 @@ struct AmbientView: View {
                 .tvSafeArea()
             }
             .navigationDestination(isPresented: $showingRecipeView) {
-                if let slot = selectedSlot, let recipe = slot.recipes.first {
+                if let slot = selectedSlot, let recipe = slot.recipesArray.first {
                     RecipeView(recipe: recipe, mealSlot: slot)
                 }
             }
@@ -186,7 +187,7 @@ struct AmbientView: View {
                 ) {
                     ForEach(todaySlots.sorted { $0.mealType.sortOrder < $1.mealType.sortOrder }) { slot in
                         TVMealCard(mealSlot: slot) {
-                            if !slot.recipes.isEmpty {
+                            if !slot.recipesArray.isEmpty {
                                 selectedSlot = slot
                                 showingRecipeView = true
                             }
@@ -267,14 +268,11 @@ struct AmbientView: View {
     private func loadTodaysMeals() {
         let weekStart = WeekPlan.normalizeToMonday(Date())
 
-        let descriptor = FetchDescriptor<WeekPlan>(
-            predicate: #Predicate<WeekPlan> { plan in
-                plan.weekStartDate == weekStart
-            }
-        )
+        let request = NSFetchRequest<WeekPlan>(entityName: "WeekPlan")
+        request.predicate = NSPredicate(format: "weekStartDate == %@", weekStart as NSDate)
 
         do {
-            let plans = try modelContext.fetch(descriptor)
+            let plans = try viewContext.fetch(request)
             if let plan = plans.first {
                 weekPlan = plan
                 todaySlots = plan.slots(for: today)
@@ -290,7 +288,8 @@ struct AmbientView: View {
 /// Full-screen ambient display with beautiful recipe photography.
 /// Acts like a food-focused screensaver.
 struct InspirationModeView: View {
-    @Query private var recipes: [Recipe]
+    @FetchRequest(sortDescriptors: [NSSortDescriptor(keyPath: \Recipe.title, ascending: true)])
+    private var recipes: FetchedResults<Recipe>
     @State private var currentRecipeIndex = 0
 
     private var currentRecipe: Recipe? {
@@ -372,4 +371,5 @@ struct InspirationModeView: View {
 
 #Preview("Ambient View") {
     AmbientView()
+        .environment(\.managedObjectContext, PersistenceController.preview.viewContext)
 }

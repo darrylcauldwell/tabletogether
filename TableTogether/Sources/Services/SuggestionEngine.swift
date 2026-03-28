@@ -63,7 +63,7 @@ final class SuggestionEngine {
     ) -> SuggestionResult {
 
         // Get IDs of recipes already planned this week
-        let plannedRecipeIDs = Set(weekPlan.slots.flatMap { $0.recipes.map(\.id) })
+        let plannedRecipeIDs = Set(weekPlan.slotsArray.flatMap { $0.recipesArray.map(\.id) })
 
         // Filter out already-planned recipes
         let candidates = allRecipes.filter { recipe in
@@ -114,7 +114,7 @@ final class SuggestionEngine {
         memory: [SuggestionMemory]
     ) -> SuggestionResult {
         // Get IDs of recipes already planned this week
-        let plannedRecipeIDs = Set(weekPlan?.slots.flatMap { $0.recipes.map(\.id) } ?? [])
+        let plannedRecipeIDs = Set(weekPlan?.slotsArray.flatMap { $0.recipesArray.map(\.id) } ?? [])
 
         // Filter out already-planned recipes
         let candidates = allRecipes.filter { recipe in

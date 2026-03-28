@@ -1,10 +1,10 @@
 import Foundation
-import SwiftData
+import CoreData
 
 /// Resolves parsed ingredients against the food database and calculates macros.
 ///
 /// Resolution pipeline for each MealParsedIngredient:
-/// 1. Search local FoodItem cache (SwiftData) by normalizedName and userAliases
+/// 1. Search local FoodItem cache (Core Data) by normalizedName and userAliases
 /// 2. If no strong match and online, query USDA API and cache the result
 /// 3. Rank matches by StringSimilarity score and dataType priority
 /// 4. Calculate macros via GramConversionService
@@ -20,7 +20,7 @@ final class IngredientResolverService {
     /// Resolves an array of parsed ingredients into resolved ingredients with macros.
     func resolve(
         ingredients: [MealParsedIngredient],
-        context: ModelContext,
+        context: NSManagedObjectContext,
         household: Household?
     ) async -> [ResolvedIngredient] {
         var resolved: [ResolvedIngredient] = []
@@ -37,7 +37,7 @@ final class IngredientResolverService {
 
     private func resolveOne(
         _ ingredient: MealParsedIngredient,
-        context: ModelContext,
+        context: NSManagedObjectContext,
         household: Household?
     ) async -> ResolvedIngredient {
         let query = ingredient.name.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
@@ -105,9 +105,9 @@ final class IngredientResolverService {
 
     // MARK: - Local Cache Search
 
-    private func searchLocalCache(query: String, context: ModelContext) -> [FoodItemMatch] {
-        let descriptor = FetchDescriptor<FoodItem>()
-        guard let allItems = try? context.fetch(descriptor) else { return [] }
+    private func searchLocalCache(query: String, context: NSManagedObjectContext) -> [FoodItemMatch] {
+        let request = NSFetchRequest<FoodItem>(entityName: "FoodItem")
+        guard let allItems = try? context.fetch(request) else { return [] }
 
         var matches: [FoodItemMatch] = []
 
@@ -116,7 +116,7 @@ final class IngredientResolverService {
             let nameScore = StringSimilarity.combinedScore(query, item.normalizedName)
 
             // Score against user aliases
-            let aliasScore = item.userAliases.map { StringSimilarity.combinedScore(query, $0) }.max() ?? 0
+            let aliasScore = item.userAliasesList.map { StringSimilarity.combinedScore(query, $0) }.max() ?? 0
 
             // Score against USDA description
             let descScore = StringSimilarity.combinedScore(query, item.usdaDescription.lowercased()) * 0.8
@@ -144,16 +144,15 @@ final class IngredientResolverService {
     @discardableResult
     private func createFoodItem(
         from result: USDAFoodResult,
-        context: ModelContext,
+        context: NSManagedObjectContext,
         household: Household?
     ) -> FoodItem {
         // Check if already cached by fdcId
-        let fdcId = result.fdcId
-        let descriptor = FetchDescriptor<FoodItem>(
-            predicate: #Predicate<FoodItem> { $0.fdcId == fdcId }
-        )
+        let fdcId = Int32(result.fdcId)
+        let request = NSFetchRequest<FoodItem>(entityName: "FoodItem")
+        request.predicate = NSPredicate(format: "fdcId == %d", fdcId)
 
-        if let existing = try? context.fetch(descriptor).first {
+        if let existing = try? context.fetch(request).first {
             return existing
         }
 
@@ -161,6 +160,7 @@ final class IngredientResolverService {
         let portions: [CommonPortion] = result.foodMeasures?.compactMap { $0.asCommonPortion } ?? []
 
         let foodItem = FoodItem(
+            context: context,
             fdcId: result.fdcId,
             usdaDescription: result.description,
             displayName: result.cleanDisplayName,
@@ -176,7 +176,6 @@ final class IngredientResolverService {
             commonPortions: portions
         )
         foodItem.household = household
-        context.insert(foodItem)
 
         return foodItem
     }

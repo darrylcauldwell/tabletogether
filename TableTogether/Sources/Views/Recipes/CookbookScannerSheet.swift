@@ -8,13 +8,13 @@
 
 #if os(iOS)
 import SwiftUI
-import SwiftData
+import CoreData
 
 struct CookbookScannerSheet: View {
-    @Environment(\.modelContext) private var modelContext
+    @Environment(\.managedObjectContext) private var viewContext
     @Environment(\.dismiss) private var dismiss
 
-    @Query private var households: [Household]
+    @FetchRequest(sortDescriptors: []) private var households: FetchedResults<Household>
 
     @State private var service = CookbookScannerService()
     @State private var showingScanner = true
@@ -355,6 +355,7 @@ struct CookbookScannerSheet: View {
 
     private func importRecipe() {
         let recipe = Recipe(
+            context: viewContext,
             title: editableTitle,
             servings: editableServings,
             instructions: editableInstructions,
@@ -365,6 +366,7 @@ struct CookbookScannerSheet: View {
         let included = editableIngredients.filter { $0.isIncluded }
         for (index, editable) in included.enumerated() {
             let recipeIngredient = RecipeIngredient(
+                context: viewContext,
                 quantity: editable.original.quantity,
                 unit: editable.original.unit,
                 preparationNote: editable.original.preparationNote,
@@ -372,11 +374,10 @@ struct CookbookScannerSheet: View {
                 order: index,
                 customName: editable.original.name
             )
-            recipe.recipeIngredients.append(recipeIngredient)
+            recipe.addToRecipeIngredients(recipeIngredient)
         }
 
         recipe.household = households.first
-        modelContext.insert(recipe)
 
         AppLogger.scanner.info("Imported scanned recipe: \(editableTitle)")
         dismiss()

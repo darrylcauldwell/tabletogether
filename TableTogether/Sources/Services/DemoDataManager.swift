@@ -1,5 +1,5 @@
 import Foundation
-import SwiftData
+import CoreData
 import SwiftUI
 
 /// Manages the demo data lifecycle for testing and demonstration purposes.
@@ -22,7 +22,7 @@ final class DemoDataManager {
 
     // MARK: - Dependencies
 
-    private var modelContext: ModelContext?
+    private var modelContext: NSManagedObjectContext?
     private var privateDataManager: PrivateDataManager?
 
     // MARK: - Initialization
@@ -30,7 +30,7 @@ final class DemoDataManager {
     init() {}
 
     /// Configures the manager with required dependencies
-    func configure(modelContext: ModelContext, privateDataManager: PrivateDataManager?) {
+    func configure(modelContext: NSManagedObjectContext, privateDataManager: PrivateDataManager?) {
         self.modelContext = modelContext
         self.privateDataManager = privateDataManager
     }
@@ -79,15 +79,16 @@ final class DemoDataManager {
 
     /// Inserts all demo data into the database
     /// Insertion order respects relationships: Ingredients -> Users -> Recipes -> WeekPlan -> MealSlots -> GroceryItems
-    private func insertDemoData(into context: ModelContext) async throws {
+    private func insertDemoData(into context: NSManagedObjectContext) async throws {
         // Fetch household for linking
-        let householdDescriptor = FetchDescriptor<Household>()
-        let household = (try? context.fetch(householdDescriptor))?.first
+        let householdRequest = NSFetchRequest<Household>(entityName: "Household")
+        let household = (try? context.fetch(householdRequest))?.first
 
         // 1. Insert Ingredients
         var ingredientMap: [Int: Ingredient] = [:]
         for (index, demoIngredient) in DemoDataCatalog.ingredients.enumerated() {
             let ingredient = Ingredient(
+                context: context,
                 id: demoIngredient.id,
                 name: demoIngredient.name,
                 category: demoIngredient.category,
@@ -99,7 +100,6 @@ final class DemoDataManager {
                 isUserCreated: false
             )
             ingredient.household = household
-            context.insert(ingredient)
             ingredientMap[index] = ingredient
         }
 
@@ -107,13 +107,13 @@ final class DemoDataManager {
         var userMap: [Int: User] = [:]
         for (index, demoUser) in DemoDataCatalog.users.enumerated() {
             let user = User(
+                context: context,
                 id: demoUser.id,
                 displayName: demoUser.displayName,
                 avatarEmoji: demoUser.avatarEmoji,
                 avatarColorHex: demoUser.avatarColorHex
             )
             user.household = household
-            context.insert(user)
             userMap[index] = user
         }
 
@@ -121,6 +121,7 @@ final class DemoDataManager {
         var recipeMap: [Int: Recipe] = [:]
         for (index, demoRecipe) in DemoDataCatalog.recipes.enumerated() {
             let recipe = Recipe(
+                context: context,
                 id: demoRecipe.id,
                 title: demoRecipe.title,
                 summary: demoRecipe.summary,
@@ -133,13 +134,13 @@ final class DemoDataManager {
                 createdBy: userMap[0] // Chef Chaos creates all recipes
             )
             recipe.household = household
-            context.insert(recipe)
             recipeMap[index] = recipe
 
             // Add recipe ingredients
             for (order, ingredientRef) in demoRecipe.ingredients.enumerated() {
                 if let ingredient = ingredientMap[ingredientRef.ingredientIndex] {
                     let recipeIngredient = RecipeIngredient(
+                        context: context,
                         id: UUID(uuidString: "DE000000-0005-\(String(format: "%04d", index))-\(String(format: "%04d", order))-000000000001")!,
                         ingredient: ingredient,
                         quantity: ingredientRef.quantity,
@@ -148,7 +149,6 @@ final class DemoDataManager {
                         order: order
                     )
                     recipe.addIngredient(recipeIngredient)
-                    context.insert(recipeIngredient)
                 }
             }
         }
@@ -156,15 +156,15 @@ final class DemoDataManager {
         // 4. Create WeekPlan for current week
         // Remove any auto-created empty plan for this week first to avoid duplicates
         let monday = currentWeekMonday()
-        let existingDescriptor = FetchDescriptor<WeekPlan>()
-        let existingPlans = (try? context.fetch(existingDescriptor)) ?? []
+        let existingRequest = NSFetchRequest<WeekPlan>(entityName: "WeekPlan")
+        let existingPlans = (try? context.fetch(existingRequest)) ?? []
         for plan in existingPlans where Calendar.current.isDate(plan.weekStartDate, inSameDayAs: monday) {
             if !DemoDataCatalog.isDemoData(plan.id) {
                 // Delete the auto-created plan's slots first
-                for slot in plan.slots {
+                for slot in plan.slotsArray {
                     context.delete(slot)
                 }
-                for item in plan.groceryItems {
+                for item in plan.groceryItemsArray {
                     context.delete(item)
                 }
                 context.delete(plan)
@@ -172,12 +172,12 @@ final class DemoDataManager {
         }
 
         let weekPlan = WeekPlan(
+            context: context,
             id: DemoDataCatalog.weekPlanID,
             weekStartDate: monday,
             status: .active
         )
         weekPlan.household = household
-        context.insert(weekPlan)
 
         // 5. Create MealSlots
         var slotMap: [String: MealSlot] = [:] // Key: "day-mealType"
@@ -185,28 +185,34 @@ final class DemoDataManager {
             let slotID = UUID(uuidString: "DE000000-0004-\(String(format: "%04d", slotConfig.day.rawValue))-\(String(format: "%04d", slotConfig.mealType.sortOrder))-000000000001")!
 
             let slot = MealSlot(
+                context: context,
                 id: slotID,
                 dayOfWeek: slotConfig.day,
                 mealType: slotConfig.mealType,
                 servingsPlanned: slotConfig.servings,
-                recipes: slotConfig.recipeIndex.flatMap { recipeMap[$0] }.map { [$0] } ?? [],
                 customMealName: slotConfig.customMealName,
                 notes: slotConfig.notes,
                 isSkipped: slotConfig.isSkipped
             )
+
+            // Assign recipes to the slot
+            if let recipeIndex = slotConfig.recipeIndex, let recipe = recipeMap[recipeIndex] {
+                slot.addToRecipes(recipe)
+            }
+
             slot.weekPlan = weekPlan
-            weekPlan.slots.append(slot)
-            context.insert(slot)
+            weekPlan.addToSlots(slot)
 
             slotMap["\(slotConfig.day.rawValue)-\(slotConfig.mealType.rawValue)"] = slot
         }
 
         // 6. Generate grocery list from week plan
-        weekPlan.generateGroceryList()
+        weekPlan.generateGroceryList(context: context)
 
         // 7. Add manual grocery items
         for manualItem in DemoDataCatalog.manualGroceryItems {
             let groceryItem = GroceryItem(
+                context: context,
                 id: manualItem.id,
                 customName: manualItem.name,
                 quantity: manualItem.quantity,
@@ -214,11 +220,10 @@ final class DemoDataManager {
                 category: manualItem.category,
                 weekPlan: weekPlan
             )
-            weekPlan.groceryItems.append(groceryItem)
-            context.insert(groceryItem)
+            weekPlan.addToGroceryItems(groceryItem)
         }
 
-        // Save SwiftData changes
+        // Save Core Data changes
         try context.save()
 
         // 8. Insert private data (meal logs and personal settings)
@@ -322,57 +327,57 @@ final class DemoDataManager {
 
     /// Removes all demo data from the database
     /// Removal order is reverse of insertion to respect relationships
-    private func removeDemoData(from context: ModelContext) async throws {
+    private func removeDemoData(from context: NSManagedObjectContext) async throws {
         // 1. Delete GroceryItems with demo UUIDs
-        let groceryDescriptor = FetchDescriptor<GroceryItem>()
-        let allGroceryItems = try context.fetch(groceryDescriptor)
+        let groceryRequest = NSFetchRequest<GroceryItem>(entityName: "GroceryItem")
+        let allGroceryItems = try context.fetch(groceryRequest)
         for item in allGroceryItems where DemoDataCatalog.isDemoData(item.id) {
             context.delete(item)
         }
 
         // 2. Delete MealSlots with demo UUIDs
-        let slotDescriptor = FetchDescriptor<MealSlot>()
-        let allSlots = try context.fetch(slotDescriptor)
+        let slotRequest = NSFetchRequest<MealSlot>(entityName: "MealSlot")
+        let allSlots = try context.fetch(slotRequest)
         for slot in allSlots where DemoDataCatalog.isDemoData(slot.id) {
             context.delete(slot)
         }
 
         // 3. Delete WeekPlans with demo UUIDs
-        let weekPlanDescriptor = FetchDescriptor<WeekPlan>()
-        let allWeekPlans = try context.fetch(weekPlanDescriptor)
+        let weekPlanRequest = NSFetchRequest<WeekPlan>(entityName: "WeekPlan")
+        let allWeekPlans = try context.fetch(weekPlanRequest)
         for plan in allWeekPlans where DemoDataCatalog.isDemoData(plan.id) {
             context.delete(plan)
         }
 
         // 4. Delete RecipeIngredients with demo UUIDs
-        let recipeIngredientDescriptor = FetchDescriptor<RecipeIngredient>()
-        let allRecipeIngredients = try context.fetch(recipeIngredientDescriptor)
+        let recipeIngredientRequest = NSFetchRequest<RecipeIngredient>(entityName: "RecipeIngredient")
+        let allRecipeIngredients = try context.fetch(recipeIngredientRequest)
         for ri in allRecipeIngredients where DemoDataCatalog.isDemoData(ri.id) {
             context.delete(ri)
         }
 
         // 5. Delete Recipes with demo UUIDs
-        let recipeDescriptor = FetchDescriptor<Recipe>()
-        let allRecipes = try context.fetch(recipeDescriptor)
+        let recipeRequest = NSFetchRequest<Recipe>(entityName: "Recipe")
+        let allRecipes = try context.fetch(recipeRequest)
         for recipe in allRecipes where DemoDataCatalog.isDemoData(recipe.id) {
             context.delete(recipe)
         }
 
         // 6. Delete Ingredients with demo UUIDs
-        let ingredientDescriptor = FetchDescriptor<Ingredient>()
-        let allIngredients = try context.fetch(ingredientDescriptor)
+        let ingredientRequest = NSFetchRequest<Ingredient>(entityName: "Ingredient")
+        let allIngredients = try context.fetch(ingredientRequest)
         for ingredient in allIngredients where DemoDataCatalog.isDemoData(ingredient.id) {
             context.delete(ingredient)
         }
 
         // 7. Delete Users with demo UUIDs
-        let userDescriptor = FetchDescriptor<User>()
-        let allUsers = try context.fetch(userDescriptor)
+        let userRequest = NSFetchRequest<User>(entityName: "User")
+        let allUsers = try context.fetch(userRequest)
         for user in allUsers where DemoDataCatalog.isDemoData(user.id) {
             context.delete(user)
         }
 
-        // Save SwiftData changes
+        // Save Core Data changes
         try context.save()
 
         // 8. Remove private data
