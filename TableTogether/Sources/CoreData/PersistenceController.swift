@@ -138,9 +138,13 @@ final class PersistenceController {
             container.persistentStoreDescriptions = [privateDescription, sharedDescription]
         }
 
+        let storeCount = container.persistentStoreDescriptions.count
+        var loadedCount = 0
+
         container.loadPersistentStores { [weak self] description, error in
             if let error {
                 AppLogger.swiftData.fault("Failed to load store '\(description.configuration ?? "default")': \(error.localizedDescription)")
+                loadedCount += 1
                 return
             }
 
@@ -160,6 +164,13 @@ final class PersistenceController {
                 // In-memory or fallback
                 self.privatePersistentStore = store
             }
+
+            loadedCount += 1
+            if loadedCount == storeCount {
+                #if DEBUG
+                self.initializeSchemaIfNeeded()
+                #endif
+            }
         }
 
         // Configure viewContext
@@ -177,10 +188,6 @@ final class PersistenceController {
 
         // Load persisted history tokens
         loadHistoryTokens()
-
-        #if DEBUG
-        initializeSchemaIfNeeded()
-        #endif
     }
 
     // MARK: - Background Context
