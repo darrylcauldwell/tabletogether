@@ -21,12 +21,8 @@ platform :ios do
     )
     new_build = latest_build + 1
 
-    increment_build_number(
-      xcodeproj: "TableTogether.xcodeproj",
-      build_number: new_build
-    )
-
-    # Keep version in sync: 1.0.<build>
+    # Update build number and version directly in pbxproj (agvtool doesn't work with multiple projects)
+    sh("sed -i '' 's/CURRENT_PROJECT_VERSION = [0-9]*/CURRENT_PROJECT_VERSION = #{new_build}/' ../TableTogether.xcodeproj/project.pbxproj")
     sh("sed -i '' 's/MARKETING_VERSION = [0-9.]*/MARKETING_VERSION = 1.0.#{new_build}/' ../TableTogether.xcodeproj/project.pbxproj")
 
     # Build the app
@@ -146,11 +142,8 @@ platform :appletvos do
     )
     new_build = latest_build + 1
 
-    increment_build_number(
-      xcodeproj: "TableTogetherTV.xcodeproj",
-      build_number: new_build
-    )
-
+    # Update build number and version directly in pbxproj (agvtool doesn't work with multiple projects)
+    sh("sed -i '' 's/CURRENT_PROJECT_VERSION = [0-9]*/CURRENT_PROJECT_VERSION = #{new_build}/' ../TableTogetherTV.xcodeproj/project.pbxproj")
     sh("sed -i '' 's/MARKETING_VERSION = [0-9.]*/MARKETING_VERSION = 1.0.#{new_build}/' ../TableTogetherTV.xcodeproj/project.pbxproj")
 
     build_app(
