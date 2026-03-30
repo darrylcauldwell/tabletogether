@@ -22,10 +22,8 @@ struct SettingsView: View {
 
     @AppStorage("appearanceMode") private var appearanceMode: Int = AppearanceMode.system.rawValue
 
-    @State private var showingAddMember = false
     @State private var sharingError: String?
     @State private var showingSharingError = false
-    @State private var isSharingLoading = false
     @State private var showingRemoveDemoDataConfirmation = false
     @State private var showingRemoveContactConfirmation = false
     @State private var contactToRemove: User?
@@ -70,55 +68,65 @@ struct SettingsView: View {
 
                 // MARK: - Household Section
                 Section {
-                    // Sharing status
+                    // Sync status
+                    HStack {
+                        Image(systemName: "checkmark.icloud")
+                            .foregroundStyle(.green)
+                        Text("iCloud Sync")
+                        Spacer()
+                        Text("Active")
+                            .foregroundStyle(Theme.Colors.textSecondary)
+                    }
+
+                    // Participant list (when sharing)
                     if persistenceController.isSharing {
-                        HStack {
-                            Image(systemName: "checkmark.icloud.fill")
-                                .foregroundStyle(.green)
-                            Text("Sharing active")
-                            Spacer()
-                            Text("\(persistenceController.participantCount) people")
-                                .foregroundStyle(Theme.Colors.textSecondary)
-                        }
-                    }
-
-                    // Household members from SwiftData
-                    ForEach(users.filter { $0.id != currentUser?.id }) { user in
-                        HStack {
-                            UserAvatar(user: user, size: 40)
-                            VStack(alignment: .leading) {
-                                Text(user.displayName)
-                                    .font(.body)
-                            }
-                        }
-                        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                            Button(role: .destructive) {
-                                contactToRemove = user
-                                showingRemoveContactConfirmation = true
-                            } label: {
-                                Label("Remove", systemImage: "trash")
+                        ForEach(persistenceController.participantNames, id: \.self) { name in
+                            HStack {
+                                Image(systemName: "person.circle.fill")
+                                    .foregroundStyle(Theme.Colors.primary)
+                                Text(name)
                             }
                         }
                     }
 
-                    // Share / manage button
                     #if os(iOS)
-                    Button {
-                        Task { await prepareSharingSheet() }
-                    } label: {
-                        HStack {
-                            if persistenceController.isSharing {
-                                Label("Manage Sharing", systemImage: "person.2.fill")
-                            } else {
-                                Label("Share Household", systemImage: "person.badge.plus")
+                    // Invite button — different API for new vs existing share
+                    if persistenceController.isSharing, let share = persistenceController.existingShare {
+                        // Existing share — invite more people
+                        Button {
+                            SharingPresenter.shared.onError = { msg in
+                                sharingError = msg
+                                showingSharingError = true
                             }
-                            if isSharingLoading {
-                                Spacer()
-                                ProgressView()
+                            SharingPresenter.shared.presentInviteMore(share: share)
+                        } label: {
+                            Label("Invite More People", systemImage: "person.badge.plus")
+                        }
+
+                        // Manage sharing — participants, permissions, stop sharing
+                        Button {
+                            SharingPresenter.shared.onError = { msg in
+                                sharingError = msg
+                                showingSharingError = true
                             }
+                            SharingPresenter.shared.presentManageSharing(share: share)
+                        } label: {
+                            Label("Manage Sharing", systemImage: "person.2")
+                        }
+                    } else if let household = households.first {
+                        // No share yet — create one and invite
+                        Button {
+                            SharingPresenter.shared.onError = { msg in
+                                sharingError = msg
+                                showingSharingError = true
+                            }
+                            Task {
+                                await SharingPresenter.shared.presentInvite(for: household)
+                            }
+                        } label: {
+                            Label("Invite to Household", systemImage: "person.badge.plus")
                         }
                     }
-                    .disabled(isSharingLoading)
                     #else
                     Text("Share from iPhone or iPad to invite others")
                         .font(.caption)
@@ -127,7 +135,15 @@ struct SettingsView: View {
                 } header: {
                     Text("Household")
                 } footer: {
-                    Text("Share your meal plans, recipes, and grocery lists with others.")
+                    if persistenceController.isSharing {
+                        if persistenceController.participantCount > 0 {
+                            Text("Sharing with \(persistenceController.participantCount) people")
+                        } else {
+                            Text("No one has joined yet. Send an invitation to get started.")
+                        }
+                    } else {
+                        Text("Share your meal plans, recipes, and grocery lists with others.")
+                    }
                 }
 
                 // MARK: - Personal Preferences Section
@@ -338,34 +354,8 @@ struct SettingsView: View {
         }
     }
 
-    // MARK: - Sharing Actions
-
-    #if os(iOS)
-    private func prepareSharingSheet() async {
-        guard let household = households.first else {
-            sharingError = "No household found. Please restart the app."
-            showingSharingError = true
-            return
-        }
-
-        isSharingLoading = true
-
-        // Wire error callback
-        SharingPresenter.shared.onError = { errorMessage in
-            sharingError = errorMessage
-            showingSharingError = true
-        }
-
-        // Present via UIKit (not SwiftUI .sheet — UICloudSharingController
-        // renders as black screen when presented via SwiftUI sheets)
-        await SharingPresenter.shared.presentSharing(
-            for: household,
-            existingShare: persistenceController.existingShare
-        )
-
-        isSharingLoading = false
-    }
-    #endif
+    // Sharing actions are handled directly by SharingPresenter.shared
+    // from the button actions in the Household section above.
 }
 
 #Preview {

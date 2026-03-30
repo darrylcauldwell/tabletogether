@@ -3,12 +3,12 @@ import UIKit
 import CloudKit
 import CoreData
 
-/// Presents UICloudSharingController via UIKit — no SwiftUI .sheet() wrapper.
+/// Presents CloudKit sharing UI via UIKit.
 ///
-/// Uses only non-deprecated APIs:
-/// - Pre-creates CKShare via NSPersistentCloudKitContainer.share() for new shares
-/// - Presents UICloudSharingController(share:container:) which is NOT deprecated
-/// - Avoids UICloudSharingController(preparationHandler:) which IS deprecated in iOS 17
+/// Three distinct operations, each using the correct Apple API:
+/// - Invite (new): NSItemProvider.registerCKShare + UIActivityViewController
+/// - Invite (existing): NSItemProvider.registerCKShare + UIActivityViewController
+/// - Manage: UICloudSharingController(share:container:)
 @MainActor
 final class SharingPresenter: NSObject, UICloudSharingControllerDelegate {
 
@@ -17,12 +17,15 @@ final class SharingPresenter: NSObject, UICloudSharingControllerDelegate {
     /// Callback for errors — wired by SettingsView to show alerts.
     var onError: ((String) -> Void)?
 
-    /// Presents sharing UI for the given household.
-    /// If no share exists, creates one first, then presents the controller.
-    func presentSharing(for household: Household, existingShare: CKShare?) async {
+    // MARK: - Invite to Household (New Share)
+
+    /// Creates a new CKShare and presents UIActivityViewController for the user to send invitations.
+    /// Pre-creates the share first, then uses NSItemProvider.registerCKShare(_:container:allowedSharingOptions:)
+    /// to present the activity view controller with the existing share.
+    func presentInvite(for household: Household) async {
         let pc = PersistenceController.shared
 
-        // Ensure data is saved before sharing
+        // Save pending changes before sharing
         if pc.viewContext.hasChanges {
             do {
                 try pc.viewContext.save()
@@ -32,21 +35,50 @@ final class SharingPresenter: NSObject, UICloudSharingControllerDelegate {
             }
         }
 
-        // Get or create the CKShare
+        // Pre-create the CKShare on MainActor before presenting
         let share: CKShare
-        if let existing = existingShare {
-            share = existing
-        } else {
-            // Pre-create the share (not using deprecated preparationHandler)
-            do {
-                share = try await pc.shareHousehold(household)
-            } catch {
-                onError?("Failed to create share: \(error.localizedDescription)")
-                return
-            }
+        do {
+            share = try await pc.shareHousehold(household)
+        } catch {
+            onError?("Failed to create share: \(error.localizedDescription)")
+            return
         }
 
-        // Present UICloudSharingController with the existing share (non-deprecated API)
+        // Now register the existing share and present
+        let itemProvider = NSItemProvider()
+        itemProvider.registerCKShare(
+            share,
+            container: pc.ckContainer,
+            allowedSharingOptions: CKAllowedSharingOptions.standard
+        )
+
+        presentActivityViewController(with: itemProvider)
+    }
+
+    // MARK: - Invite More People (Existing Share)
+
+    /// Presents UIActivityViewController for an existing share so the user can invite more people.
+    /// Uses NSItemProvider.registerCKShare(_:container:allowedSharingOptions:)
+    func presentInviteMore(share: CKShare) {
+        let pc = PersistenceController.shared
+
+        let itemProvider = NSItemProvider()
+        itemProvider.registerCKShare(
+            share,
+            container: pc.ckContainer,
+            allowedSharingOptions: CKAllowedSharingOptions.standard
+        )
+
+        presentActivityViewController(with: itemProvider)
+    }
+
+    // MARK: - Manage Sharing
+
+    /// Presents UICloudSharingController for the owner to manage participants, permissions, and stop sharing.
+    /// Uses UICloudSharingController(share:container:) which is NOT deprecated.
+    func presentManageSharing(share: CKShare) {
+        let pc = PersistenceController.shared
+
         let controller = UICloudSharingController(share: share, container: pc.ckContainer)
         controller.delegate = self
         controller.availablePermissions = [.allowReadWrite]
@@ -101,7 +133,28 @@ final class SharingPresenter: NSObject, UICloudSharingControllerDelegate {
         nil
     }
 
-    // MARK: - View Controller Discovery
+    // MARK: - Private Helpers
+
+    private func presentActivityViewController(with itemProvider: NSItemProvider) {
+        let configuration = UIActivityItemsConfiguration(itemProviders: [itemProvider])
+
+        let activityVC = UIActivityViewController(activityItemsConfiguration: configuration)
+        activityVC.modalPresentationStyle = .formSheet
+
+        guard let topVC = Self.topViewController() else {
+            onError?("Unable to present sharing UI")
+            return
+        }
+
+        // iPad requires popover source
+        if let popover = activityVC.popoverPresentationController {
+            popover.sourceView = topVC.view
+            popover.sourceRect = CGRect(x: topVC.view.bounds.midX, y: topVC.view.bounds.midY, width: 0, height: 0)
+            popover.permittedArrowDirections = []
+        }
+
+        topVC.present(activityVC, animated: true)
+    }
 
     private static func topViewController() -> UIViewController? {
         guard let windowScene = UIApplication.shared.connectedScenes

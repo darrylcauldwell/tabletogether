@@ -78,6 +78,12 @@ final class PersistenceController {
     nonisolated(unsafe) static let appTransactionAuthor = "TableTogether"
     nonisolated(unsafe) static let tokenPrefix = "HistoryToken_"
 
+    // MARK: - Sharing UI Observer
+
+    /// Observes system sharing UI events (save/stop) to keep local state in sync.
+    @ObservationIgnored
+    private var sharingUIObserver: CKSystemSharingUIObserver?
+
     // MARK: - History Processing Queue
 
     /// Serial queue for processing persistent history (off main thread, matches Apple's sample).
@@ -161,6 +167,23 @@ final class PersistenceController {
             name: .NSPersistentStoreRemoteChange,
             object: container.persistentStoreCoordinator
         )
+
+        // Set up CKSystemSharingUIObserver to monitor system sharing UI events
+        if !inMemory {
+            let observer = CKSystemSharingUIObserver(container: ckContainer)
+            observer.systemSharingUIDidSaveShareBlock = { [weak self] _, result in
+                Task { @MainActor in
+                    await self?.fetchExistingShare()
+                }
+            }
+            observer.systemSharingUIDidStopSharingBlock = { [weak self] _, result in
+                Task { @MainActor in
+                    self?.existingShare = nil
+                    await self?.fetchExistingShare()
+                }
+            }
+            self.sharingUIObserver = observer
+        }
 
         #if DEBUG
         if !inMemory {
