@@ -16,7 +16,7 @@ struct WeekPlannerView: View {
     @FetchRequest(sortDescriptors: []) private var households: FetchedResults<Household>
 
     @State private var currentWeekStart: Date = WeekPlannerView.mondayOfCurrentWeek()
-    @State private var isSuggestionTrayExpanded: Bool = true
+    @State private var isSuggestionTrayExpanded: Bool = false
     @State private var selectedDayIndex: Int = 0
     @State private var showingRecentChanges: Bool = false
 
