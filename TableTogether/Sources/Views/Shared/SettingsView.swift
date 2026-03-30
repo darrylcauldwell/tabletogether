@@ -264,10 +264,10 @@ struct SettingsView: View {
             }
             #if os(iOS)
             .sheet(isPresented: $showingSharingSheet) {
-                if let share = sharingShare {
+                if let household = households.first {
                     CloudSharingSheet(
-                        share: share,
-                        container: persistenceController.ckContainer,
+                        share: persistenceController.existingShare,
+                        household: household,
                         persistenceController: persistenceController,
                         onDismiss: {
                             Task { await persistenceController.fetchExistingShare() }
@@ -348,23 +348,14 @@ struct SettingsView: View {
 
     #if os(iOS)
     private func prepareSharingSheet() async {
-        do {
-            if let existing = persistenceController.existingShare {
-                sharingShare = existing
-                showingSharingSheet = true
-            } else if let household = households.first {
-                // Ensure household is saved before sharing
-                try viewContext.save()
-                sharingShare = try await persistenceController.shareHousehold(household)
-                showingSharingSheet = true
-            } else {
-                AppLogger.sharing.error("No household found to share")
-            }
-        } catch {
-            AppLogger.sharing.error("Failed to prepare sharing: \(error.localizedDescription)")
-            sharingError = error.localizedDescription
+        guard households.first != nil else {
+            sharingError = "No household found. Please restart the app."
             showingSharingError = true
+            return
         }
+        // Ensure data is saved before sharing
+        try? viewContext.save()
+        showingSharingSheet = true
     }
     #endif
 }
