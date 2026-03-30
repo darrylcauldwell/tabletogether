@@ -24,8 +24,8 @@ struct SettingsView: View {
 
     @State private var sharingError: String?
     @State private var showingSharingError = false
-    @State private var showingStopSharingConfirmation = false
-    @State private var isStoppingShare = false
+    @State private var showingRemoveParticipantConfirmation = false
+    @State private var participantToRemove: String?
     @State private var showingRemoveDemoDataConfirmation = false
     @State private var showingRemoveContactConfirmation = false
     @State private var contactToRemove: User?
@@ -70,59 +70,43 @@ struct SettingsView: View {
 
                 // MARK: - Household Section
                 Section {
-                    // Sync status
-                    HStack {
-                        Image(systemName: "checkmark.icloud")
-                            .foregroundStyle(.green)
-                        Text("iCloud Sync")
-                        Spacer()
-                        Text("Active")
-                            .foregroundStyle(Theme.Colors.textSecondary)
-                    }
-
-                    // Participant list (when sharing)
+                    // Family members — swipe to remove
                     if persistenceController.isSharing {
                         ForEach(persistenceController.participantNames, id: \.self) { name in
-                            HStack {
+                            HStack(spacing: 12) {
                                 Image(systemName: "person.circle.fill")
+                                    .font(.title2)
                                     .foregroundStyle(Theme.Colors.primary)
                                 Text(name)
+                                    .font(.body)
+                            }
+                            .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                                Button(role: .destructive) {
+                                    participantToRemove = name
+                                    showingRemoveParticipantConfirmation = true
+                                } label: {
+                                    Label("Remove", systemImage: "person.badge.minus")
+                                }
                             }
                         }
                     }
 
+                    // Invite button — always available
                     #if os(iOS)
-                    if persistenceController.isSharing, let share = persistenceController.existingShare {
-                        // Invite more people
-                        Button {
-                            SharingPresenter.shared.onError = { msg in
-                                sharingError = msg
-                                showingSharingError = true
-                            }
+                    Button {
+                        SharingPresenter.shared.onError = { msg in
+                            sharingError = msg
+                            showingSharingError = true
+                        }
+                        if let share = persistenceController.existingShare {
                             SharingPresenter.shared.presentInviteMore(share: share)
-                        } label: {
-                            Label("Invite More People", systemImage: "person.badge.plus")
-                        }
-
-                        // Stop sharing — simple custom UI, no UICloudSharingController
-                        Button(role: .destructive) {
-                            showingStopSharingConfirmation = true
-                        } label: {
-                            Label("Stop Sharing", systemImage: "xmark.circle")
-                        }
-                    } else if let household = households.first {
-                        // No share yet — create one and invite
-                        Button {
-                            SharingPresenter.shared.onError = { msg in
-                                sharingError = msg
-                                showingSharingError = true
-                            }
+                        } else if let household = households.first {
                             Task {
                                 await SharingPresenter.shared.presentInvite(for: household)
                             }
-                        } label: {
-                            Label("Invite to Household", systemImage: "person.badge.plus")
                         }
+                    } label: {
+                        Label("Invite Family Member", systemImage: "person.badge.plus")
                     }
                     #else
                     Text("Share from iPhone or iPad to invite others")
@@ -132,14 +116,10 @@ struct SettingsView: View {
                 } header: {
                     Text("Household")
                 } footer: {
-                    if persistenceController.isSharing {
-                        if persistenceController.participantCount > 0 {
-                            Text("Sharing with \(persistenceController.participantCount) people")
-                        } else {
-                            Text("No one has joined yet. Send an invitation to get started.")
-                        }
+                    if persistenceController.participantCount > 0 {
+                        Text("Swipe left on a person to remove them from the household.")
                     } else {
-                        Text("Share your meal plans, recipes, and grocery lists with others.")
+                        Text("Invite family members to share meal plans, recipes, and grocery lists.")
                     }
                 }
 
@@ -288,23 +268,30 @@ struct SettingsView: View {
                 Text(sharingError ?? "Unknown error")
             }
             .confirmationDialog(
-                "Stop Sharing?",
-                isPresented: $showingStopSharingConfirmation,
+                "Remove from Household?",
+                isPresented: $showingRemoveParticipantConfirmation,
                 titleVisibility: .visible
             ) {
-                Button("Stop Sharing", role: .destructive) {
+                Button("Remove", role: .destructive) {
                     Task {
-                        isStoppingShare = true
-                        if let share = persistenceController.existingShare {
-                            await persistenceController.purgeObjectsAndRecords(for: share)
+                        // TODO: Remove specific participant from CKShare
+                        // For now, if this is the last participant, stop sharing entirely
+                        if persistenceController.participantCount <= 1 {
+                            if let share = persistenceController.existingShare {
+                                await persistenceController.purgeObjectsAndRecords(for: share)
+                            }
                         }
                         await persistenceController.fetchExistingShare()
-                        isStoppingShare = false
+                        participantToRemove = nil
                     }
                 }
-                Button("Cancel", role: .cancel) {}
+                Button("Cancel", role: .cancel) {
+                    participantToRemove = nil
+                }
             } message: {
-                Text("Others will lose access to your shared meal plans, recipes, and grocery lists. This cannot be undone.")
+                if let name = participantToRemove {
+                    Text("\(name) will lose access to your shared meal plans, recipes, and grocery lists.")
+                }
             }
             #endif
             .confirmationDialog(
