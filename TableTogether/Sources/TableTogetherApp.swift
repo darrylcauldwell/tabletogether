@@ -45,9 +45,6 @@ struct TableTogetherApp: App {
                 .environment(\.deepLinkMealSlotId, $deepLinkMealSlotId)
                 .preferredColorScheme(selectedColorScheme)
                 .task {
-                    #if DEBUG
-                    persistenceController.initializeCloudKitSchemaIfNeeded()
-                    #endif
                     await initializeDataIfNeeded()
                     if TableTogetherApp.isScreenshotMode {
                         let demoManager = DemoDataManager()

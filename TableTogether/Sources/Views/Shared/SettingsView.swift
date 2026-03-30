@@ -24,9 +24,9 @@ struct SettingsView: View {
 
     @State private var showingAddMember = false
     @State private var showingSharingSheet = false
-    @State private var sharingShare: CKShare?
     @State private var sharingError: String?
     @State private var showingSharingError = false
+    @State private var isSharingLoading = false
     @State private var showingRemoveDemoDataConfirmation = false
     @State private var showingRemoveContactConfirmation = false
     @State private var contactToRemove: User?
@@ -107,12 +107,19 @@ struct SettingsView: View {
                     Button {
                         Task { await prepareSharingSheet() }
                     } label: {
-                        if persistenceController.isSharing {
-                            Label("Manage Sharing", systemImage: "person.2.fill")
-                        } else {
-                            Label("Share Household", systemImage: "person.badge.plus")
+                        HStack {
+                            if persistenceController.isSharing {
+                                Label("Manage Sharing", systemImage: "person.2.fill")
+                            } else {
+                                Label("Share Household", systemImage: "person.badge.plus")
+                            }
+                            if isSharingLoading {
+                                Spacer()
+                                ProgressView()
+                            }
                         }
                     }
+                    .disabled(isSharingLoading)
                     #else
                     Text("Share from iPhone or iPad to invite others")
                         .font(.caption)
@@ -263,15 +270,14 @@ struct SettingsView: View {
                 }
             }
             #if os(iOS)
-            .sheet(isPresented: $showingSharingSheet) {
+            .sheet(isPresented: $showingSharingSheet, onDismiss: {
+                Task { await persistenceController.fetchExistingShare() }
+            }) {
                 if let household = households.first {
                     CloudSharingSheet(
                         share: persistenceController.existingShare,
                         household: household,
-                        persistenceController: persistenceController,
-                        onDismiss: {
-                            Task { await persistenceController.fetchExistingShare() }
-                        }
+                        persistenceController: persistenceController
                     )
                 }
             }
@@ -353,8 +359,9 @@ struct SettingsView: View {
             showingSharingError = true
             return
         }
-        // Ensure data is saved before sharing
+        // Save any pending changes before presenting sharing UI
         try? viewContext.save()
+        // Present the sheet — CloudSharingSheet handles both new and existing shares
         showingSharingSheet = true
     }
     #endif

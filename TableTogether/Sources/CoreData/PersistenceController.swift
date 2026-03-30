@@ -6,24 +6,21 @@ import os
 
 /// Unified persistence controller managing Core Data with CloudKit sharing.
 ///
-/// Handles:
+/// Architecture matches Apple's CoreDataCloudKitShare sample:
 /// - NSPersistentCloudKitContainer with dual stores (private + shared)
+/// - Serial OperationQueue for history processing (off main thread)
+/// - UserDefaults-based history token persistence
 /// - CloudKit sharing lifecycle (create, accept, fetch shares)
-/// - Persistent history tracking and remote change processing
-/// - Deduplication of records arriving from CloudKit
 @Observable
 @MainActor
 final class PersistenceController {
 
     // MARK: - Singleton & Preview
 
-    /// Shared instance for the app.
     static let shared = PersistenceController()
 
-    /// In-memory controller for SwiftUI previews and tests.
     static let preview: PersistenceController = {
         let controller = PersistenceController(inMemory: true)
-        // Seed minimal preview data on the viewContext
         let context = controller.viewContext
         let household = Household(context: context)
         household.id = UUID()
@@ -35,37 +32,33 @@ final class PersistenceController {
 
     // MARK: - Container & Stores
 
-    /// The CloudKit-enabled persistent container.
     let container: NSPersistentCloudKitContainer
 
-    /// The private persistent store (owner's data).
+    /// The private persistent store (owner's data). Set during init, always available after.
     private(set) var privatePersistentStore: NSPersistentStore?
 
-    /// The shared persistent store (data shared by others).
+    /// The shared persistent store (data shared by others). Set during init, always available after.
     private(set) var sharedPersistentStore: NSPersistentStore?
 
-    /// The CloudKit container for sharing operations.
+    /// Error from store loading, if any. Observable so UI can show error state.
+    private(set) var storeLoadError: String?
+
     @ObservationIgnored
     private(set) lazy var ckContainer = CKContainer(identifier: Self.cloudKitContainerID)
 
-    /// Main context for UI reads and writes.
     var viewContext: NSManagedObjectContext { container.viewContext }
 
     // MARK: - Sharing State
 
-    /// The existing CKShare for the household, if any.
     private(set) var existingShare: CKShare?
 
-    /// Whether the household is currently shared with others.
     var isSharing: Bool { existingShare != nil }
 
-    /// Number of participants (excluding owner).
     var participantCount: Int {
         guard let share = existingShare else { return 0 }
         return share.participants.count - 1
     }
 
-    /// Participant names for display.
     var participantNames: [String] {
         guard let share = existingShare else { return [] }
         return share.participants
@@ -77,24 +70,23 @@ final class PersistenceController {
             }
     }
 
-    /// Last error from sharing operations.
     private(set) var lastError: String?
 
     // MARK: - Constants
 
     static let cloudKitContainerID = "iCloud.dev.dreamfold.tabletogether"
-    private static let appTransactionAuthor = "TableTogether"
+    nonisolated(unsafe) static let appTransactionAuthor = "TableTogether"
+    nonisolated(unsafe) static let tokenPrefix = "HistoryToken_"
 
-    // MARK: - History Tokens
+    // MARK: - History Processing Queue
 
+    /// Serial queue for processing persistent history (off main thread, matches Apple's sample).
     @ObservationIgnored
-    private var lastHistoryTokens: [String: NSPersistentHistoryToken] = [:]
-
-    @ObservationIgnored
-    private lazy var tokenDirectory: URL = {
-        let url = NSPersistentContainer.defaultDirectoryURL().appendingPathComponent("HistoryTokens", isDirectory: true)
-        try? FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
-        return url
+    private let historyQueue: OperationQueue = {
+        let queue = OperationQueue()
+        queue.maxConcurrentOperationCount = 1
+        queue.name = "PersistenceController.historyQueue"
+        return queue
     }()
 
     // MARK: - Initialization
@@ -103,7 +95,6 @@ final class PersistenceController {
         container = NSPersistentCloudKitContainer(name: "TableTogether")
 
         if inMemory {
-            // Single in-memory store for previews/tests
             let description = NSPersistentStoreDescription()
             description.type = NSInMemoryStoreType
             container.persistentStoreDescriptions = [description]
@@ -138,37 +129,23 @@ final class PersistenceController {
             container.persistentStoreDescriptions = [privateDescription, sharedDescription]
         }
 
-        let storeCount = container.persistentStoreDescriptions.count
-        var loadedCount = 0
-
-        container.loadPersistentStores { [weak self] description, error in
+        // loadPersistentStores fires completion synchronously for SQLite stores
+        // (shouldAddStoreAsynchronously defaults to false). Stores are ready when this returns.
+        container.loadPersistentStores { description, error in
             if let error {
                 AppLogger.swiftData.fault("Failed to load store '\(description.configuration ?? "default")': \(error.localizedDescription)")
-                loadedCount += 1
+                self.storeLoadError = error.localizedDescription
                 return
             }
 
-            guard let self else { return }
-
             // Capture store references
             if let url = description.url,
-               let store = description.cloudKitContainerOptions.flatMap({ _ -> NSPersistentStore? in
-                self.container.persistentStoreCoordinator.persistentStore(for: url)
-            }) {
+               let store = self.container.persistentStoreCoordinator.persistentStore(for: url) {
                 if description.cloudKitContainerOptions?.databaseScope == .shared {
                     self.sharedPersistentStore = store
                 } else {
                     self.privatePersistentStore = store
                 }
-            } else if let url = description.url,
-                      let store = self.container.persistentStoreCoordinator.persistentStore(for: url) {
-                // In-memory or fallback
-                self.privatePersistentStore = store
-            }
-
-            loadedCount += 1
-            if loadedCount == storeCount {
-                self.storesLoaded = true
             }
         }
 
@@ -177,7 +154,7 @@ final class PersistenceController {
         container.viewContext.mergePolicy = NSMergePolicy.mergeByPropertyObjectTrump
         container.viewContext.transactionAuthor = Self.appTransactionAuthor
 
-        // Observe remote changes
+        // Register for remote changes AFTER stores are loaded
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(processRemoteChanges),
@@ -185,13 +162,20 @@ final class PersistenceController {
             object: container.persistentStoreCoordinator
         )
 
-        // Load persisted history tokens
-        loadHistoryTokens()
+        #if DEBUG
+        if !inMemory {
+            do {
+                try container.initializeCloudKitSchema(options: [])
+                AppLogger.swiftData.info("CloudKit schema initialized")
+            } catch {
+                AppLogger.swiftData.warning("CloudKit schema init: \(error.localizedDescription)")
+            }
+        }
+        #endif
     }
 
     // MARK: - Background Context
 
-    /// Creates a new background context for batch operations.
     func newBackgroundContext() -> NSManagedObjectContext {
         let context = container.newBackgroundContext()
         context.mergePolicy = NSMergePolicy.mergeByPropertyObjectTrump
@@ -201,19 +185,16 @@ final class PersistenceController {
 
     // MARK: - Store Queries
 
-    /// Whether an object lives in the private store (owned by this user).
     func isOwned(object: NSManagedObject) -> Bool {
         guard let store = object.objectID.persistentStore else { return true }
         return store == privatePersistentStore
     }
 
-    /// Whether the current user can edit an object.
     func canEdit(object: NSManagedObject) -> Bool {
         if isOwned(object: object) { return true }
         return container.canUpdateRecord(forManagedObjectWith: object.objectID)
     }
 
-    /// Whether the current user can delete an object.
     func canDelete(object: NSManagedObject) -> Bool {
         if isOwned(object: object) { return true }
         return container.canDeleteRecord(forManagedObjectWith: object.objectID)
@@ -221,14 +202,18 @@ final class PersistenceController {
 
     // MARK: - Sharing
 
-    /// Creates a CKShare for the given household, sharing all related data.
+    /// Creates a CKShare for the given household.
+    /// Saves the context first to ensure the object is persisted.
     func shareHousehold(_ household: Household) async throws -> CKShare {
-        try await withCheckedThrowingContinuation { continuation in
+        // Ensure household is saved to the persistent store before sharing
+        if viewContext.hasChanges {
+            try viewContext.save()
+        }
+
+        return try await withCheckedThrowingContinuation { continuation in
             container.share([household], to: nil) { _, share, _, error in
                 if let error {
-                    Task { @MainActor in
-                        self.lastError = error.localizedDescription
-                    }
+                    self.lastError = error.localizedDescription
                     continuation.resume(throwing: error)
                     return
                 }
@@ -243,10 +228,8 @@ final class PersistenceController {
                 share[CKShare.SystemFieldKey.title] = "TableTogether Household" as CKRecordValue
                 share.publicPermission = .none
 
-                Task { @MainActor in
-                    self.existingShare = share
-                    self.lastError = nil
-                }
+                self.existingShare = share
+                self.lastError = nil
                 continuation.resume(returning: share)
             }
         }
@@ -262,9 +245,7 @@ final class PersistenceController {
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
             container.acceptShareInvitations(from: [metadata], into: sharedStore) { _, error in
                 if let error {
-                    Task { @MainActor in
-                        self.lastError = error.localizedDescription
-                    }
+                    self.lastError = error.localizedDescription
                     continuation.resume(throwing: error)
                 } else {
                     AppLogger.sharing.info("Accepted household share invitation")
@@ -282,19 +263,13 @@ final class PersistenceController {
 
         do {
             let shares = try container.fetchShares(in: privateStore)
-            await MainActor.run {
-                self.existingShare = shares.first
-                self.lastError = nil
-            }
+            existingShare = shares.first
+            lastError = nil
             if let share = shares.first {
-                AppLogger.sharing.info("Found existing household share with \(share.participants.count) participants")
-            } else {
-                AppLogger.sharing.info("No existing household share found")
+                AppLogger.sharing.info("Found existing share with \(share.participants.count) participants")
             }
         } catch {
-            await MainActor.run {
-                self.lastError = error.localizedDescription
-            }
+            lastError = error.localizedDescription
             AppLogger.sharing.error("Failed to fetch shares: \(error.localizedDescription)")
         }
     }
@@ -305,9 +280,12 @@ final class PersistenceController {
         return shares[object.objectID]
     }
 
-    /// Persists updates to an existing CKShare.
+    /// Persists updates to an existing CKShare (called by UICloudSharingController delegate).
     func persistUpdatedShare(_ share: CKShare) async throws {
-        guard let store = privatePersistentStore ?? sharedPersistentStore else { return }
+        guard let store = privatePersistentStore ?? sharedPersistentStore else {
+            throw NSError(domain: "PersistenceController", code: 3,
+                          userInfo: [NSLocalizedDescriptionKey: "No persistent store available"])
+        }
 
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
             container.persistUpdatedShare(share, in: store) { _, error in
@@ -320,73 +298,98 @@ final class PersistenceController {
         }
     }
 
-    // MARK: - History Processing
+    /// Purges shared objects and records when sharing stops (called by UICloudSharingController delegate).
+    func purgeObjectsAndRecords(for share: CKShare) async {
+        guard let store = privatePersistentStore else { return }
+        guard let zoneID = share.recordID.zoneID as CKRecordZone.ID? else { return }
 
-    /// Whether stores have finished loading.
-    private var storesLoaded = false
-
-    @objc
-    private nonisolated func processRemoteChanges(_ notification: Notification) {
-        Task { @MainActor in
-            guard self.storesLoaded else { return }
-            self.processHistory()
+        do {
+            try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+                container.purgeObjectsAndRecordsInZone(with: zoneID, in: store) { _, error in
+                    if let error {
+                        continuation.resume(throwing: error)
+                    } else {
+                        continuation.resume()
+                    }
+                }
+            }
+            existingShare = nil
+            AppLogger.sharing.info("Purged shared objects and records")
+        } catch {
+            AppLogger.sharing.error("Failed to purge: \(error.localizedDescription)")
         }
     }
 
-    private func processHistory() {
-        let stores: [NSPersistentStore] = [privatePersistentStore, sharedPersistentStore].compactMap { $0 }
-        guard !stores.isEmpty else { return }
+    // MARK: - History Processing (Serial Queue, Off Main Thread)
 
-        for store in stores {
-            guard let storeID = store.identifier else { continue }
-            let token = lastHistoryTokens[storeID]
+    @objc
+    private nonisolated func processRemoteChanges(_ notification: Notification) {
+        // Extract store UUID from notification (matches Apple's sample pattern)
+        guard let storeUUID = notification.userInfo?[NSStoreUUIDKey] as? String else { return }
 
-            let request = NSPersistentHistoryChangeRequest.fetchHistory(after: token)
-            if let fetchRequest = NSPersistentHistoryTransaction.fetchRequest {
-                fetchRequest.predicate = NSPredicate(format: "author != %@", Self.appTransactionAuthor)
-                request.fetchRequest = fetchRequest
-            }
-            request.affectedStores = [store]
-
-            let context = newBackgroundContext()
+        historyQueue.addOperation { [weak self] in
+            guard let self else { return }
+            let context = self.container.newBackgroundContext()
+            context.mergePolicy = NSMergePolicy.mergeByPropertyObjectTrump
             context.performAndWait {
-                do {
-                    let result = try context.execute(request) as? NSPersistentHistoryResult
-                    guard let transactions = result?.result as? [NSPersistentHistoryTransaction],
-                          !transactions.isEmpty else { return }
+                self.processHistory(storeUUID: storeUUID, context: context)
+            }
+        }
+    }
 
-                    // Merge remote changes into viewContext
-                    for transaction in transactions {
-                        self.viewContext.perform {
-                            self.viewContext.mergeChanges(fromContextDidSave: transaction.objectIDNotification())
-                        }
-                    }
+    private nonisolated func processHistory(storeUUID: String, context: NSManagedObjectContext) {
+        // Find the store matching this UUID
+        let store = container.persistentStoreCoordinator.persistentStores.first {
+            $0.identifier == storeUUID
+        }
+        guard let store else { return }
 
-                    // Update token — archive and persist on this thread
-                    if let lastToken = transactions.last?.token {
-                        if let data = try? NSKeyedArchiver.archivedData(withRootObject: lastToken, requiringSecureCoding: true) {
-                            let url = NSPersistentContainer.defaultDirectoryURL()
-                                .appendingPathComponent("HistoryTokens", isDirectory: true)
-                                .appendingPathComponent("\(storeID).token")
-                            try? data.write(to: url)
-                        }
-                    }
+        // Load token from UserDefaults
+        let tokenKey = Self.tokenPrefix + storeUUID
+        let lastToken: NSPersistentHistoryToken? = {
+            guard let data = UserDefaults.standard.data(forKey: tokenKey) else { return nil }
+            return try? NSKeyedUnarchiver.unarchivedObject(ofClass: NSPersistentHistoryToken.self, from: data)
+        }()
 
-                    // Deduplicate new objects in private store only
-                    if store == self.privatePersistentStore {
-                        self.deduplicateIfNeeded(transactions: transactions, in: context)
-                    }
-                } catch {
-                    AppLogger.swiftData.error("Failed to process history for store \(storeID): \(error.localizedDescription)")
+        // Fetch history since last token, excluding our own changes
+        let request = NSPersistentHistoryChangeRequest.fetchHistory(after: lastToken)
+        if let fetchRequest = NSPersistentHistoryTransaction.fetchRequest {
+            fetchRequest.predicate = NSPredicate(format: "author != %@", Self.appTransactionAuthor)
+            request.fetchRequest = fetchRequest
+        }
+        request.affectedStores = [store]
+
+        do {
+            let result = try context.execute(request) as? NSPersistentHistoryResult
+            guard let transactions = result?.result as? [NSPersistentHistoryTransaction],
+                  !transactions.isEmpty else { return }
+
+            // Merge remote changes into viewContext
+            for transaction in transactions {
+                let notification = transaction.objectIDNotification()
+                Task { @MainActor in
+                    self.viewContext.mergeChanges(fromContextDidSave: notification)
                 }
             }
+
+            // Save updated token to UserDefaults
+            if let newToken = transactions.last?.token,
+               let data = try? NSKeyedArchiver.archivedData(withRootObject: newToken, requiringSecureCoding: true) {
+                UserDefaults.standard.set(data, forKey: tokenKey)
+            }
+
+            // Deduplicate in private store only (not shared)
+            if store.configurationName != "Shared" {
+                deduplicateIfNeeded(transactions: transactions, in: context)
+            }
+        } catch {
+            AppLogger.swiftData.error("Failed to process history for store \(storeUUID): \(error.localizedDescription)")
         }
     }
 
     // MARK: - Deduplication
 
-    /// Deduplicates objects that arrived from CloudKit by keeping the lowest UUID.
-    private func deduplicateIfNeeded(transactions: [NSPersistentHistoryTransaction], in context: NSManagedObjectContext) {
+    private nonisolated func deduplicateIfNeeded(transactions: [NSPersistentHistoryTransaction], in context: NSManagedObjectContext) {
         let entityNames = ["Household", "Recipe", "Ingredient", "User", "WeekPlan",
                            "MealSlot", "MealArchetype", "GroceryItem", "FoodItem",
                            "RecipeIngredient", "SuggestionMemory"]
@@ -398,18 +401,14 @@ final class PersistenceController {
                 let entityName = change.changedObjectID.entity.name ?? ""
                 guard entityNames.contains(entityName) else { continue }
 
-                // Fetch the inserted object to get its UUID
                 guard let inserted = try? context.existingObject(with: change.changedObjectID),
                       let insertedUUID = inserted.value(forKey: "id") as? UUID else { continue }
 
-                // Find duplicates with same UUID
                 let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: entityName)
                 fetchRequest.predicate = NSPredicate(format: "id == %@", insertedUUID as CVarArg)
-                fetchRequest.affectedStores = [privatePersistentStore].compactMap { $0 }
 
                 guard let duplicates = try? context.fetch(fetchRequest), duplicates.count > 1 else { continue }
 
-                // Keep the one with the "lowest" objectID (deterministic across peers)
                 let sorted = duplicates.sorted {
                     $0.objectID.uriRepresentation().absoluteString < $1.objectID.uriRepresentation().absoluteString
                 }
@@ -428,48 +427,4 @@ final class PersistenceController {
             }
         }
     }
-
-    // MARK: - History Token Persistence
-
-    private func loadHistoryTokens() {
-        guard let files = try? FileManager.default.contentsOfDirectory(at: tokenDirectory, includingPropertiesForKeys: nil) else { return }
-
-        for file in files where file.pathExtension == "token" {
-            let storeID = file.deletingPathExtension().lastPathComponent
-            if let data = try? Data(contentsOf: file),
-               let token = try? NSKeyedUnarchiver.unarchivedObject(ofClass: NSPersistentHistoryToken.self, from: data) {
-                lastHistoryTokens[storeID] = token
-            }
-        }
-    }
-
-    private func saveHistoryToken(_ token: NSPersistentHistoryToken, for storeID: String) {
-        let url = tokenDirectory.appendingPathComponent("\(storeID).token")
-        if let data = try? NSKeyedArchiver.archivedData(withRootObject: token, requiringSecureCoding: true) {
-            try? data.write(to: url)
-        }
-    }
-
-    // MARK: - Schema Initialization (Debug Only)
-
-    #if DEBUG
-    /// Pushes the Core Data model to CloudKit Development schema.
-    /// Call once after app launch (not during init — stores must be loaded first).
-    func initializeCloudKitSchemaIfNeeded() {
-        do {
-            try container.initializeCloudKitSchema(options: [])
-            AppLogger.swiftData.info("CloudKit schema initialized successfully")
-        } catch {
-            AppLogger.swiftData.warning("CloudKit schema initialization: \(error.localizedDescription)")
-        }
-    }
-    #endif
-}
-
-// MARK: - Environment Access
-
-extension PersistenceController {
-    /// Access the shared controller from views.
-    /// Use `PersistenceController.shared` directly — no environment key needed
-    /// since the controller is a singleton and @MainActor isolated.
 }
