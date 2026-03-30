@@ -25,6 +25,8 @@ struct SettingsView: View {
     @State private var showingAddMember = false
     @State private var showingSharingSheet = false
     @State private var sharingShare: CKShare?
+    @State private var sharingError: String?
+    @State private var showingSharingError = false
     @State private var showingRemoveDemoDataConfirmation = false
     @State private var showingRemoveContactConfirmation = false
     @State private var contactToRemove: User?
@@ -273,6 +275,11 @@ struct SettingsView: View {
                     )
                 }
             }
+            .alert("Sharing Error", isPresented: $showingSharingError) {
+                Button("OK") {}
+            } message: {
+                Text(sharingError ?? "Unknown error")
+            }
             #endif
             .confirmationDialog(
                 "Remove Contact?",
@@ -344,12 +351,19 @@ struct SettingsView: View {
         do {
             if let existing = persistenceController.existingShare {
                 sharingShare = existing
+                showingSharingSheet = true
             } else if let household = households.first {
+                // Ensure household is saved before sharing
+                try viewContext.save()
                 sharingShare = try await persistenceController.shareHousehold(household)
+                showingSharingSheet = true
+            } else {
+                AppLogger.sharing.error("No household found to share")
             }
-            showingSharingSheet = true
         } catch {
             AppLogger.sharing.error("Failed to prepare sharing: \(error.localizedDescription)")
+            sharingError = error.localizedDescription
+            showingSharingError = true
         }
     }
     #endif

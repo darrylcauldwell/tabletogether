@@ -540,10 +540,10 @@ struct SyncStatusRow: View {
             Text("iCloud Sync")
             Spacer()
 
-            Image(systemName: persistenceController.isSharing ? "checkmark.icloud" : "icloud")
-                .foregroundStyle(persistenceController.isSharing ? .green : Theme.Colors.textSecondary)
+            Image(systemName: "checkmark.icloud")
+                .foregroundStyle(.green)
 
-            Text(persistenceController.isSharing ? "Connected" : "Not Sharing")
+            Text(persistenceController.isSharing ? "Sharing with \(persistenceController.participantCount) people" : "Active")
                 .font(.subheadline)
                 .foregroundStyle(Theme.Colors.textSecondary)
         }
