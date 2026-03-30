@@ -10,7 +10,7 @@ import CoreData
 /// - Invite (existing): NSItemProvider.registerCKShare + UIActivityViewController
 /// - Manage: UICloudSharingController(share:container:)
 @MainActor
-final class SharingPresenter: NSObject, UICloudSharingControllerDelegate {
+final class SharingPresenter: NSObject {
 
     static let shared = SharingPresenter()
 
@@ -70,67 +70,6 @@ final class SharingPresenter: NSObject, UICloudSharingControllerDelegate {
         )
 
         presentActivityViewController(with: itemProvider)
-    }
-
-    // MARK: - Manage Sharing
-
-    /// Presents UICloudSharingController for the owner to manage participants, permissions, and stop sharing.
-    /// Uses UICloudSharingController(share:container:) which is NOT deprecated.
-    func presentManageSharing(share: CKShare) {
-        let pc = PersistenceController.shared
-
-        let controller = UICloudSharingController(share: share, container: pc.ckContainer)
-        controller.delegate = self
-        controller.availablePermissions = [.allowReadWrite]
-        controller.modalPresentationStyle = .formSheet
-
-        guard let topVC = Self.topViewController() else {
-            onError?("Unable to present sharing UI")
-            return
-        }
-        topVC.present(controller, animated: true)
-    }
-
-    // MARK: - UICloudSharingControllerDelegate
-
-    func cloudSharingControllerDidSaveShare(_ csc: UICloudSharingController) {
-        if let share = csc.share {
-            Task {
-                try? await PersistenceController.shared.persistUpdatedShare(share)
-                await PersistenceController.shared.fetchExistingShare()
-            }
-        }
-        AppLogger.sharing.info("Share saved successfully")
-    }
-
-    func cloudSharingControllerDidStopSharing(_ csc: UICloudSharingController) {
-        if let share = csc.share {
-            Task {
-                await PersistenceController.shared.purgeObjectsAndRecords(for: share)
-                await PersistenceController.shared.fetchExistingShare()
-            }
-        } else {
-            Task {
-                await PersistenceController.shared.fetchExistingShare()
-            }
-        }
-        AppLogger.sharing.info("Sharing stopped")
-    }
-
-    func cloudSharingController(
-        _ csc: UICloudSharingController,
-        failedToSaveShareWithError error: Error
-    ) {
-        AppLogger.sharing.error("Failed to save share: \(error.localizedDescription)")
-        onError?(error.localizedDescription)
-    }
-
-    func itemTitle(for csc: UICloudSharingController) -> String? {
-        "TableTogether Household"
-    }
-
-    func itemThumbnailData(for csc: UICloudSharingController) -> Data? {
-        nil
     }
 
     // MARK: - Private Helpers

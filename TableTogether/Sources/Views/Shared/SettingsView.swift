@@ -24,6 +24,8 @@ struct SettingsView: View {
 
     @State private var sharingError: String?
     @State private var showingSharingError = false
+    @State private var showingStopSharingConfirmation = false
+    @State private var isStoppingShare = false
     @State private var showingRemoveDemoDataConfirmation = false
     @State private var showingRemoveContactConfirmation = false
     @State private var contactToRemove: User?
@@ -90,9 +92,8 @@ struct SettingsView: View {
                     }
 
                     #if os(iOS)
-                    // Invite button — different API for new vs existing share
                     if persistenceController.isSharing, let share = persistenceController.existingShare {
-                        // Existing share — invite more people
+                        // Invite more people
                         Button {
                             SharingPresenter.shared.onError = { msg in
                                 sharingError = msg
@@ -103,15 +104,11 @@ struct SettingsView: View {
                             Label("Invite More People", systemImage: "person.badge.plus")
                         }
 
-                        // Manage sharing — participants, permissions, stop sharing
-                        Button {
-                            SharingPresenter.shared.onError = { msg in
-                                sharingError = msg
-                                showingSharingError = true
-                            }
-                            SharingPresenter.shared.presentManageSharing(share: share)
+                        // Stop sharing — simple custom UI, no UICloudSharingController
+                        Button(role: .destructive) {
+                            showingStopSharingConfirmation = true
                         } label: {
-                            Label("Manage Sharing", systemImage: "person.2")
+                            Label("Stop Sharing", systemImage: "xmark.circle")
                         }
                     } else if let household = households.first {
                         // No share yet — create one and invite
@@ -289,6 +286,25 @@ struct SettingsView: View {
                 Button("OK") {}
             } message: {
                 Text(sharingError ?? "Unknown error")
+            }
+            .confirmationDialog(
+                "Stop Sharing?",
+                isPresented: $showingStopSharingConfirmation,
+                titleVisibility: .visible
+            ) {
+                Button("Stop Sharing", role: .destructive) {
+                    Task {
+                        isStoppingShare = true
+                        if let share = persistenceController.existingShare {
+                            await persistenceController.purgeObjectsAndRecords(for: share)
+                        }
+                        await persistenceController.fetchExistingShare()
+                        isStoppingShare = false
+                    }
+                }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text("Others will lose access to your shared meal plans, recipes, and grocery lists. This cannot be undone.")
             }
             #endif
             .confirmationDialog(
