@@ -73,7 +73,7 @@ struct WeekPlannerView: View {
                 onClearWeek: clearWeek
             )
         }
-        .navigationTitle("Meal Plan")
+        .navigationTitle("")
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
