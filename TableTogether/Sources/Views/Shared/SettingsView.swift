@@ -271,13 +271,17 @@ struct SettingsView: View {
             }
             #if os(iOS)
             .sheet(isPresented: $showingSharingSheet, onDismiss: {
-                Task { await persistenceController.fetchExistingShare() }
+                isSharingLoading = false
             }) {
                 if let household = households.first {
                     CloudSharingSheet(
                         share: persistenceController.existingShare,
                         household: household,
-                        persistenceController: persistenceController
+                        persistenceController: persistenceController,
+                        onError: { errorMessage in
+                            sharingError = errorMessage
+                            showingSharingError = true
+                        }
                     )
                 }
             }
@@ -359,9 +363,19 @@ struct SettingsView: View {
             showingSharingError = true
             return
         }
-        // Save any pending changes before presenting sharing UI
-        try? viewContext.save()
-        // Present the sheet — CloudSharingSheet handles both new and existing shares
+
+        // Save pending changes before presenting sharing UI
+        do {
+            if viewContext.hasChanges {
+                try viewContext.save()
+            }
+        } catch {
+            sharingError = "Failed to save data: \(error.localizedDescription)"
+            showingSharingError = true
+            return
+        }
+
+        isSharingLoading = true
         showingSharingSheet = true
     }
     #endif

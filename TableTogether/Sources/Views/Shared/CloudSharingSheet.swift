@@ -9,24 +9,23 @@ import UIKit
 /// Matches Apple's CoreDataCloudKitShare sample pattern:
 /// - Existing share: UICloudSharingController(share:container:) for managing
 /// - New share: UICloudSharingController(preparationHandler:) for creating
-///
-/// Delegate callbacks persist share updates and purge data when sharing stops.
 struct CloudSharingSheet: UIViewControllerRepresentable {
     let share: CKShare?
     let household: Household
     let persistenceController: PersistenceController
+    var onError: ((String) -> Void)?
 
     func makeUIViewController(context: Context) -> UICloudSharingController {
         let controller: UICloudSharingController
 
         if let existingShare = share {
-            // Manage existing share
+            // Manage existing share — shows participants, permissions, stop sharing
             controller = UICloudSharingController(
                 share: existingShare,
                 container: persistenceController.ckContainer
             )
         } else {
-            // Create new share via preparation handler (Apple's recommended pattern)
+            // Create new share — shows invite UI (iMessage, email, link, AirDrop)
             controller = UICloudSharingController { _, completion in
                 let pc = self.persistenceController
                 pc.container.share([self.household], to: nil) { _, share, container, error in
@@ -47,18 +46,19 @@ struct CloudSharingSheet: UIViewControllerRepresentable {
     func updateUIViewController(_ uiViewController: UICloudSharingController, context: Context) {}
 
     func makeCoordinator() -> Coordinator {
-        Coordinator(persistenceController: persistenceController)
+        Coordinator(persistenceController: persistenceController, onError: onError)
     }
 
     final class Coordinator: NSObject, UICloudSharingControllerDelegate {
         let persistenceController: PersistenceController
+        let onError: ((String) -> Void)?
 
-        init(persistenceController: PersistenceController) {
+        init(persistenceController: PersistenceController, onError: ((String) -> Void)?) {
             self.persistenceController = persistenceController
+            self.onError = onError
         }
 
         func cloudSharingControllerDidSaveShare(_ csc: UICloudSharingController) {
-            // Persist share metadata back to Core Data (Apple's sample does this)
             if let share = csc.share {
                 Task {
                     try? await persistenceController.persistUpdatedShare(share)
@@ -69,10 +69,14 @@ struct CloudSharingSheet: UIViewControllerRepresentable {
         }
 
         func cloudSharingControllerDidStopSharing(_ csc: UICloudSharingController) {
-            // Purge shared objects and records (Apple's sample does this)
             if let share = csc.share {
                 Task {
                     await persistenceController.purgeObjectsAndRecords(for: share)
+                    await persistenceController.fetchExistingShare()
+                }
+            } else {
+                Task {
+                    await persistenceController.fetchExistingShare()
                 }
             }
             AppLogger.sharing.info("Sharing stopped")
@@ -83,6 +87,7 @@ struct CloudSharingSheet: UIViewControllerRepresentable {
             failedToSaveShareWithError error: Error
         ) {
             AppLogger.sharing.error("Failed to save share: \(error.localizedDescription)")
+            onError?(error.localizedDescription)
         }
 
         func itemTitle(for csc: UICloudSharingController) -> String? {
