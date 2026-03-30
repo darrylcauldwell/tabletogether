@@ -80,9 +80,11 @@ final class PersistenceController {
 
     // MARK: - Sharing UI Observer
 
+    #if os(iOS)
     /// Observes system sharing UI events (save/stop) to keep local state in sync.
     @ObservationIgnored
     private var sharingUIObserver: CKSystemSharingUIObserver?
+    #endif
 
     // MARK: - History Processing Queue
 
@@ -169,6 +171,7 @@ final class PersistenceController {
         )
 
         // Set up CKSystemSharingUIObserver to monitor system sharing UI events
+        #if os(iOS)
         if !inMemory {
             let observer = CKSystemSharingUIObserver(container: ckContainer)
             observer.systemSharingUIDidSaveShareBlock = { [weak self] _, result in
@@ -184,6 +187,7 @@ final class PersistenceController {
             }
             self.sharingUIObserver = observer
         }
+        #endif
 
         #if DEBUG
         if !inMemory {
