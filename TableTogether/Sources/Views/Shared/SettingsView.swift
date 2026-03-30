@@ -23,7 +23,6 @@ struct SettingsView: View {
     @AppStorage("appearanceMode") private var appearanceMode: Int = AppearanceMode.system.rawValue
 
     @State private var showingAddMember = false
-    @State private var showingSharingSheet = false
     @State private var sharingError: String?
     @State private var showingSharingError = false
     @State private var isSharingLoading = false
@@ -270,21 +269,6 @@ struct SettingsView: View {
                 }
             }
             #if os(iOS)
-            .sheet(isPresented: $showingSharingSheet, onDismiss: {
-                isSharingLoading = false
-            }) {
-                if let household = households.first {
-                    CloudSharingSheet(
-                        share: persistenceController.existingShare,
-                        household: household,
-                        persistenceController: persistenceController,
-                        onError: { errorMessage in
-                            sharingError = errorMessage
-                            showingSharingError = true
-                        }
-                    )
-                }
-            }
             .alert("Sharing Error", isPresented: $showingSharingError) {
                 Button("OK") {}
             } message: {
@@ -358,25 +342,28 @@ struct SettingsView: View {
 
     #if os(iOS)
     private func prepareSharingSheet() async {
-        guard households.first != nil else {
+        guard let household = households.first else {
             sharingError = "No household found. Please restart the app."
             showingSharingError = true
             return
         }
 
-        // Save pending changes before presenting sharing UI
-        do {
-            if viewContext.hasChanges {
-                try viewContext.save()
-            }
-        } catch {
-            sharingError = "Failed to save data: \(error.localizedDescription)"
+        isSharingLoading = true
+
+        // Wire error callback
+        SharingPresenter.shared.onError = { errorMessage in
+            sharingError = errorMessage
             showingSharingError = true
-            return
         }
 
-        isSharingLoading = true
-        showingSharingSheet = true
+        // Present via UIKit (not SwiftUI .sheet — UICloudSharingController
+        // renders as black screen when presented via SwiftUI sheets)
+        await SharingPresenter.shared.presentSharing(
+            for: household,
+            existingShare: persistenceController.existingShare
+        )
+
+        isSharingLoading = false
     }
     #endif
 }
