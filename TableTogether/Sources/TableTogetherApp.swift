@@ -204,22 +204,55 @@ extension EnvironmentValues {
     }
 }
 
-// MARK: - App Delegates for CloudKit Share Acceptance
+// MARK: - App & Scene Delegates for CloudKit Share Acceptance
+//
+// Per Apple's "Accepting Share Invitations in a SwiftUI App" documentation:
+// SwiftUI apps are scene-based, so share acceptance must use UIWindowSceneDelegate
+// (not UIApplicationDelegate which is deprecated for this purpose).
 
 #if os(iOS)
-class AppDelegate: NSObject, UIApplicationDelegate {
-    func application(
-        _ application: UIApplication,
+class SceneDelegate: UIResponder, UIWindowSceneDelegate {
+    /// Called when user taps a CloudKit share link while app is running or suspended.
+    func windowScene(
+        _ windowScene: UIWindowScene,
         userDidAcceptCloudKitShareWith cloudKitShareMetadata: CKShare.Metadata
     ) {
+        acceptShare(metadata: cloudKitShareMetadata)
+    }
+
+    /// Called when app is launched from a CloudKit share link (cold start).
+    func scene(
+        _ scene: UIScene,
+        willConnectTo session: UISceneSession,
+        options connectionOptions: UIScene.ConnectionOptions
+    ) {
+        if let metadata = connectionOptions.cloudKitShareMetadata {
+            acceptShare(metadata: metadata)
+        }
+    }
+
+    private func acceptShare(metadata: CKShare.Metadata) {
         Task {
             do {
-                try await PersistenceController.shared.acceptShare(metadata: cloudKitShareMetadata)
+                try await PersistenceController.shared.acceptShare(metadata: metadata)
                 AppLogger.sharing.info("Accepted CloudKit share invitation")
             } catch {
                 AppLogger.sharing.error("Failed to accept CloudKit share: \(error.localizedDescription)")
             }
         }
+    }
+}
+
+class AppDelegate: NSObject, UIApplicationDelegate {
+    /// Wire the SceneDelegate so share acceptance works in SwiftUI.
+    func application(
+        _ application: UIApplication,
+        configurationForConnecting connectingSceneSession: UISceneSession,
+        options: UIScene.ConnectionOptions
+    ) -> UISceneConfiguration {
+        let config = UISceneConfiguration(name: nil, sessionRole: connectingSceneSession.role)
+        config.delegateClass = SceneDelegate.self
+        return config
     }
 }
 #endif
