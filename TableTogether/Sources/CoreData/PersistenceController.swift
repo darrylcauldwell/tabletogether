@@ -60,14 +60,67 @@ final class PersistenceController {
     }
 
     var participantNames: [String] {
+        householdMembers.map(\.name)
+    }
+
+    /// Rich participant data including name and acceptance status.
+    var householdMembers: [HouseholdMember] {
         guard let share = existingShare else { return [] }
         return share.participants
             .filter { $0.role != .owner }
-            .compactMap { participant in
-                participant.userIdentity.nameComponents.flatMap {
+            .map { participant in
+                let name = participant.userIdentity.nameComponents.flatMap {
                     PersonNameComponentsFormatter.localizedString(from: $0, style: .default)
-                } ?? "Unknown"
+                } ?? participant.userIdentity.lookupInfo?.emailAddress
+                  ?? participant.userIdentity.lookupInfo?.phoneNumber
+                  ?? "Invited Person"
+
+                let status: HouseholdMember.Status = switch participant.acceptanceStatus {
+                case .accepted: .accepted
+                case .removed: .removed
+                case .pending: .pending
+                @unknown default: .pending
+                }
+
+                return HouseholdMember(name: name, status: status)
             }
+    }
+
+    /// Represents a household member with their sharing status.
+    struct HouseholdMember: Identifiable {
+        let name: String
+        let status: Status
+        var id: String { name }
+
+        enum Status {
+            case pending
+            case accepted
+            case removed
+
+            var label: String {
+                switch self {
+                case .pending: "Invite Sent"
+                case .accepted: "Joined"
+                case .removed: "Removed"
+                }
+            }
+
+            var iconName: String {
+                switch self {
+                case .pending: "envelope.circle.fill"
+                case .accepted: "checkmark.circle.fill"
+                case .removed: "xmark.circle.fill"
+                }
+            }
+
+            var color: String {
+                switch self {
+                case .pending: "orange"
+                case .accepted: "green"
+                case .removed: "red"
+                }
+            }
+        }
     }
 
     private(set) var lastError: String?

@@ -72,17 +72,22 @@ struct SettingsView: View {
                 Section {
                     // Family members — swipe to remove
                     if persistenceController.isSharing {
-                        ForEach(persistenceController.participantNames, id: \.self) { name in
+                        ForEach(persistenceController.householdMembers) { member in
                             HStack(spacing: 12) {
-                                Image(systemName: "person.circle.fill")
+                                Image(systemName: member.status.iconName)
                                     .font(.title2)
-                                    .foregroundStyle(Theme.Colors.primary)
-                                Text(name)
-                                    .font(.body)
+                                    .foregroundStyle(member.status == .accepted ? Theme.Colors.primary : .orange)
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(member.name)
+                                        .font(.body)
+                                    Text(member.status.label)
+                                        .font(.caption)
+                                        .foregroundStyle(Theme.Colors.textSecondary)
+                                }
                             }
                             .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                                 Button(role: .destructive) {
-                                    participantToRemove = name
+                                    participantToRemove = member.name
                                     showingRemoveParticipantConfirmation = true
                                 } label: {
                                     Label("Remove", systemImage: "person.badge.minus")
