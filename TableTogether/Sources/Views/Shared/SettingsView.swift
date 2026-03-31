@@ -70,6 +70,28 @@ struct SettingsView: View {
 
                 // MARK: - Household Section
                 Section {
+                    // Owner (you) — editable name
+                    if let user = currentUser {
+                        HStack(spacing: 12) {
+                            Image(systemName: "person.circle.fill")
+                                .font(.title2)
+                                .foregroundStyle(Theme.Colors.primary)
+                            VStack(alignment: .leading, spacing: 2) {
+                                TextField("Your Name", text: Binding(
+                                    get: { user.displayName },
+                                    set: { newValue in
+                                        user.displayName = newValue
+                                        try? viewContext.save()
+                                    }
+                                ))
+                                .font(.body)
+                                Text("You")
+                                    .font(.caption)
+                                    .foregroundStyle(Theme.Colors.textSecondary)
+                            }
+                        }
+                    }
+
                     // Family members — swipe to remove
                     if persistenceController.isSharing {
                         ForEach(persistenceController.householdMembers) { member in
