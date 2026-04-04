@@ -256,7 +256,7 @@ struct CalendarSettingsView: View {
 
                 // Hide success message after delay
                 Task {
-                    try? await Task.sleep(nanoseconds: 3_000_000_000)
+                    try? await Task.sleep(for: .seconds(3))
                     showingSyncSuccess = false
                 }
             } else {

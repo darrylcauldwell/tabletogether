@@ -7,7 +7,7 @@ struct RecipeGeneratorView: View {
     @Environment(\.managedObjectContext) private var viewContext
     @Environment(\.dismiss) private var dismiss
 
-    @FetchRequest(sortDescriptors: []) private var households: FetchedResults<Household>
+    @FetchRequest(sortDescriptors: [SortDescriptor(\.name)]) private var households: FetchedResults<Household>
     @State private var generatorService = RecipeGeneratorService()
 
     // Form state
@@ -19,7 +19,7 @@ struct RecipeGeneratorView: View {
     @State private var showingResults = false
     @State private var selectedRecipe: GeneratedRecipe?
 
-    @FetchRequest(sortDescriptors: []) private var existingIngredients: FetchedResults<Ingredient>
+    @FetchRequest(sortDescriptors: [SortDescriptor(\.name)]) private var existingIngredients: FetchedResults<Ingredient>
 
     var body: some View {
         NavigationStack {

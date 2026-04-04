@@ -10,10 +10,10 @@ struct WeekPlannerView: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
     @FetchRequest(sortDescriptors: [SortDescriptor(\.weekStartDate, order: .reverse)]) private var weekPlans: FetchedResults<WeekPlan>
-    @FetchRequest(sortDescriptors: []) private var recipes: FetchedResults<Recipe>
-    @FetchRequest(sortDescriptors: []) private var suggestionMemories: FetchedResults<SuggestionMemory>
-    @FetchRequest(sortDescriptors: []) private var users: FetchedResults<User>
-    @FetchRequest(sortDescriptors: []) private var households: FetchedResults<Household>
+    @FetchRequest(sortDescriptors: [SortDescriptor(\.title)]) private var recipes: FetchedResults<Recipe>
+    @FetchRequest(sortDescriptors: [SortDescriptor(\.timesCooked, order: .reverse)]) private var suggestionMemories: FetchedResults<SuggestionMemory>
+    @FetchRequest(sortDescriptors: [SortDescriptor(\.displayName)]) private var users: FetchedResults<User>
+    @FetchRequest(sortDescriptors: [SortDescriptor(\.name)]) private var households: FetchedResults<Household>
 
     @State private var currentWeekStart: Date = WeekPlannerView.mondayOfCurrentWeek()
     @State private var isSuggestionTrayExpanded: Bool = false

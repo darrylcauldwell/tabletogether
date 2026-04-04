@@ -10,7 +10,7 @@ struct RecipeEditorView: View {
     @Environment(\.managedObjectContext) private var viewContext
     @Environment(\.dismiss) private var dismiss
 
-    @FetchRequest(sortDescriptors: []) private var households: FetchedResults<Household>
+    @FetchRequest(sortDescriptors: [SortDescriptor(\.name)]) private var households: FetchedResults<Household>
 
     // The recipe being edited, or nil for creating a new recipe
     let recipe: Recipe?

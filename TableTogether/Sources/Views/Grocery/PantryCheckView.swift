@@ -32,7 +32,7 @@ func sundayOfCurrentWeek() -> Date {
 struct PantryCheckView: View {
     @Environment(\.managedObjectContext) private var viewContext
 
-    @FetchRequest(sortDescriptors: []) private var weekPlans: FetchedResults<WeekPlan>
+    @FetchRequest(sortDescriptors: [SortDescriptor(\.weekStartDate, order: .reverse)]) private var weekPlans: FetchedResults<WeekPlan>
 
     @AppStorage("groceryDatePreset") private var presetStorage: String = DateRangePreset.thisWeek.rawValue
     @State private var startDate: Date = mondayOfCurrentWeek()

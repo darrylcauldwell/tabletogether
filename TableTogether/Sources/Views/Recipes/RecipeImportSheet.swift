@@ -7,7 +7,7 @@ struct RecipeImportSheet: View {
     @Environment(\.managedObjectContext) private var viewContext
     @Environment(\.dismiss) private var dismiss
 
-    @FetchRequest(sortDescriptors: []) private var households: FetchedResults<Household>
+    @FetchRequest(sortDescriptors: [SortDescriptor(\.name)]) private var households: FetchedResults<Household>
     @State private var parser = RecipeParser()
 
     @State private var urlString = ""

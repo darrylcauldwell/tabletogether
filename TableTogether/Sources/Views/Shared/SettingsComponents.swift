@@ -574,7 +574,7 @@ struct DefaultArchetypesView: View {
 }
 
 struct IngredientDatabaseView: View {
-    @FetchRequest(sortDescriptors: []) private var ingredients: FetchedResults<Ingredient>
+    @FetchRequest(sortDescriptors: [SortDescriptor(\.name)]) private var ingredients: FetchedResults<Ingredient>
 
     var body: some View {
         List {

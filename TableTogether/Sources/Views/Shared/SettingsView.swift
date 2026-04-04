@@ -18,7 +18,7 @@ struct SettingsView: View {
     @Environment(\.calendarService) private var calendarService
     private var persistenceController: PersistenceController { PersistenceController.shared }
 
-    @FetchRequest(sortDescriptors: []) private var users: FetchedResults<User>
+    @FetchRequest(sortDescriptors: [SortDescriptor(\.displayName)]) private var users: FetchedResults<User>
 
     @AppStorage("appearanceMode") private var appearanceMode: Int = AppearanceMode.system.rawValue
 
@@ -35,7 +35,7 @@ struct SettingsView: View {
     @State private var healthService = HealthKitService.shared
 
     @State private var showingPaprikaFilePicker = false
-    @FetchRequest(sortDescriptors: []) private var households: FetchedResults<Household>
+    @FetchRequest(sortDescriptors: [SortDescriptor(\.name)]) private var households: FetchedResults<Household>
 
     private var selectedAppearanceMode: AppearanceMode {
         AppearanceMode(rawValue: appearanceMode) ?? .system

@@ -4,7 +4,7 @@ import CoreData
 /// Onboarding flow for first-time users
 struct OnboardingView: View {
     @Environment(\.managedObjectContext) private var viewContext
-    @FetchRequest(sortDescriptors: []) private var households: FetchedResults<Household>
+    @FetchRequest(sortDescriptors: [SortDescriptor(\.name)]) private var households: FetchedResults<Household>
     @Binding var isOnboardingComplete: Bool
 
     @State private var currentPage: Int = 0

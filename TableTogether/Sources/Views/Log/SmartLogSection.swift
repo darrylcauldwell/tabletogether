@@ -11,7 +11,7 @@ struct SmartLogSection: View {
     @Binding var resolvedIngredients: [ResolvedIngredient]
     @Binding var isSmartEstimate: Bool
 
-    @FetchRequest(sortDescriptors: []) private var households: FetchedResults<Household>
+    @FetchRequest(sortDescriptors: [SortDescriptor(\.name)]) private var households: FetchedResults<Household>
 
     @State private var parser = NaturalLanguageMealParser()
     @State private var resolver = IngredientResolverService()

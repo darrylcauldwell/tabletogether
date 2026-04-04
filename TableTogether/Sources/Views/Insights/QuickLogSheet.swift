@@ -21,9 +21,9 @@ struct QuickLogSheet: View {
     @State private var healthService = HealthKitService.shared
     @State private var estimator = MealEstimatorService()
 
-    @FetchRequest(sortDescriptors: []) private var recipes: FetchedResults<Recipe>
-    @FetchRequest(sortDescriptors: []) private var mealSlots: FetchedResults<MealSlot>
-    @FetchRequest(sortDescriptors: []) private var users: FetchedResults<User>
+    @FetchRequest(sortDescriptors: [SortDescriptor(\.title)]) private var recipes: FetchedResults<Recipe>
+    @FetchRequest(sortDescriptors: [SortDescriptor(\.dayOfWeekRaw), SortDescriptor(\.mealTypeRaw)]) private var mealSlots: FetchedResults<MealSlot>
+    @FetchRequest(sortDescriptors: [SortDescriptor(\.displayName)]) private var users: FetchedResults<User>
 
     @State private var selectedMealType: MealType = .dinner
     @State private var searchText = ""
@@ -375,7 +375,7 @@ struct QuickLogSheet: View {
                 )
             } catch {
                 // HealthKit write failed - not critical, don't show error to user
-                print("Failed to log meal to HealthKit: \(error)")
+                AppLogger.app.error("Failed to log meal to HealthKit: \(error)")
             }
         }
     }

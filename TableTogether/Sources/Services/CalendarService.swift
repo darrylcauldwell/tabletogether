@@ -116,13 +116,8 @@ final class CalendarService {
 
     /// Check the current authorization status.
     func checkAuthorizationStatus() {
-        if #available(iOS 17.0, *) {
-            authorizationStatus = EKEventStore.authorizationStatus(for: .event)
-            isAuthorized = authorizationStatus == .fullAccess
-        } else {
-            authorizationStatus = EKEventStore.authorizationStatus(for: .event)
-            isAuthorized = authorizationStatus == .authorized
-        }
+        authorizationStatus = EKEventStore.authorizationStatus(for: .event)
+        isAuthorized = authorizationStatus == .fullAccess
     }
 
     /// Request full calendar access.
@@ -138,11 +133,7 @@ final class CalendarService {
         do {
             var granted = false
 
-            if #available(iOS 17.0, *) {
-                granted = try await eventStore.requestFullAccessToEvents()
-            } else {
-                granted = try await eventStore.requestAccess(to: .event)
-            }
+            granted = try await eventStore.requestFullAccessToEvents()
 
             isAuthorized = granted
             checkAuthorizationStatus()

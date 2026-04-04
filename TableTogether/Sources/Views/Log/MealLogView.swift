@@ -7,9 +7,9 @@ import CoreData
 /// All meal log data is personal and stored in CloudKit private database.
 struct MealLogView: View {
     @Environment(\.privateDataManager) private var privateDataManager
-    @FetchRequest(sortDescriptors: []) private var recipes: FetchedResults<Recipe>
-    @FetchRequest(sortDescriptors: []) private var mealSlots: FetchedResults<MealSlot>
-    @FetchRequest(sortDescriptors: []) private var users: FetchedResults<User>
+    @FetchRequest(sortDescriptors: [SortDescriptor(\.title)]) private var recipes: FetchedResults<Recipe>
+    @FetchRequest(sortDescriptors: [SortDescriptor(\.dayOfWeekRaw), SortDescriptor(\.mealTypeRaw)]) private var mealSlots: FetchedResults<MealSlot>
+    @FetchRequest(sortDescriptors: [SortDescriptor(\.displayName)]) private var users: FetchedResults<User>
 
     @State private var showQuickLogSheet = false
     @State private var logToEdit: PrivateMealLog?

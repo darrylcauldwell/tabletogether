@@ -14,8 +14,8 @@ struct InsightsView: View {
     @Environment(\.privateDataManager) private var privateDataManager
     @State private var healthService = HealthKitService.shared
 
-    @FetchRequest(sortDescriptors: []) private var users: FetchedResults<User>
-    @FetchRequest(sortDescriptors: []) private var recipes: FetchedResults<Recipe>
+    @FetchRequest(sortDescriptors: [SortDescriptor(\.displayName)]) private var users: FetchedResults<User>
+    @FetchRequest(sortDescriptors: [SortDescriptor(\.title)]) private var recipes: FetchedResults<Recipe>
 
     @State private var showExpandedDailyView = false
     @State private var showHealthKitSection = false

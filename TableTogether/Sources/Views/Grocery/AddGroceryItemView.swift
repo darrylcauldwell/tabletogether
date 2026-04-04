@@ -14,7 +14,7 @@ struct AddGroceryItemView: View {
     @State private var selectedCategory: IngredientCategory = .other
     @State private var searchText = ""
 
-    @FetchRequest(sortDescriptors: []) private var ingredients: FetchedResults<Ingredient>
+    @FetchRequest(sortDescriptors: [SortDescriptor(\.name)]) private var ingredients: FetchedResults<Ingredient>
 
     /// Filtered ingredients based on search
     private var filteredIngredients: [Ingredient] {

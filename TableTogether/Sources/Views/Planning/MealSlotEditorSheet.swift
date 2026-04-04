@@ -8,9 +8,9 @@ struct MealSlotEditorSheet: View {
 
     @ObservedObject var slot: MealSlot
 
-    @FetchRequest(sortDescriptors: []) private var recipes: FetchedResults<Recipe>
-    @FetchRequest(sortDescriptors: []) private var users: FetchedResults<User>
-    @FetchRequest(sortDescriptors: []) private var archetypes: FetchedResults<MealArchetype>
+    @FetchRequest(sortDescriptors: [SortDescriptor(\.title)]) private var recipes: FetchedResults<Recipe>
+    @FetchRequest(sortDescriptors: [SortDescriptor(\.displayName)]) private var users: FetchedResults<User>
+    @FetchRequest(sortDescriptors: [SortDescriptor(\.name)]) private var archetypes: FetchedResults<MealArchetype>
 
     @State private var showingRecipePicker = false
     @State private var customMealName: String = ""

@@ -507,7 +507,6 @@ extension View {
 
     /// Limits the Dynamic Type size for specific UI elements that cannot grow indefinitely.
     /// Use sparingly and only when layout constraints make it necessary.
-    @available(iOS 17.0, tvOS 17.0, *)
     func limitDynamicTypeSize(to limit: DynamicTypeSize = .accessibility3) -> some View {
         self.dynamicTypeSize(...limit)
     }

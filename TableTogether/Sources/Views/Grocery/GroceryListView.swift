@@ -7,7 +7,7 @@ import CoreData
 struct GroceryListView: View {
     @Environment(\.managedObjectContext) private var viewContext
 
-    @FetchRequest(sortDescriptors: []) private var weekPlans: FetchedResults<WeekPlan>
+    @FetchRequest(sortDescriptors: [SortDescriptor(\.weekStartDate, order: .reverse)]) private var weekPlans: FetchedResults<WeekPlan>
 
     @State private var showingAddItem = false
     @State private var checkedItemsExpanded = false
