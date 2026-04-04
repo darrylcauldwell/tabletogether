@@ -8,7 +8,7 @@ enum GroceryRowMode {
 
 /// A single grocery item row with checkbox, details, and swipe actions
 struct GroceryItemRow: View {
-    @ObservedObject var item: GroceryItem
+    var item: GroceryItem
 
     var displayQuantity: Double? = nil
     var mode: GroceryRowMode = .shopping

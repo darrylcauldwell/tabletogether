@@ -6,7 +6,7 @@ import CoreData
 /// Individual meal slot showing archetype badge, recipe card, and assigned users.
 /// Supports drop destination for drag and drop recipe assignment.
 struct MealSlotView: View {
-    @ObservedObject var slot: MealSlot
+    var slot: MealSlot
     let isCompact: Bool
     let onTapped: () -> Void
     let onRecipeDropped: (String) -> Void  // Receives recipe UUID string
