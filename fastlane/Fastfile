@@ -21,9 +21,14 @@ platform :ios do
     )
     new_build = latest_build + 1
 
-    # Update build number and version directly in pbxproj (agvtool doesn't work with multiple projects)
-    sh("sed -i '' 's/CURRENT_PROJECT_VERSION = [0-9]*/CURRENT_PROJECT_VERSION = #{new_build}/' ../TableTogether.xcodeproj/project.pbxproj")
-    sh("sed -i '' 's/MARKETING_VERSION = [0-9.]*/MARKETING_VERSION = 1.0.#{new_build}/' ../TableTogether.xcodeproj/project.pbxproj")
+    increment_build_number(
+      xcodeproj: "TableTogether.xcodeproj",
+      build_number: new_build
+    )
+    increment_version_number(
+      xcodeproj: "TableTogether.xcodeproj",
+      version_number: "1.0.#{new_build}"
+    )
 
     # Build the app
     build_app(
@@ -142,7 +147,7 @@ platform :appletvos do
     )
     new_build = latest_build + 1
 
-    # Update build number and version directly in pbxproj (agvtool doesn't work with multiple projects)
+    # tvOS project is in a subdirectory — use sed (agvtool runs from repo root, targets iOS project)
     sh("sed -i '' 's/CURRENT_PROJECT_VERSION = [0-9]*/CURRENT_PROJECT_VERSION = #{new_build}/' ../TableTogetherTV/TableTogetherTV.xcodeproj/project.pbxproj")
     sh("sed -i '' 's/MARKETING_VERSION = [0-9.]*/MARKETING_VERSION = 1.0.#{new_build}/' ../TableTogetherTV/TableTogetherTV.xcodeproj/project.pbxproj")
 
