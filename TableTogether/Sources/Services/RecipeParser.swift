@@ -191,13 +191,19 @@ final class BasicRecipeParser: RecipeParserProtocol {
             }
 
             // Try to parse JSON-LD schema first
-            if let recipe = try? parseJSONLD(from: html, sourceURL: url) {
+            do {
+                let recipe = try parseJSONLD(from: html, sourceURL: url)
                 return recipe
+            } catch {
+                AppLogger.parser.info("JSON-LD parsing failed for \(url.absoluteString): \(error.localizedDescription)")
             }
 
             // Fall back to basic HTML parsing
-            if let recipe = try? parseBasicHTML(from: html, sourceURL: url) {
+            do {
+                let recipe = try parseBasicHTML(from: html, sourceURL: url)
                 return recipe
+            } catch {
+                AppLogger.parser.info("Basic HTML parsing failed for \(url.absoluteString): \(error.localizedDescription)")
             }
 
             throw RecipeParserError.noRecipeFound

@@ -81,7 +81,7 @@ struct SettingsView: View {
                                     get: { user.displayName },
                                     set: { newValue in
                                         user.displayName = newValue
-                                        try? viewContext.save()
+                                        viewContext.saveWithLogging(context: "update display name")
                                     }
                                 ))
                                 .font(.body)

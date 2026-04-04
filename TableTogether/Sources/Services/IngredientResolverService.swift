@@ -107,7 +107,13 @@ final class IngredientResolverService {
 
     private func searchLocalCache(query: String, context: NSManagedObjectContext) -> [FoodItemMatch] {
         let request = NSFetchRequest<FoodItem>(entityName: "FoodItem")
-        guard let allItems = try? context.fetch(request) else { return [] }
+        let allItems: [FoodItem]
+        do {
+            allItems = try context.fetch(request)
+        } catch {
+            AppLogger.swiftData.error("Failed to fetch FoodItem cache: \(error.localizedDescription)")
+            return []
+        }
 
         var matches: [FoodItemMatch] = []
 
@@ -152,8 +158,12 @@ final class IngredientResolverService {
         let request = NSFetchRequest<FoodItem>(entityName: "FoodItem")
         request.predicate = NSPredicate(format: "fdcId == %d", fdcId)
 
-        if let existing = try? context.fetch(request).first {
-            return existing
+        do {
+            if let existing = try context.fetch(request).first {
+                return existing
+            }
+        } catch {
+            AppLogger.swiftData.error("Failed to fetch FoodItem by fdcId: \(error.localizedDescription)")
         }
 
         // Build common portions from USDA measures

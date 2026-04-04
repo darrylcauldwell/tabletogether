@@ -407,9 +407,12 @@ final class PrivateDataManager {
         }
 
         // Load meal logs
-        if let data = UserDefaults.standard.data(forKey: mealLogsCacheKey),
-           let cached = try? JSONDecoder().decode([PrivateMealLog].self, from: data) {
-            mealLogs = cached
+        if let data = UserDefaults.standard.data(forKey: mealLogsCacheKey) {
+            do {
+                mealLogs = try JSONDecoder().decode([PrivateMealLog].self, from: data)
+            } catch {
+                AppLogger.app.error("Failed to decode cached meal logs: \(error.localizedDescription)")
+            }
         }
 
         // Load last sync date
@@ -419,8 +422,11 @@ final class PrivateDataManager {
     }
 
     private func saveMealLogsToCache() {
-        if let data = try? JSONEncoder().encode(mealLogs) {
+        do {
+            let data = try JSONEncoder().encode(mealLogs)
             UserDefaults.standard.set(data, forKey: mealLogsCacheKey)
+        } catch {
+            AppLogger.app.error("Failed to encode meal logs for cache: \(error.localizedDescription)")
         }
     }
 

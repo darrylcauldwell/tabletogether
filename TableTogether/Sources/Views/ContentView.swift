@@ -30,7 +30,7 @@ struct ContentView: View {
 
         // Archetypes are created by TableTogetherApp, but ensure they exist
         let archetypeRequest = NSFetchRequest<MealArchetype>(entityName: "MealArchetype")
-        let existingArchetypes = (try? viewContext.fetch(archetypeRequest)) ?? []
+        let existingArchetypes = viewContext.fetchWithLogging(archetypeRequest, context: "archetypes for onboarding")
         if existingArchetypes.isEmpty {
             for archetypeType in ArchetypeType.allCases {
                 let archetype = MealArchetype(context: viewContext, systemType: archetypeType)
@@ -38,7 +38,7 @@ struct ContentView: View {
             }
         }
 
-        try? viewContext.save()
+        viewContext.saveWithLogging(context: "onboarding user and archetypes")
     }
 }
 

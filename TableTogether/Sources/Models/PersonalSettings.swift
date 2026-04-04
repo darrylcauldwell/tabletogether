@@ -200,18 +200,25 @@ struct PersonalSettings: Identifiable, Codable {
 
     /// Saves to local cache for offline access
     func saveToLocalCache() {
-        if let data = try? JSONEncoder().encode(self) {
+        do {
+            let data = try JSONEncoder().encode(self)
             UserDefaults.standard.set(data, forKey: Self.cacheKey)
+        } catch {
+            AppLogger.app.error("Failed to encode personal settings for cache: \(error.localizedDescription)")
         }
     }
 
     /// Loads from local cache
     static func loadFromLocalCache() -> PersonalSettings? {
-        guard let data = UserDefaults.standard.data(forKey: cacheKey),
-              let settings = try? JSONDecoder().decode(PersonalSettings.self, from: data) else {
+        guard let data = UserDefaults.standard.data(forKey: cacheKey) else {
             return nil
         }
-        return settings
+        do {
+            return try JSONDecoder().decode(PersonalSettings.self, from: data)
+        } catch {
+            AppLogger.app.error("Failed to decode personal settings from cache: \(error.localizedDescription)")
+            return nil
+        }
     }
 
     /// Clears local cache

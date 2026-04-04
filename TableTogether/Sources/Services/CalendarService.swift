@@ -77,17 +77,24 @@ final class CalendarService {
 
     private init() {
         // Load settings from UserDefaults
-        if let data = userDefaults.data(forKey: settingsKey),
-           let decoded = try? JSONDecoder().decode(CalendarSettings.self, from: data) {
-            self.settings = decoded
+        if let data = userDefaults.data(forKey: settingsKey) {
+            do {
+                self.settings = try JSONDecoder().decode(CalendarSettings.self, from: data)
+            } catch {
+                AppLogger.app.error("Failed to decode calendar settings: \(error.localizedDescription)")
+                self.settings = CalendarSettings()
+            }
         } else {
             self.settings = CalendarSettings()
         }
 
         // Load event mappings
-        if let data = userDefaults.data(forKey: mappingsKey),
-           let decoded = try? JSONDecoder().decode([UUID: CalendarEventMapping].self, from: data) {
-            self.eventMappings = decoded
+        if let data = userDefaults.data(forKey: mappingsKey) {
+            do {
+                self.eventMappings = try JSONDecoder().decode([UUID: CalendarEventMapping].self, from: data)
+            } catch {
+                AppLogger.app.error("Failed to decode calendar event mappings: \(error.localizedDescription)")
+            }
         }
 
         // Check initial authorization status
@@ -230,14 +237,20 @@ final class CalendarService {
     }
 
     private func saveSettings() {
-        if let data = try? JSONEncoder().encode(settings) {
+        do {
+            let data = try JSONEncoder().encode(settings)
             userDefaults.set(data, forKey: settingsKey)
+        } catch {
+            AppLogger.app.error("Failed to encode calendar settings: \(error.localizedDescription)")
         }
     }
 
     private func saveMappings() {
-        if let data = try? JSONEncoder().encode(eventMappings) {
+        do {
+            let data = try JSONEncoder().encode(eventMappings)
             userDefaults.set(data, forKey: mappingsKey)
+        } catch {
+            AppLogger.app.error("Failed to encode calendar event mappings: \(error.localizedDescription)")
         }
         updateSyncedEventCount()
     }

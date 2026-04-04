@@ -96,7 +96,13 @@ final class PaprikaImporter {
 
             // Fetch existing recipe titles for duplicate detection
             let existingRequest = NSFetchRequest<Recipe>(entityName: "Recipe")
-            let existingRecipes = (try? context.fetch(existingRequest)) ?? []
+            let existingRecipes: [Recipe]
+            do {
+                existingRecipes = try context.fetch(existingRequest)
+            } catch {
+                AppLogger.swiftData.error("Failed to fetch existing recipes for duplicate check: \(error.localizedDescription)")
+                existingRecipes = []
+            }
             let existingTitles = Set(existingRecipes.map { $0.title.lowercased() })
 
             var imported = 0
@@ -238,14 +244,22 @@ final class PaprikaImporter {
 
             for entry in entries {
                 // Each entry is gzip-compressed JSON
-                if let jsonData = try? decompressGzip(entry.data) {
-                    if let recipe = try? JSONDecoder().decode(PaprikaRecipeData.self, from: jsonData) {
+                do {
+                    let jsonData = try decompressGzip(entry.data)
+                    do {
+                        let recipe = try JSONDecoder().decode(PaprikaRecipeData.self, from: jsonData)
                         recipes.append(recipe)
+                    } catch {
+                        AppLogger.parser.error("Failed to decode Paprika recipe JSON: \(error.localizedDescription)")
                     }
-                } else {
+                } catch {
                     // Maybe it's already plain JSON (unlikely but handle gracefully)
-                    if let recipe = try? JSONDecoder().decode(PaprikaRecipeData.self, from: entry.data) {
+                    AppLogger.parser.info("Gzip decompression failed, trying plain JSON: \(error.localizedDescription)")
+                    do {
+                        let recipe = try JSONDecoder().decode(PaprikaRecipeData.self, from: entry.data)
                         recipes.append(recipe)
+                    } catch {
+                        AppLogger.parser.error("Failed to decode Paprika entry as plain JSON: \(error.localizedDescription)")
                     }
                 }
             }

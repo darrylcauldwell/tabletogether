@@ -82,7 +82,13 @@ final class DemoDataManager {
     private func insertDemoData(into context: NSManagedObjectContext) async throws {
         // Fetch household for linking
         let householdRequest = NSFetchRequest<Household>(entityName: "Household")
-        let household = (try? context.fetch(householdRequest))?.first
+        let household: Household?
+        do {
+            household = try context.fetch(householdRequest).first
+        } catch {
+            AppLogger.swiftData.error("Failed to fetch household for demo data: \(error.localizedDescription)")
+            household = nil
+        }
 
         // 1. Insert Ingredients
         var ingredientMap: [Int: Ingredient] = [:]
@@ -157,7 +163,13 @@ final class DemoDataManager {
         // Remove any auto-created empty plan for this week first to avoid duplicates
         let monday = currentWeekMonday()
         let existingRequest = NSFetchRequest<WeekPlan>(entityName: "WeekPlan")
-        let existingPlans = (try? context.fetch(existingRequest)) ?? []
+        let existingPlans: [WeekPlan]
+        do {
+            existingPlans = try context.fetch(existingRequest)
+        } catch {
+            AppLogger.swiftData.error("Failed to fetch existing week plans: \(error.localizedDescription)")
+            existingPlans = []
+        }
         for plan in existingPlans where Calendar.current.isDate(plan.weekStartDate, inSameDayAs: monday) {
             if !DemoDataCatalog.isDemoData(plan.id) {
                 // Delete the auto-created plan's slots first
