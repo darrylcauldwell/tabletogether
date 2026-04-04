@@ -33,7 +33,7 @@ jobs:
           fi
           echo "All iOS targets at MARKETING_VERSION = $(echo "$VERSIONS" | tr -d ' ')"
 
-          TV_VERSIONS=$(grep "MARKETING_VERSION" TableTogetherTV.xcodeproj/project.pbxproj | sed 's/.*= //' | sed 's/;.*//' | sort -u)
+          TV_VERSIONS=$(grep "MARKETING_VERSION" TableTogetherTV/TableTogetherTV.xcodeproj/project.pbxproj | sed 's/.*= //' | sed 's/;.*//' | sort -u)
           TV_COUNT=$(echo "$TV_VERSIONS" | wc -l | tr -d ' ')
           if [ "$TV_COUNT" -gt 1 ]; then
             echo "::error::Multiple tvOS MARKETING_VERSION values found:"
@@ -66,7 +66,7 @@ jobs:
       - name: Build tvOS
         run: |
           xcodebuild build \
-            -project TableTogetherTV.xcodeproj \
+            -project TableTogetherTV/TableTogetherTV.xcodeproj \
             -scheme TableTogetherTV \
             -destination 'generic/platform=tvOS Simulator' \
             -configuration Debug \
