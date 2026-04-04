@@ -514,7 +514,8 @@
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SUPPORTS_MACCATALYST = YES;
-				SWIFT_VERSION = 6.0;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.2;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				CODE_SIGN_ENTITLEMENTS = "TableTogether/TableTogether.entitlements";
 				INFOPLIST_KEY_NSCalendarsUsageDescription = "TableTogether adds meal plans to your calendar so you know when to start cooking.";
@@ -573,7 +574,8 @@
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SUPPORTS_MACCATALYST = YES;
-				SWIFT_VERSION = 6.0;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.2;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VALIDATE_PRODUCT = YES;
 				CODE_SIGN_ENTITLEMENTS = "TableTogether/TableTogether.entitlements";
