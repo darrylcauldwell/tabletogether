@@ -89,6 +89,7 @@
 		035B9E1DEEC35B42B7DE80D2 /* RecipeImportSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 143F6C29214E568E9F480E70 /* RecipeImportSheet.swift */; };
 		B68945829D3D5E319C9D30A7 /* RecipeLibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DBFA590460F57E8A39192E4 /* RecipeLibraryView.swift */; };
 		A6C8A0C843B257119FE37428 /* CalendarSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B9F5940A8EB5B1A8097DB6B /* CalendarSettingsView.swift */; };
+		D231CAB0D0E85B3C96ABBD34 /* CloudKitDiagnosticsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5810E5BE05165687BE8318F0 /* CloudKitDiagnosticsView.swift */; };
 		51927B5C75F2518E80D334D7 /* CloudSharingSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9C6208E342F553AB609B2F4 /* CloudSharingSheet.swift */; };
 		78753B5D3E785BD786611C59 /* Components.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99DF474AA40F57A2962F8733 /* Components.swift */; };
 		673EF3C130FD502CAC638408 /* DesignSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 384FA0453E9954CE8FBC570B /* DesignSystem.swift */; };
@@ -187,6 +188,7 @@
 		143F6C29214E568E9F480E70 /* RecipeImportSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TableTogether/Sources/Views/Recipes/RecipeImportSheet.swift"; sourceTree = "<group>"; };
 		9DBFA590460F57E8A39192E4 /* RecipeLibraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TableTogether/Sources/Views/Recipes/RecipeLibraryView.swift"; sourceTree = "<group>"; };
 		1B9F5940A8EB5B1A8097DB6B /* CalendarSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TableTogether/Sources/Views/Settings/CalendarSettingsView.swift"; sourceTree = "<group>"; };
+		5810E5BE05165687BE8318F0 /* CloudKitDiagnosticsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TableTogether/Sources/Views/Settings/CloudKitDiagnosticsView.swift"; sourceTree = "<group>"; };
 		E9C6208E342F553AB609B2F4 /* CloudSharingSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TableTogether/Sources/Views/Shared/CloudSharingSheet.swift"; sourceTree = "<group>"; };
 		99DF474AA40F57A2962F8733 /* Components.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TableTogether/Sources/Views/Shared/Components.swift"; sourceTree = "<group>"; };
 		384FA0453E9954CE8FBC570B /* DesignSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TableTogether/Sources/Views/Shared/DesignSystem.swift"; sourceTree = "<group>"; };
@@ -294,6 +296,7 @@
 				143F6C29214E568E9F480E70 /* RecipeImportSheet.swift */,
 				9DBFA590460F57E8A39192E4 /* RecipeLibraryView.swift */,
 				1B9F5940A8EB5B1A8097DB6B /* CalendarSettingsView.swift */,
+				5810E5BE05165687BE8318F0 /* CloudKitDiagnosticsView.swift */,
 				E9C6208E342F553AB609B2F4 /* CloudSharingSheet.swift */,
 				99DF474AA40F57A2962F8733 /* Components.swift */,
 				384FA0453E9954CE8FBC570B /* DesignSystem.swift */,
@@ -459,6 +462,7 @@
 				035B9E1DEEC35B42B7DE80D2 /* RecipeImportSheet.swift in Sources */,
 				B68945829D3D5E319C9D30A7 /* RecipeLibraryView.swift in Sources */,
 				A6C8A0C843B257119FE37428 /* CalendarSettingsView.swift in Sources */,
+				D231CAB0D0E85B3C96ABBD34 /* CloudKitDiagnosticsView.swift in Sources */,
 				51927B5C75F2518E80D334D7 /* CloudSharingSheet.swift in Sources */,
 				78753B5D3E785BD786611C59 /* Components.swift in Sources */,
 				673EF3C130FD502CAC638408 /* DesignSystem.swift in Sources */,

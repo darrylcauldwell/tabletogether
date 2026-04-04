@@ -239,6 +239,17 @@ struct SettingsView: View {
                     }
                 }
 
+                // MARK: - Diagnostics
+                Section {
+                    NavigationLink {
+                        CloudKitDiagnosticsView()
+                    } label: {
+                        Label("CloudKit Diagnostics", systemImage: "stethoscope")
+                    }
+                } header: {
+                    Text("Developer")
+                }
+
                 // MARK: - About Section
                 Section("About") {
                     HStack {
