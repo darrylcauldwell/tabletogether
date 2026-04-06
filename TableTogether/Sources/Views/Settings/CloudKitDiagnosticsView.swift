@@ -16,6 +16,9 @@ struct CloudKitDiagnosticsView: View {
     @State private var lastError: String = "None"
     @State private var containerID: String = PersistenceController.cloudKitContainerID
     @State private var isRefreshing = false
+    @State private var showingResetSharedConfirmation = false
+    @State private var showingResetAllConfirmation = false
+    @State private var copiedToClipboard = false
 
     var body: some View {
         List {
@@ -30,6 +33,13 @@ struct CloudKitDiagnosticsView: View {
                 row("Private Store", privateStoreStatus)
                 row("Shared Store", sharedStoreStatus)
                 row("Store Load Error", pc.storeLoadError ?? "None")
+            }
+
+            // MARK: - Sync Health
+            Section("Sync Health") {
+                row("Shared Store Healthy", pc.sharedStoreHealthy ? "Yes" : "No")
+                row("Recovery In Progress", pc.syncRecoveryInProgress ? "Yes" : "No")
+                row("Recovery Attempts", "\(pc.recoveryAttemptCount)")
             }
 
             // MARK: - CloudKit Sharing
@@ -54,8 +64,38 @@ struct CloudKitDiagnosticsView: View {
                 }
             }
 
+            // MARK: - Recent Sync Events
+            Section("Recent Sync Events") {
+                if pc.lastSyncEvents.isEmpty {
+                    Text("No events yet")
+                        .foregroundStyle(Theme.Colors.textSecondary)
+                } else {
+                    ForEach(pc.lastSyncEvents.suffix(10).reversed()) { event in
+                        VStack(alignment: .leading, spacing: 4) {
+                            HStack {
+                                Image(systemName: event.succeeded ? "checkmark.circle.fill" : "xmark.circle.fill")
+                                    .foregroundStyle(event.succeeded ? .green : .red)
+                                    .font(.caption)
+                                Text(event.eventType.capitalized)
+                                    .font(.subheadline.bold())
+                                Spacer()
+                                Text(event.timestamp, style: .time)
+                                    .font(.caption2)
+                                    .foregroundStyle(Theme.Colors.textSecondary)
+                            }
+                            if let error = event.error {
+                                Text(error)
+                                    .font(.caption)
+                                    .foregroundStyle(.red)
+                                    .lineLimit(3)
+                            }
+                        }
+                    }
+                }
+            }
+
             // MARK: - Actions
-            Section {
+            Section("Actions") {
                 Button {
                     Task { await refresh() }
                 } label: {
@@ -74,11 +114,54 @@ struct CloudKitDiagnosticsView: View {
                 } label: {
                     Label("Fetch Existing Share", systemImage: "icloud.and.arrow.down")
                 }
+
+                Button {
+                    copyDiagnosticsToClipboard()
+                } label: {
+                    Label(copiedToClipboard ? "Copied!" : "Copy Diagnostics", systemImage: "doc.on.doc")
+                }
+            }
+
+            // MARK: - Recovery Actions
+            Section {
+                Button(role: .destructive) {
+                    showingResetSharedConfirmation = true
+                } label: {
+                    Label("Reset Shared Store", systemImage: "arrow.triangle.2.circlepath")
+                }
+                .disabled(pc.isSharing || pc.syncRecoveryInProgress)
+
+                Button(role: .destructive) {
+                    showingResetAllConfirmation = true
+                } label: {
+                    Label("Reset All Sync Data", systemImage: "exclamationmark.triangle")
+                }
+                .disabled(pc.syncRecoveryInProgress)
+            } header: {
+                Text("Recovery")
+            } footer: {
+                Text("Reset Shared Store clears stale sharing data. Reset All re-downloads everything from iCloud.")
             }
         }
         .navigationTitle("CloudKit Diagnostics")
         .task {
             await refresh()
+        }
+        .confirmationDialog("Reset Shared Store?", isPresented: $showingResetSharedConfirmation, titleVisibility: .visible) {
+            Button("Reset Shared Store", role: .destructive) {
+                Task { await pc.resetSharedStore() }
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("This clears stale sharing data and re-syncs the shared database. Your recipes and plans are not affected.")
+        }
+        .confirmationDialog("Reset All Sync Data?", isPresented: $showingResetAllConfirmation, titleVisibility: .visible) {
+            Button("Reset All Sync Data", role: .destructive) {
+                Task { await pc.resetAllSyncData() }
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("This deletes all local data and re-downloads from iCloud. Only use this if sync is completely broken.")
         }
     }
 
@@ -93,6 +176,50 @@ struct CloudKitDiagnosticsView: View {
                 .font(.caption)
                 .foregroundStyle(Theme.Colors.textSecondary)
                 .multilineTextAlignment(.trailing)
+        }
+    }
+
+    private func copyDiagnosticsToClipboard() {
+        var lines: [String] = []
+        lines.append("=== CloudKit Diagnostics ===")
+        lines.append("Date: \(Date())")
+        lines.append("")
+        lines.append("iCloud Account: \(iCloudStatus)")
+        lines.append("Container: \(containerID)")
+        lines.append("")
+        lines.append("Private Store: \(privateStoreStatus)")
+        lines.append("Shared Store: \(sharedStoreStatus)")
+        lines.append("Store Load Error: \(pc.storeLoadError ?? "None")")
+        lines.append("")
+        lines.append("Shared Store Healthy: \(pc.sharedStoreHealthy)")
+        lines.append("Recovery In Progress: \(pc.syncRecoveryInProgress)")
+        lines.append("Recovery Attempts: \(pc.recoveryAttemptCount)")
+        lines.append("")
+        lines.append("Share Exists: \(pc.isSharing)")
+        lines.append("Participant Count: \(pc.participantCount)")
+        lines.append("Last Error: \(pc.lastError ?? "None")")
+        lines.append("")
+        lines.append("Record Counts:")
+        for (name, count) in recordCounts {
+            lines.append("  \(name): \(count)")
+        }
+        lines.append("")
+        lines.append("Recent Sync Events:")
+        for event in pc.lastSyncEvents.suffix(10) {
+            let status = event.succeeded ? "OK" : "FAIL"
+            lines.append("  [\(status)] \(event.eventType) — \(event.timestamp)")
+            if let error = event.error {
+                lines.append("    Error: \(error)")
+            }
+        }
+
+        #if os(iOS)
+        UIPasteboard.general.string = lines.joined(separator: "\n")
+        #endif
+        copiedToClipboard = true
+        Task {
+            try? await Task.sleep(for: .seconds(2))
+            copiedToClipboard = false
         }
     }
 
