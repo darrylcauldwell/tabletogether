@@ -169,12 +169,25 @@ final class PersistenceController {
 
     // MARK: - Initialization
 
-    init(inMemory: Bool = false) {
-        // Load Core Data model from SPM resource bundle (not main bundle)
-        guard let modelURL = Bundle.module.url(forResource: "TableTogether", withExtension: "momd"),
-              let model = NSManagedObjectModel(contentsOf: modelURL) else {
-            fatalError("Failed to load Core Data model from SPM resource bundle")
+    /// Locate the Core Data model in either the SPM resource bundle or the main bundle.
+    private static func loadManagedObjectModel() -> NSManagedObjectModel {
+        // SPM resource bundle (iOS via XcodeGen + Package.swift)
+        #if SWIFT_PACKAGE
+        if let url = Bundle.module.url(forResource: "TableTogether", withExtension: "momd"),
+           let model = NSManagedObjectModel(contentsOf: url) {
+            return model
         }
+        #endif
+        // Main bundle (tvOS xcodeproj, or fallback)
+        if let url = Bundle.main.url(forResource: "TableTogether", withExtension: "momd"),
+           let model = NSManagedObjectModel(contentsOf: url) {
+            return model
+        }
+        fatalError("Failed to load Core Data model — not found in any bundle")
+    }
+
+    init(inMemory: Bool = false) {
+        let model = Self.loadManagedObjectModel()
         container = NSPersistentCloudKitContainer(name: "TableTogether", managedObjectModel: model)
 
         if inMemory {
