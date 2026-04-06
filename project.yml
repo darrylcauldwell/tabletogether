@@ -54,5 +54,5 @@ targets:
           DEBUG_INFORMATION_FORMAT: dwarf-with-dsym
           VALIDATE_PRODUCT: "YES"
           DEAD_CODE_STRIPPING: "YES"
-    resources:
-      - TableTogether/Assets.xcassets
+    sources:
+      - path: TableTogether/Assets.xcassets
