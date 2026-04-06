@@ -66,9 +66,16 @@ struct TableTogetherApp: App {
                     NotificationCenter.default.post(name: .importFromURLRequested, object: nil)
                 }
                 .keyboardShortcut("i", modifiers: [.command, .shift])
+
+                Divider()
+
+                Button("Settings…") {
+                    NotificationCenter.default.post(name: .openSettingsRequested, object: nil)
+                }
+                .keyboardShortcut(",", modifiers: .command)
             }
 
-            CommandGroup(after: .sidebar) {
+            CommandMenu("Go") {
                 Button("Plan") {
                     NotificationCenter.default.post(name: .navigateToSection, object: SidebarSection.plan)
                 }
@@ -93,13 +100,6 @@ struct TableTogetherApp: App {
                     NotificationCenter.default.post(name: .navigateToSection, object: SidebarSection.insights)
                 }
                 .keyboardShortcut("5", modifiers: .command)
-            }
-
-            CommandGroup(replacing: .appSettings) {
-                Button("Settings…") {
-                    NotificationCenter.default.post(name: .openSettingsRequested, object: nil)
-                }
-                .keyboardShortcut(",", modifiers: .command)
             }
         }
         #endif
