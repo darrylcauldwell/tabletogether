@@ -58,6 +58,9 @@ enum AppLogger {
 
     /// Logger for cookbook OCR scanning operations
     static let scanner = Logger(subsystem: subsystem, category: "Scanner")
+
+    /// Logger for CloudKit sync recovery and mirroring events
+    static let sync = Logger(subsystem: subsystem, category: "Sync")
 }
 
 // MARK: - Logger Convenience Extensions

@@ -125,6 +125,23 @@ final class PersistenceController {
 
     private(set) var lastError: String?
 
+    // MARK: - Sync Health
+
+    /// Recent mirroring events for diagnostics (ring buffer, last 20).
+    private(set) var lastSyncEvents: [SyncEventInfo] = []
+
+    /// Whether the shared store is syncing without zone errors.
+    private(set) var sharedStoreHealthy = true
+
+    /// Whether a sync recovery operation is in progress.
+    private(set) var syncRecoveryInProgress = false
+
+    /// Number of automatic recovery attempts since last success.
+    private(set) var recoveryAttemptCount = 0
+
+    @ObservationIgnored
+    private var lastRecoveryAttempt: Date?
+
     // MARK: - Constants
 
     static let cloudKitContainerID = "iCloud.dev.dreamfold.tabletogether"
@@ -221,6 +238,14 @@ final class PersistenceController {
             selector: #selector(processRemoteChanges),
             name: .NSPersistentStoreRemoteChange,
             object: container.persistentStoreCoordinator
+        )
+
+        // Observe CloudKit mirroring events for sync health monitoring
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleCloudKitEvent),
+            name: NSPersistentCloudKitContainer.eventChangedNotification,
+            object: container
         )
 
         // Set up CKSystemSharingUIObserver to monitor system sharing UI events
@@ -507,4 +532,252 @@ final class PersistenceController {
             }
         }
     }
+
+    // MARK: - CloudKit Mirroring Event Observer
+
+    @objc
+    private nonisolated func handleCloudKitEvent(_ notification: Notification) {
+        guard let event = notification.userInfo?[NSPersistentCloudKitContainer.eventNotificationUserInfoKey]
+                as? NSPersistentCloudKitContainer.Event else { return }
+
+        let eventType: String = switch event.type {
+        case .setup: "setup"
+        case .import: "import"
+        case .export: "export"
+        @unknown default: "unknown"
+        }
+
+        let storeID = event.storeIdentifier
+        let succeeded = event.succeeded
+        let errorMessage = event.error?.localizedDescription
+
+        if let errorMessage {
+            AppLogger.sync.error("CloudKit \(eventType) failed for store \(storeID): \(errorMessage)")
+        } else if succeeded {
+            AppLogger.sync.info("CloudKit \(eventType) succeeded for store \(storeID)")
+        }
+
+        // Check for stale zone errors that require shared store recovery
+        let needsRecovery = !succeeded && isStaleZoneError(event.error)
+
+        Task { @MainActor in
+            let info = SyncEventInfo(
+                storeIdentifier: storeID,
+                eventType: eventType,
+                succeeded: succeeded,
+                error: errorMessage,
+                timestamp: Date()
+            )
+            self.lastSyncEvents.append(info)
+            if self.lastSyncEvents.count > 20 {
+                self.lastSyncEvents.removeFirst(self.lastSyncEvents.count - 20)
+            }
+
+            // Track shared store health and trigger recovery
+            if needsRecovery,
+               storeID == self.sharedPersistentStore?.identifier {
+                self.sharedStoreHealthy = false
+                await self.attemptSharedStoreRecovery()
+            } else if succeeded, storeID == self.sharedPersistentStore?.identifier {
+                self.sharedStoreHealthy = true
+                self.recoveryAttemptCount = 0
+            }
+        }
+    }
+
+    /// Check whether a CKError indicates stale zone references.
+    private nonisolated func isStaleZoneError(_ error: Error?) -> Bool {
+        guard let error else { return false }
+        let nsError = error as NSError
+
+        // Direct CKError zone-not-found or unknown-item
+        if nsError.domain == CKError.errorDomain {
+            if nsError.code == CKError.zoneNotFound.rawValue ||
+               nsError.code == CKError.unknownItem.rawValue {
+                return true
+            }
+            // Check partial errors
+            if nsError.code == CKError.partialFailure.rawValue,
+               let partialErrors = nsError.userInfo[CKPartialErrorsByItemIDKey] as? [AnyHashable: Error] {
+                return partialErrors.values.contains { partialError in
+                    let code = (partialError as NSError).code
+                    return code == CKError.zoneNotFound.rawValue || code == CKError.unknownItem.rawValue
+                }
+            }
+        }
+
+        // Check underlying error
+        if let underlying = nsError.userInfo[NSUnderlyingErrorKey] as? Error {
+            return isStaleZoneError(underlying)
+        }
+
+        return false
+    }
+
+    // MARK: - Sync Recovery
+
+    /// Attempt automatic recovery of the shared store with backoff.
+    private func attemptSharedStoreRecovery() async {
+        guard !syncRecoveryInProgress else { return }
+        guard existingShare == nil else {
+            AppLogger.sync.warning("Skipping shared store recovery — active sharing exists")
+            return
+        }
+        guard recoveryAttemptCount < 3 else {
+            storeLoadError = "CloudKit sync failed repeatedly. Use CloudKit Diagnostics to reset sync data."
+            AppLogger.sync.error("Shared store recovery exhausted (3 attempts)")
+            return
+        }
+        if let last = lastRecoveryAttempt, Date().timeIntervalSince(last) < 300 {
+            AppLogger.sync.info("Skipping recovery — last attempt was \(Int(Date().timeIntervalSince(last)))s ago")
+            return
+        }
+
+        await resetSharedStore()
+    }
+
+    /// Delete and recreate the shared persistent store to clear stale zone metadata.
+    func resetSharedStore() async {
+        guard !syncRecoveryInProgress else { return }
+        guard existingShare == nil else {
+            AppLogger.sync.warning("Cannot reset shared store — active sharing exists")
+            return
+        }
+
+        syncRecoveryInProgress = true
+        recoveryAttemptCount += 1
+        lastRecoveryAttempt = Date()
+        AppLogger.sync.info("Resetting shared store (attempt \(recoveryAttemptCount))")
+
+        let coordinator = container.persistentStoreCoordinator
+
+        // Remove the shared store
+        if let store = sharedPersistentStore {
+            let storeURL = store.url
+            let tokenKey = Self.tokenPrefix + store.identifier
+
+            do {
+                try coordinator.remove(store)
+                sharedPersistentStore = nil
+
+                // Delete SQLite files
+                if let url = storeURL {
+                    for suffix in ["", "-wal", "-shm"] {
+                        let fileURL = url.appendingPathExtension(suffix.isEmpty ? "" : String(suffix.dropFirst()))
+                        let actualURL = suffix.isEmpty ? url : URL(fileURLWithPath: url.path + suffix)
+                        try? FileManager.default.removeItem(at: actualURL)
+                    }
+                }
+
+                // Clear history token
+                UserDefaults.standard.removeObject(forKey: tokenKey)
+
+                AppLogger.sync.info("Removed shared store and cleared metadata")
+            } catch {
+                AppLogger.sync.error("Failed to remove shared store: \(error.localizedDescription)")
+                syncRecoveryInProgress = false
+                return
+            }
+        }
+
+        // Re-add the shared store
+        let storeDirectory = NSPersistentContainer.defaultDirectoryURL()
+        let sharedDescription = NSPersistentStoreDescription(
+            url: storeDirectory.appendingPathComponent("shared.sqlite")
+        )
+        sharedDescription.configuration = "Shared"
+        let sharedOptions = NSPersistentCloudKitContainerOptions(
+            containerIdentifier: Self.cloudKitContainerID
+        )
+        sharedOptions.databaseScope = .shared
+        sharedDescription.cloudKitContainerOptions = sharedOptions
+        sharedDescription.setOption(true as NSNumber, forKey: NSPersistentHistoryTrackingKey)
+        sharedDescription.setOption(true as NSNumber, forKey: NSPersistentStoreRemoteChangeNotificationPostOptionKey)
+
+        do {
+            guard let storeURL = sharedDescription.url else {
+                AppLogger.sync.error("Shared store description has no URL")
+                syncRecoveryInProgress = false
+                return
+            }
+            let newStore = try coordinator.addPersistentStore(
+                type: .sqlite,
+                at: storeURL,
+                options: sharedDescription.options
+            )
+            sharedPersistentStore = newStore
+            sharedStoreHealthy = true
+            AppLogger.sync.info("Shared store recreated successfully")
+        } catch {
+            AppLogger.sync.error("Failed to recreate shared store: \(error.localizedDescription)")
+            storeLoadError = "Failed to recreate shared store: \(error.localizedDescription)"
+        }
+
+        syncRecoveryInProgress = false
+    }
+
+    /// Delete both stores and re-sync from CloudKit. Nuclear recovery option.
+    func resetAllSyncData() async {
+        guard !syncRecoveryInProgress else { return }
+        syncRecoveryInProgress = true
+        AppLogger.sync.warning("Resetting ALL sync data — will re-download from CloudKit")
+
+        let coordinator = container.persistentStoreCoordinator
+
+        // Remove all stores
+        for store in coordinator.persistentStores {
+            let url = store.url
+            let tokenKey = Self.tokenPrefix + store.identifier
+            do {
+                try coordinator.remove(store)
+                if let url {
+                    for suffix in ["", "-wal", "-shm"] {
+                        let actualURL = suffix.isEmpty ? url : URL(fileURLWithPath: url.path + suffix)
+                        try? FileManager.default.removeItem(at: actualURL)
+                    }
+                }
+                UserDefaults.standard.removeObject(forKey: tokenKey)
+            } catch {
+                AppLogger.sync.error("Failed to remove store: \(error.localizedDescription)")
+            }
+        }
+
+        privatePersistentStore = nil
+        sharedPersistentStore = nil
+        existingShare = nil
+
+        // Re-load all stores from the original descriptions
+        container.loadPersistentStores { description, error in
+            if let error {
+                AppLogger.sync.fault("Failed to reload store '\(description.configuration ?? "default")': \(error.localizedDescription)")
+                self.storeLoadError = error.localizedDescription
+                return
+            }
+            if let url = description.url,
+               let store = self.container.persistentStoreCoordinator.persistentStore(for: url) {
+                if description.cloudKitContainerOptions?.databaseScope == .shared {
+                    self.sharedPersistentStore = store
+                } else {
+                    self.privatePersistentStore = store
+                }
+            }
+        }
+
+        sharedStoreHealthy = true
+        recoveryAttemptCount = 0
+        lastSyncEvents.removeAll()
+        syncRecoveryInProgress = false
+        AppLogger.sync.info("All sync data reset — waiting for CloudKit re-sync")
+    }
+}
+
+// MARK: - Sync Event Info
+
+struct SyncEventInfo: Identifiable {
+    let id = UUID()
+    let storeIdentifier: String
+    let eventType: String
+    let succeeded: Bool
+    let error: String?
+    let timestamp: Date
 }
