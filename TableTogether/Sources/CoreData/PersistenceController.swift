@@ -169,26 +169,8 @@ final class PersistenceController {
 
     // MARK: - Initialization
 
-    /// Locate the Core Data model in either the SPM resource bundle or the main bundle.
-    private static func loadManagedObjectModel() -> NSManagedObjectModel {
-        // SPM resource bundle (iOS via XcodeGen + Package.swift)
-        #if SWIFT_PACKAGE
-        if let url = Bundle.module.url(forResource: "TableTogether", withExtension: "momd"),
-           let model = NSManagedObjectModel(contentsOf: url) {
-            return model
-        }
-        #endif
-        // Main bundle (tvOS xcodeproj, or fallback)
-        if let url = Bundle.main.url(forResource: "TableTogether", withExtension: "momd"),
-           let model = NSManagedObjectModel(contentsOf: url) {
-            return model
-        }
-        fatalError("Failed to load Core Data model — not found in any bundle")
-    }
-
     init(inMemory: Bool = false) {
-        let model = Self.loadManagedObjectModel()
-        container = NSPersistentCloudKitContainer(name: "TableTogether", managedObjectModel: model)
+        container = NSPersistentCloudKitContainer(name: "TableTogether")
 
         if inMemory {
             let description = NSPersistentStoreDescription()
@@ -225,32 +207,25 @@ final class PersistenceController {
             container.persistentStoreDescriptions = [privateDescription, sharedDescription]
         }
 
-        // loadPersistentStores may fire completion on a background queue for CloudKit containers.
-        // Use nonisolated(unsafe) locals to capture store references, then assign on MainActor.
-        nonisolated(unsafe) var loadedPrivateStore: NSPersistentStore?
-        nonisolated(unsafe) var loadedSharedStore: NSPersistentStore?
-        nonisolated(unsafe) var loadError: String?
-
+        // loadPersistentStores fires completion synchronously for SQLite stores
+        // (shouldAddStoreAsynchronously defaults to false). Stores are ready when this returns.
         container.loadPersistentStores { description, error in
             if let error {
                 AppLogger.swiftData.fault("Failed to load store '\(description.configuration ?? "default")': \(error.localizedDescription)")
-                loadError = error.localizedDescription
+                self.storeLoadError = error.localizedDescription
                 return
             }
+
+            // Capture store references
             if let url = description.url,
                let store = self.container.persistentStoreCoordinator.persistentStore(for: url) {
                 if description.cloudKitContainerOptions?.databaseScope == .shared {
-                    loadedSharedStore = store
+                    self.sharedPersistentStore = store
                 } else {
-                    loadedPrivateStore = store
+                    self.privatePersistentStore = store
                 }
             }
         }
-
-        // Now assign on MainActor (we're in init, which runs on MainActor)
-        privatePersistentStore = loadedPrivateStore
-        sharedPersistentStore = loadedSharedStore
-        storeLoadError = loadError
 
         // Configure viewContext
         container.viewContext.automaticallyMergesChangesFromParent = true
@@ -792,29 +767,21 @@ final class PersistenceController {
 
         container.persistentStoreDescriptions = [privateDescription, sharedDescription]
 
-        nonisolated(unsafe) var reloadedPrivateStore: NSPersistentStore?
-        nonisolated(unsafe) var reloadedSharedStore: NSPersistentStore?
-        nonisolated(unsafe) var reloadError: String?
-
         container.loadPersistentStores { description, error in
             if let error {
                 AppLogger.sync.fault("Failed to reload store '\(description.configuration ?? "default")': \(error.localizedDescription)")
-                reloadError = error.localizedDescription
+                self.storeLoadError = error.localizedDescription
                 return
             }
             if let url = description.url,
                let store = self.container.persistentStoreCoordinator.persistentStore(for: url) {
                 if description.cloudKitContainerOptions?.databaseScope == .shared {
-                    reloadedSharedStore = store
+                    self.sharedPersistentStore = store
                 } else {
-                    reloadedPrivateStore = store
+                    self.privatePersistentStore = store
                 }
             }
         }
-
-        privatePersistentStore = reloadedPrivateStore
-        sharedPersistentStore = reloadedSharedStore
-        storeLoadError = reloadError
         sharedStoreHealthy = true
         recoveryAttemptCount = 0
         lastSyncEvents.removeAll()

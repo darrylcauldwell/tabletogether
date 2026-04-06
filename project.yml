@@ -56,3 +56,4 @@ targets:
           DEAD_CODE_STRIPPING: "YES"
     sources:
       - path: TableTogether/Assets.xcassets
+      - path: TableTogether/Sources/CoreData/TableTogether.xcdatamodeld
