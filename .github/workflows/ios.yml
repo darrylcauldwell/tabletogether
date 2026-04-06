@@ -62,6 +62,17 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             -quiet
 
+      # --- Build Mac Catalyst ---
+      - name: Build Mac Catalyst
+        run: |
+          xcodebuild build \
+            -project TableTogether.xcodeproj \
+            -scheme TableTogether \
+            -destination 'platform=macOS,variant=Mac Catalyst' \
+            -configuration Debug \
+            CODE_SIGNING_ALLOWED=NO \
+            -quiet
+
       # --- Build tvOS ---
       - name: Build tvOS
         run: |
