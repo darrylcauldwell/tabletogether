@@ -21,17 +21,17 @@ jobs:
       - name: Select Xcode
         run: sudo xcode-select -s /Applications/Xcode_26.2.app/Contents/Developer
 
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate Xcode project
+        run: xcodegen generate --spec project.yml
+
       # --- MARKETING_VERSION consistency ---
       - name: Check MARKETING_VERSION consistency
         run: |
-          VERSIONS=$(grep "MARKETING_VERSION" TableTogether.xcodeproj/project.pbxproj | sed 's/.*= //' | sed 's/;.*//' | sort -u)
-          COUNT=$(echo "$VERSIONS" | wc -l | tr -d ' ')
-          if [ "$COUNT" -gt 1 ]; then
-            echo "::error::Multiple MARKETING_VERSION values found:"
-            echo "$VERSIONS"
-            exit 1
-          fi
-          echo "All iOS targets at MARKETING_VERSION = $(echo "$VERSIONS" | tr -d ' ')"
+          IOS_VERSION=$(grep "MARKETING_VERSION" project.yml | head -1 | sed 's/.*: *//' | tr -d '"')
+          echo "iOS MARKETING_VERSION = $IOS_VERSION"
 
           TV_VERSIONS=$(grep "MARKETING_VERSION" TableTogetherTV/TableTogetherTV.xcodeproj/project.pbxproj | sed 's/.*= //' | sed 's/;.*//' | sort -u)
           TV_COUNT=$(echo "$TV_VERSIONS" | wc -l | tr -d ' ')
@@ -96,6 +96,12 @@ jobs:
 
       - name: Select Xcode
         run: sudo xcode-select -s /Applications/Xcode_26.2.app/Contents/Developer
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate Xcode project
+        run: xcodegen generate --spec project.yml
 
       - name: Install fastlane
         run: bundle install --jobs 4 --retry 3
