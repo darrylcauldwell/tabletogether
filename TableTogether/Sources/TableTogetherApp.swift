@@ -253,45 +253,18 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 
     #if targetEnvironment(macCatalyst)
-    override func buildMenu(with builder: UIMenuBuilder) {
-        super.buildMenu(with: builder)
-        guard builder.system == .main else { return }
-
-        // File menu: New Recipe, Import from URL, Settings
-        let newRecipe = UIKeyCommand(
-            title: "New Recipe",
-            action: #selector(handleNewRecipe),
-            input: "N",
-            modifierFlags: .command
-        )
-        let importURL = UIKeyCommand(
-            title: "Import from URL…",
-            action: #selector(handleImportFromURL),
-            input: "I",
-            modifierFlags: [.command, .shift]
-        )
-        let settings = UIKeyCommand(
-            title: "Settings…",
-            action: #selector(handleOpenSettings),
-            input: ",",
-            modifierFlags: .command
-        )
-        let fileMenu = UIMenu(title: "", options: .displayInline, children: [newRecipe, importURL, settings])
-        builder.insertChild(fileMenu, atStartOfMenu: .file)
-
-        // Go menu: section navigation
-        let goItems: [(String, String, String)] = [
-            ("Plan", "1", "plan"),
-            ("Recipes", "2", "recipes"),
-            ("Shopping", "3", "grocery"),
-            ("Meal Log", "4", "log"),
-            ("Insights", "5", "insights"),
+    /// Keyboard shortcuts for Mac Catalyst — delivered via the responder chain.
+    override var keyCommands: [UIKeyCommand]? {
+        [
+            UIKeyCommand(title: "New Recipe", action: #selector(handleNewRecipe), input: "N", modifierFlags: .command),
+            UIKeyCommand(title: "Import from URL…", action: #selector(handleImportFromURL), input: "I", modifierFlags: [.command, .shift]),
+            UIKeyCommand(title: "Settings…", action: #selector(handleOpenSettings), input: ",", modifierFlags: .command),
+            UIKeyCommand(title: "Plan", action: #selector(handleNavigate(_:)), input: "1", modifierFlags: .command),
+            UIKeyCommand(title: "Recipes", action: #selector(handleNavigate(_:)), input: "2", modifierFlags: .command),
+            UIKeyCommand(title: "Shopping", action: #selector(handleNavigate(_:)), input: "3", modifierFlags: .command),
+            UIKeyCommand(title: "Meal Log", action: #selector(handleNavigate(_:)), input: "4", modifierFlags: .command),
+            UIKeyCommand(title: "Insights", action: #selector(handleNavigate(_:)), input: "5", modifierFlags: .command),
         ]
-        let goChildren = goItems.map { title, key, _ in
-            UIKeyCommand(title: title, action: #selector(handleNavigate(_:)), input: key, modifierFlags: .command)
-        }
-        let goMenu = UIMenu(title: "Go", children: goChildren)
-        builder.insertSibling(goMenu, afterMenu: .view)
     }
 
     @objc private func handleNewRecipe() {
