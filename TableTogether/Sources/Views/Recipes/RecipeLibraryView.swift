@@ -101,6 +101,30 @@ struct RecipeLibraryView: View {
                 #if os(iOS)
                 ToolbarItem(placement: .topBarTrailing) {
                     HStack(spacing: 16) {
+                        #if targetEnvironment(macCatalyst)
+                        // Toolbar add button for Mac — supplements the FAB
+                        Menu {
+                            Button {
+                                showingGeneratorSheet = true
+                            } label: {
+                                Label("Generate with AI", systemImage: "wand.and.stars")
+                            }
+                            Button {
+                                showingImportSheet = true
+                            } label: {
+                                Label("Import from URL", systemImage: "link")
+                            }
+                            Button {
+                                showingEditorSheet = true
+                            } label: {
+                                Label("Create Manually", systemImage: "square.and.pencil")
+                            }
+                        } label: {
+                            Image(systemName: "plus")
+                                .foregroundColor(.appPrimary)
+                        }
+                        #endif
+
                         // Sort menu
                         Menu {
                             ForEach(SortOption.allCases) { option in
