@@ -4,11 +4,7 @@ import CloudKit
 
 @main
 struct TableTogetherApp: App {
-    #if os(iOS)
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
-    #elseif os(macOS)
-    @NSApplicationDelegateAdaptor(MacAppDelegate.self) var appDelegate
-    #endif
 
     // MARK: - Screenshot Mode
 
@@ -257,20 +253,3 @@ class AppDelegate: NSObject, UIApplicationDelegate {
 }
 #endif
 
-#if os(macOS)
-class MacAppDelegate: NSObject, NSApplicationDelegate {
-    func application(
-        _ application: NSApplication,
-        userDidAcceptCloudKitShareWith cloudKitShareMetadata: CKShare.Metadata
-    ) {
-        Task {
-            do {
-                try await PersistenceController.shared.acceptShare(metadata: cloudKitShareMetadata)
-                AppLogger.sharing.info("Accepted CloudKit share invitation (macOS)")
-            } catch {
-                AppLogger.sharing.error("Failed to accept CloudKit share: \(error.localizedDescription)")
-            }
-        }
-    }
-}
-#endif

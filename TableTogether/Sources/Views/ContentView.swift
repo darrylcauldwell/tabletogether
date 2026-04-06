@@ -216,7 +216,7 @@ struct SidebarView: View {
             }
         }
         .toolbar {
-            #if os(iOS)
+            #if os(iOS) && !targetEnvironment(macCatalyst)
             ToolbarItem(placement: .bottomBar) {
                 Button {
                     showSettings = true

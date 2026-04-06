@@ -17,7 +17,7 @@ struct RecipeLibraryView: View {
     @State private var showingImportSheet = false
     @State private var showingEditorSheet = false
     @State private var showingGeneratorSheet = false
-    #if os(iOS)
+    #if os(iOS) && !targetEnvironment(macCatalyst)
     @State private var showingScannerSheet = false
     #endif
     @State private var selectedRecipe: Recipe?
@@ -181,7 +181,7 @@ struct RecipeLibraryView: View {
                 Button("Create Manually") {
                     showingEditorSheet = true
                 }
-                #if os(iOS)
+                #if os(iOS) && !targetEnvironment(macCatalyst)
                 Button("Scan from Cookbook") {
                     showingScannerSheet = true
                 }
@@ -199,7 +199,7 @@ struct RecipeLibraryView: View {
             .sheet(isPresented: $showingGeneratorSheet) {
                 RecipeGeneratorView()
             }
-            #if os(iOS)
+            #if os(iOS) && !targetEnvironment(macCatalyst)
             .sheet(isPresented: $showingScannerSheet) {
                 CookbookScannerSheet()
             }
