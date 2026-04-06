@@ -163,30 +163,4 @@
         <relationship name="household" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Household" inverseName="memories" inverseEntity="Household"/>
         <relationship name="recipe" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Recipe" inverseName="suggestionMemory" inverseEntity="Recipe"/>
     </entity>
-    <configuration name="Private" usedWithCloudKit="YES">
-        <memberEntity name="Household"/>
-        <memberEntity name="User"/>
-        <memberEntity name="Recipe"/>
-        <memberEntity name="RecipeIngredient"/>
-        <memberEntity name="Ingredient"/>
-        <memberEntity name="FoodItem"/>
-        <memberEntity name="MealSlot"/>
-        <memberEntity name="WeekPlan"/>
-        <memberEntity name="MealArchetype"/>
-        <memberEntity name="GroceryItem"/>
-        <memberEntity name="SuggestionMemory"/>
-    </configuration>
-    <configuration name="Shared" usedWithCloudKit="YES">
-        <memberEntity name="Household"/>
-        <memberEntity name="User"/>
-        <memberEntity name="Recipe"/>
-        <memberEntity name="RecipeIngredient"/>
-        <memberEntity name="Ingredient"/>
-        <memberEntity name="FoodItem"/>
-        <memberEntity name="MealSlot"/>
-        <memberEntity name="WeekPlan"/>
-        <memberEntity name="MealArchetype"/>
-        <memberEntity name="GroceryItem"/>
-        <memberEntity name="SuggestionMemory"/>
-    </configuration>
 </model>

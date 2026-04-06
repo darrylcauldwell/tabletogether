@@ -136,11 +136,35 @@ struct TableTogetherApp: App {
         let existingHouseholds = context.fetchWithLogging(householdRequest, context: "household check")
 
         let household: Household
-        if let existing = existingHouseholds.first {
-            household = existing
+        // Prefer the deterministic default household if it exists
+        if let defaultHousehold = existingHouseholds.first(where: { $0.id == Household.defaultID }) {
+            household = defaultHousehold
+        } else if let legacy = existingHouseholds.first {
+            // Legacy data with random UUIDs — adopt the first, then migrate its ID
+            // so future syncs across devices converge on the same household.
+            household = legacy
+            household.id = Household.defaultID
+            AppLogger.app.info("Adopted legacy household and migrated to default ID")
         } else {
+            // Fresh install — create the default household
             household = Household(context: context, name: "My Household")
-            AppLogger.app.info("Created household")
+            AppLogger.app.info("Created default household")
+        }
+
+        // Merge any duplicate households into the canonical one
+        let duplicates = existingHouseholds.filter { $0 !== household }
+        if !duplicates.isEmpty {
+            AppLogger.app.info("Merging \(duplicates.count) duplicate households")
+            for duplicate in duplicates {
+                for recipe in duplicate.recipesArray { recipe.household = household }
+                for ingredient in duplicate.ingredientsArray { ingredient.household = household }
+                for user in duplicate.usersArray { user.household = household }
+                for weekPlan in duplicate.weekPlansArray { weekPlan.household = household }
+                for archetype in duplicate.archetypesArray { archetype.household = household }
+                for memory in duplicate.memoriesArray { memory.household = household }
+                for foodItem in duplicate.foodItemsArray { foodItem.household = household }
+                context.delete(duplicate)
+            }
         }
 
         // Link orphaned top-level records to household

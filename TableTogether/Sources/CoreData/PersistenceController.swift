@@ -179,11 +179,12 @@ final class PersistenceController {
         } else {
             let storeDirectory = NSPersistentContainer.defaultDirectoryURL()
 
-            // Private store — owner's data, syncs to CloudKit private database
+            // Private store — owner's data, syncs to CloudKit private database.
+            // Uses the default configuration (no named configuration) to match
+            // Apple's CoreDataCloudKitShare sample pattern.
             let privateDescription = NSPersistentStoreDescription(
                 url: storeDirectory.appendingPathComponent("private.sqlite")
             )
-            privateDescription.configuration = "Private"
             privateDescription.cloudKitContainerOptions = NSPersistentCloudKitContainerOptions(
                 containerIdentifier: Self.cloudKitContainerID
             )
@@ -191,11 +192,12 @@ final class PersistenceController {
             privateDescription.setOption(true as NSNumber, forKey: NSPersistentHistoryTrackingKey)
             privateDescription.setOption(true as NSNumber, forKey: NSPersistentStoreRemoteChangeNotificationPostOptionKey)
 
-            // Shared store — data shared by others, syncs to CloudKit shared database
+            // Shared store — data shared BY OTHER USERS with this device.
+            // Owner's own data always lives in the private store; the shared store
+            // is populated automatically when the user accepts an invitation.
             let sharedDescription = NSPersistentStoreDescription(
                 url: storeDirectory.appendingPathComponent("shared.sqlite")
             )
-            sharedDescription.configuration = "Shared"
             let sharedOptions = NSPersistentCloudKitContainerOptions(
                 containerIdentifier: Self.cloudKitContainerID
             )
@@ -674,12 +676,11 @@ final class PersistenceController {
             }
         }
 
-        // Re-add the shared store
+        // Re-add the shared store (uses default configuration)
         let storeDirectory = NSPersistentContainer.defaultDirectoryURL()
         let sharedDescription = NSPersistentStoreDescription(
             url: storeDirectory.appendingPathComponent("shared.sqlite")
         )
-        sharedDescription.configuration = "Shared"
         let sharedOptions = NSPersistentCloudKitContainerOptions(
             containerIdentifier: Self.cloudKitContainerID
         )

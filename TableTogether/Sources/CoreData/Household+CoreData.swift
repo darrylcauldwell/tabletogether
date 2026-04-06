@@ -53,11 +53,16 @@ public class Household: NSManagedObject {
 
     // MARK: - Convenience Initializer
 
+    /// Deterministic UUID for the default household so all devices create the same ID.
+    /// Without this, each device creates a Household with a random UUID before CloudKit
+    /// sync completes, resulting in duplicate households that cannot be merged by ID.
+    static let defaultID = UUID(uuidString: "00000000-0000-0000-0000-000000000001")!
+
     @discardableResult
     convenience init(context: NSManagedObjectContext, name: String = "My Household") {
         let entity = NSEntityDescription.entity(forEntityName: "Household", in: context)!
         self.init(entity: entity, insertInto: context)
-        self.id = UUID()
+        self.id = Self.defaultID
         self.name = name
         self.createdAt = Date()
     }
