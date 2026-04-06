@@ -36,41 +36,6 @@ struct RecipeEditorView: View {
     @State private var newInstructionText = ""
     @State private var newTagText = ""
 
-    // Editable ingredient representation
-    struct EditableIngredientItem: Identifiable, Equatable {
-        let id: UUID
-        var name: String
-        var quantity: Double
-        var unit: MeasurementUnit
-        var preparationNote: String
-        var isOptional: Bool
-
-        init(
-            id: UUID = UUID(),
-            name: String = "",
-            quantity: Double = 1,
-            unit: MeasurementUnit = .piece,
-            preparationNote: String = "",
-            isOptional: Bool = false
-        ) {
-            self.id = id
-            self.name = name
-            self.quantity = quantity
-            self.unit = unit
-            self.preparationNote = preparationNote
-            self.isOptional = isOptional
-        }
-
-        init(from recipeIngredient: RecipeIngredient) {
-            self.id = recipeIngredient.id
-            self.name = recipeIngredient.displayName
-            self.quantity = recipeIngredient.quantity
-            self.unit = recipeIngredient.unit
-            self.preparationNote = recipeIngredient.preparationNote ?? ""
-            self.isOptional = recipeIngredient.isOptional
-        }
-    }
-
     var isEditing: Bool { recipe != nil }
 
     init(recipe: Recipe?) {
@@ -484,9 +449,7 @@ struct RecipeEditorView: View {
 
     private func addIngredient() {
         guard !newIngredientText.isEmpty else { return }
-
-        let parsed = parseIngredientText(newIngredientText)
-        editableIngredients.append(parsed)
+        editableIngredients.append(IngredientParser.parse(newIngredientText))
         newIngredientText = ""
     }
 
@@ -588,81 +551,6 @@ struct RecipeEditorView: View {
         dismiss()
     }
 
-    // MARK: - Parsing Helpers
-
-    private func parseIngredientText(_ text: String) -> EditableIngredientItem {
-        // Simple parsing - tries to extract quantity and unit from text
-        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
-
-        // Pattern: "2 cups flour" or "1/2 tsp salt" or just "butter"
-        let patterns: [(String, MeasurementUnit)] = [
-            (#"^([\d./]+)\s*(?:cups?|c\.?)\s+"#, .cup),
-            (#"^([\d./]+)\s*(?:tablespoons?|tbsp?\.?|T\.?)\s+"#, .tablespoon),
-            (#"^([\d./]+)\s*(?:teaspoons?|tsp?\.?|t\.?)\s+"#, .teaspoon),
-            (#"^([\d./]+)\s*(?:grams?|g\.?)\s+"#, .gram),
-            (#"^([\d./]+)\s*(?:kg|kilograms?)\s+"#, .kilogram),
-            (#"^([\d./]+)\s*(?:ml|milliliters?)\s+"#, .milliliter),
-            (#"^([\d./]+)\s*(?:l|liters?)\s+"#, .liter),
-            (#"^([\d./]+)\s+"#, .piece) // Fallback for just a number
-        ]
-
-        var quantity: Double = 1
-        var unit: MeasurementUnit = .piece
-        var name = trimmed
-
-        for (pattern, matchedUnit) in patterns {
-            if let regex = try? NSRegularExpression(pattern: pattern, options: .caseInsensitive),
-               let match = regex.firstMatch(in: trimmed, options: [], range: NSRange(trimmed.startIndex..., in: trimmed)) {
-
-                if let quantityRange = Range(match.range(at: 1), in: trimmed) {
-                    let quantityStr = String(trimmed[quantityRange])
-                    quantity = parseFraction(quantityStr)
-                }
-
-                unit = matchedUnit
-                name = String(trimmed[trimmed.index(trimmed.startIndex, offsetBy: match.range.length)...])
-                    .trimmingCharacters(in: .whitespacesAndNewlines)
-                break
-            }
-        }
-
-        // Check for preparation note (after comma)
-        var preparationNote = ""
-        if let commaIndex = name.firstIndex(of: ",") {
-            preparationNote = String(name[name.index(after: commaIndex)...])
-                .trimmingCharacters(in: .whitespacesAndNewlines)
-            name = String(name[..<commaIndex])
-                .trimmingCharacters(in: .whitespacesAndNewlines)
-        }
-
-        return EditableIngredientItem(
-            name: name,
-            quantity: quantity,
-            unit: unit,
-            preparationNote: preparationNote
-        )
-    }
-
-    private func parseFraction(_ string: String) -> Double {
-        let components = string.components(separatedBy: " ")
-        var total: Double = 0
-
-        for component in components {
-            if component.contains("/") {
-                let fractionParts = component.components(separatedBy: "/")
-                if fractionParts.count == 2,
-                   let numerator = Double(fractionParts[0]),
-                   let denominator = Double(fractionParts[1]),
-                   denominator != 0 {
-                    total += numerator / denominator
-                }
-            } else if let num = Double(component) {
-                total += num
-            }
-        }
-
-        return total > 0 ? total : 1
-    }
 }
 
 // MARK: - Preview
@@ -672,47 +560,4 @@ struct RecipeEditorView: View {
         RecipeEditorView(recipe: nil)
     }
     .environment(\.managedObjectContext, PersistenceController.preview.viewContext)
-}
-
-private struct RecipeEditorEditPreview: View {
-    @Environment(\.managedObjectContext) private var viewContext
-    @State private var recipe: Recipe?
-
-    var body: some View {
-        Group {
-            if let recipe = recipe {
-                NavigationStack {
-                    RecipeEditorView(recipe: recipe)
-                }
-            } else {
-                ProgressView("Loading...")
-            }
-        }
-        .task {
-            let newRecipe = Recipe(
-                context: viewContext,
-                title: "Test Recipe",
-                summary: "A test recipe for preview",
-                servings: 4,
-                prepTimeMinutes: 15,
-                cookTimeMinutes: 30,
-                instructions: ["Step 1", "Step 2", "Step 3"],
-                suggestedArchetypes: [.quickWeeknight, .familyFavorite]
-            )
-
-            let ingredients = [
-                RecipeIngredient(context: viewContext, quantity: 2, unit: .cup, order: 0, customName: "Flour"),
-                RecipeIngredient(context: viewContext, quantity: 1, unit: .cup, order: 1, customName: "Sugar"),
-                RecipeIngredient(context: viewContext, quantity: 2, unit: .piece, order: 2, customName: "Eggs")
-            ]
-
-            ingredients.forEach { newRecipe.addToRecipeIngredients($0) }
-            recipe = newRecipe
-        }
-    }
-}
-
-#Preview("Edit Mode") {
-    RecipeEditorEditPreview()
-        .environment(\.managedObjectContext, PersistenceController.preview.viewContext)
 }

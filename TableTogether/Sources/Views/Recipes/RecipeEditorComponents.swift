@@ -1,6 +1,110 @@
 import SwiftUI
 import CoreData
 
+// MARK: - Editable Ingredient Item
+
+extension RecipeEditorView {
+    struct EditableIngredientItem: Identifiable, Equatable {
+        let id: UUID
+        var name: String
+        var quantity: Double
+        var unit: MeasurementUnit
+        var preparationNote: String
+        var isOptional: Bool
+
+        init(
+            id: UUID = UUID(),
+            name: String = "",
+            quantity: Double = 1,
+            unit: MeasurementUnit = .piece,
+            preparationNote: String = "",
+            isOptional: Bool = false
+        ) {
+            self.id = id
+            self.name = name
+            self.quantity = quantity
+            self.unit = unit
+            self.preparationNote = preparationNote
+            self.isOptional = isOptional
+        }
+
+        init(from recipeIngredient: RecipeIngredient) {
+            self.id = recipeIngredient.id
+            self.name = recipeIngredient.displayName
+            self.quantity = recipeIngredient.quantity
+            self.unit = recipeIngredient.unit
+            self.preparationNote = recipeIngredient.preparationNote ?? ""
+            self.isOptional = recipeIngredient.isOptional
+        }
+    }
+}
+
+// MARK: - Ingredient Parsing
+
+enum IngredientParser {
+    static func parse(_ text: String) -> RecipeEditorView.EditableIngredientItem {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        let patterns: [(String, MeasurementUnit)] = [
+            (#"^([\d./]+)\s*(?:cups?|c\.?)\s+"#, .cup),
+            (#"^([\d./]+)\s*(?:tablespoons?|tbsp?\.?|T\.?)\s+"#, .tablespoon),
+            (#"^([\d./]+)\s*(?:teaspoons?|tsp?\.?|t\.?)\s+"#, .teaspoon),
+            (#"^([\d./]+)\s*(?:grams?|g\.?)\s+"#, .gram),
+            (#"^([\d./]+)\s*(?:kg|kilograms?)\s+"#, .kilogram),
+            (#"^([\d./]+)\s*(?:ml|milliliters?)\s+"#, .milliliter),
+            (#"^([\d./]+)\s*(?:l|liters?)\s+"#, .liter),
+            (#"^([\d./]+)\s+"#, .piece),
+        ]
+
+        var quantity: Double = 1
+        var unit: MeasurementUnit = .piece
+        var name = trimmed
+
+        for (pattern, matchedUnit) in patterns {
+            if let regex = try? NSRegularExpression(pattern: pattern, options: .caseInsensitive),
+               let match = regex.firstMatch(in: trimmed, options: [], range: NSRange(trimmed.startIndex..., in: trimmed)) {
+                if let quantityRange = Range(match.range(at: 1), in: trimmed) {
+                    quantity = parseFraction(String(trimmed[quantityRange]))
+                }
+                unit = matchedUnit
+                name = String(trimmed[trimmed.index(trimmed.startIndex, offsetBy: match.range.length)...])
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
+                break
+            }
+        }
+
+        var preparationNote = ""
+        if let commaIndex = name.firstIndex(of: ",") {
+            preparationNote = String(name[name.index(after: commaIndex)...])
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+            name = String(name[..<commaIndex])
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+
+        return RecipeEditorView.EditableIngredientItem(
+            name: name, quantity: quantity, unit: unit, preparationNote: preparationNote
+        )
+    }
+
+    static func parseFraction(_ string: String) -> Double {
+        var total: Double = 0
+        for component in string.components(separatedBy: " ") {
+            if component.contains("/") {
+                let parts = component.components(separatedBy: "/")
+                if parts.count == 2,
+                   let num = Double(parts[0]),
+                   let den = Double(parts[1]),
+                   den != 0 {
+                    total += num / den
+                }
+            } else if let num = Double(component) {
+                total += num
+            }
+        }
+        return total > 0 ? total : 1
+    }
+}
+
 // MARK: - Ingredient Editor Row
 
 struct IngredientEditorRow: View {
