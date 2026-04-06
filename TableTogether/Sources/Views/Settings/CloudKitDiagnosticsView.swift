@@ -129,7 +129,7 @@ struct CloudKitDiagnosticsView: View {
                 } label: {
                     Label("Reset Shared Store", systemImage: "arrow.triangle.2.circlepath")
                 }
-                .disabled(pc.isSharing || pc.syncRecoveryInProgress)
+                .disabled(pc.syncRecoveryInProgress)
 
                 Button(role: .destructive) {
                     showingResetAllConfirmation = true

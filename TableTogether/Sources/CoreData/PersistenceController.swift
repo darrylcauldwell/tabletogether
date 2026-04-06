@@ -540,6 +540,9 @@ final class PersistenceController {
         guard let event = notification.userInfo?[NSPersistentCloudKitContainer.eventNotificationUserInfoKey]
                 as? NSPersistentCloudKitContainer.Event else { return }
 
+        // Only track completed events (endDate != nil), not start events
+        guard event.endDate != nil else { return }
+
         let eventType: String = switch event.type {
         case .setup: "setup"
         case .import: "import"
@@ -615,10 +618,6 @@ final class PersistenceController {
     /// Attempt automatic recovery of the shared store with backoff.
     private func attemptSharedStoreRecovery() async {
         guard !syncRecoveryInProgress else { return }
-        guard existingShare == nil else {
-            AppLogger.sync.warning("Skipping shared store recovery — active sharing exists")
-            return
-        }
         guard recoveryAttemptCount < 3 else {
             storeLoadError = "CloudKit sync failed repeatedly. Use CloudKit Diagnostics to reset sync data."
             AppLogger.sync.error("Shared store recovery exhausted (3 attempts)")
@@ -635,10 +634,6 @@ final class PersistenceController {
     /// Delete and recreate the shared persistent store to clear stale zone metadata.
     func resetSharedStore() async {
         guard !syncRecoveryInProgress else { return }
-        guard existingShare == nil else {
-            AppLogger.sync.warning("Cannot reset shared store — active sharing exists")
-            return
-        }
 
         syncRecoveryInProgress = true
         recoveryAttemptCount += 1
