@@ -138,22 +138,16 @@ platform :appletvos do
     )
     new_build = latest_build + 1
 
-    # Build tvOS — version set via xcargs (no sed on pbxproj needed)
+    # Build tvOS — automatic signing, version set via xcargs
     build_app(
       scheme: "TableTogetherTV",
       export_method: "app-store",
       project: "TableTogetherTV/TableTogetherTV.xcodeproj",
       destination: "generic/platform=tvOS",
-      skip_build_archive: false,
-      skip_archive: false,
-      xcargs: "CURRENT_PROJECT_VERSION=#{new_build} MARKETING_VERSION=1.1 -allowProvisioningUpdates -authenticationKeyPath '#{File.expand_path(asc_key_path)}' -authenticationKeyID #{asc_key_id} -authenticationKeyIssuerID #{asc_issuer_id} CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY='Apple Distribution' PROVISIONING_PROFILE_SPECIFIER='dev.dreamfold.tabletogether.tv AppStore' DEVELOPMENT_TEAM=N6BK2WX94Z",
+      xcargs: "CURRENT_PROJECT_VERSION=#{new_build} MARKETING_VERSION=1.1 -allowProvisioningUpdates -authenticationKeyPath '#{File.expand_path(asc_key_path)}' -authenticationKeyID #{asc_key_id} -authenticationKeyIssuerID #{asc_issuer_id}",
       export_options: {
-        signingStyle: "manual",
-        teamID: "N6BK2WX94Z",
-        signingCertificate: "Apple Distribution",
-        provisioningProfiles: {
-          "dev.dreamfold.tabletogether.tv" => "dev.dreamfold.tabletogether.tv AppStore"
-        }
+        signingStyle: "automatic",
+        teamID: "N6BK2WX94Z"
       }
     )
 
