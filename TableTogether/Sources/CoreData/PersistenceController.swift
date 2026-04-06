@@ -536,7 +536,7 @@ final class PersistenceController {
     // MARK: - CloudKit Mirroring Event Observer
 
     @objc
-    private nonisolated func handleCloudKitEvent(_ notification: Notification) {
+    private func handleCloudKitEvent(_ notification: Notification) {
         guard let event = notification.userInfo?[NSPersistentCloudKitContainer.eventNotificationUserInfoKey]
                 as? NSPersistentCloudKitContainer.Event else { return }
 
@@ -550,6 +550,7 @@ final class PersistenceController {
         let storeID = event.storeIdentifier
         let succeeded = event.succeeded
         let errorMessage = event.error?.localizedDescription
+        let needsRecovery = !succeeded && isStaleZoneError(event.error)
 
         if let errorMessage {
             AppLogger.sync.error("CloudKit \(eventType) failed for store \(storeID): \(errorMessage)")
@@ -557,31 +558,26 @@ final class PersistenceController {
             AppLogger.sync.info("CloudKit \(eventType) succeeded for store \(storeID)")
         }
 
-        // Check for stale zone errors that require shared store recovery
-        let needsRecovery = !succeeded && isStaleZoneError(event.error)
+        let info = SyncEventInfo(
+            storeIdentifier: storeID,
+            eventType: eventType,
+            succeeded: succeeded,
+            error: errorMessage,
+            timestamp: Date()
+        )
+        lastSyncEvents.append(info)
+        if lastSyncEvents.count > 20 {
+            lastSyncEvents.removeFirst(lastSyncEvents.count - 20)
+        }
 
-        Task { @MainActor in
-            let info = SyncEventInfo(
-                storeIdentifier: storeID,
-                eventType: eventType,
-                succeeded: succeeded,
-                error: errorMessage,
-                timestamp: Date()
-            )
-            self.lastSyncEvents.append(info)
-            if self.lastSyncEvents.count > 20 {
-                self.lastSyncEvents.removeFirst(self.lastSyncEvents.count - 20)
-            }
-
-            // Track shared store health and trigger recovery
-            if needsRecovery,
-               storeID == self.sharedPersistentStore?.identifier {
-                self.sharedStoreHealthy = false
-                await self.attemptSharedStoreRecovery()
-            } else if succeeded, storeID == self.sharedPersistentStore?.identifier {
-                self.sharedStoreHealthy = true
-                self.recoveryAttemptCount = 0
-            }
+        // Track shared store health and trigger recovery
+        if needsRecovery,
+           storeID == sharedPersistentStore?.identifier {
+            sharedStoreHealthy = false
+            Task { await attemptSharedStoreRecovery() }
+        } else if succeeded, storeID == sharedPersistentStore?.identifier {
+            sharedStoreHealthy = true
+            recoveryAttemptCount = 0
         }
     }
 
