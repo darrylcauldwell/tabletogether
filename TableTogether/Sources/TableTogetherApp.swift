@@ -54,55 +54,7 @@ struct TableTogetherApp: App {
                     handleDeepLink(url)
                 }
         }
-        #if targetEnvironment(macCatalyst)
-        .commands {
-            CommandGroup(after: .newItem) {
-                Button("New Recipe") {
-                    NotificationCenter.default.post(name: .newRecipeRequested, object: nil)
-                }
-                .keyboardShortcut("n", modifiers: [.command])
-
-                Button("Import from URL…") {
-                    NotificationCenter.default.post(name: .importFromURLRequested, object: nil)
-                }
-                .keyboardShortcut("i", modifiers: [.command, .shift])
-
-                Divider()
-
-                Button("Settings…") {
-                    NotificationCenter.default.post(name: .openSettingsRequested, object: nil)
-                }
-                .keyboardShortcut(",", modifiers: .command)
-            }
-
-            CommandMenu("Go") {
-                Button("Plan") {
-                    NotificationCenter.default.post(name: .navigateToSection, object: SidebarSection.plan)
-                }
-                .keyboardShortcut("1", modifiers: .command)
-
-                Button("Recipes") {
-                    NotificationCenter.default.post(name: .navigateToSection, object: SidebarSection.recipes)
-                }
-                .keyboardShortcut("2", modifiers: .command)
-
-                Button("Shopping") {
-                    NotificationCenter.default.post(name: .navigateToSection, object: SidebarSection.grocery)
-                }
-                .keyboardShortcut("3", modifiers: .command)
-
-                Button("Meal Log") {
-                    NotificationCenter.default.post(name: .navigateToSection, object: SidebarSection.log)
-                }
-                .keyboardShortcut("4", modifiers: .command)
-
-                Button("Insights") {
-                    NotificationCenter.default.post(name: .navigateToSection, object: SidebarSection.insights)
-                }
-                .keyboardShortcut("5", modifiers: .command)
-            }
-        }
-        #endif
+        // Menu bar commands added via AppDelegate.buildMenu(with:) for Catalyst compatibility
     }
 
     /// Handle deep links from calendar events.
@@ -288,7 +240,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     }
 }
 
-class AppDelegate: NSObject, UIApplicationDelegate {
+class AppDelegate: UIResponder, UIApplicationDelegate {
     /// Wire the SceneDelegate so share acceptance works in SwiftUI.
     func application(
         _ application: UIApplication,
@@ -299,6 +251,76 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         config.delegateClass = SceneDelegate.self
         return config
     }
+
+    #if targetEnvironment(macCatalyst)
+    override func buildMenu(with builder: UIMenuBuilder) {
+        super.buildMenu(with: builder)
+        guard builder.system == .main else { return }
+
+        // File menu: New Recipe, Import from URL, Settings
+        let newRecipe = UIKeyCommand(
+            title: "New Recipe",
+            action: #selector(handleNewRecipe),
+            input: "N",
+            modifierFlags: .command
+        )
+        let importURL = UIKeyCommand(
+            title: "Import from URL…",
+            action: #selector(handleImportFromURL),
+            input: "I",
+            modifierFlags: [.command, .shift]
+        )
+        let settings = UIKeyCommand(
+            title: "Settings…",
+            action: #selector(handleOpenSettings),
+            input: ",",
+            modifierFlags: .command
+        )
+        let fileMenu = UIMenu(title: "", options: .displayInline, children: [newRecipe, importURL, settings])
+        builder.insertChild(fileMenu, atStartOfMenu: .file)
+
+        // Go menu: section navigation
+        let goItems: [(String, String, String)] = [
+            ("Plan", "1", "plan"),
+            ("Recipes", "2", "recipes"),
+            ("Shopping", "3", "grocery"),
+            ("Meal Log", "4", "log"),
+            ("Insights", "5", "insights"),
+        ]
+        let goChildren = goItems.map { title, key, _ in
+            UIKeyCommand(title: title, action: #selector(handleNavigate(_:)), input: key, modifierFlags: .command)
+        }
+        let goMenu = UIMenu(title: "Go", children: goChildren)
+        builder.insertSibling(goMenu, afterMenu: .view)
+    }
+
+    @objc private func handleNewRecipe() {
+        NotificationCenter.default.post(name: .newRecipeRequested, object: nil)
+    }
+
+    @objc private func handleImportFromURL() {
+        NotificationCenter.default.post(name: .importFromURLRequested, object: nil)
+    }
+
+    @objc private func handleOpenSettings() {
+        NotificationCenter.default.post(name: .openSettingsRequested, object: nil)
+    }
+
+    @objc private func handleNavigate(_ sender: UIKeyCommand) {
+        guard let input = sender.input else { return }
+        let section: SidebarSection? = switch input {
+        case "1": .plan
+        case "2": .recipes
+        case "3": .grocery
+        case "4": .log
+        case "5": .insights
+        default: nil
+        }
+        if let section {
+            NotificationCenter.default.post(name: .navigateToSection, object: section)
+        }
+    }
+    #endif
 }
 #endif
 
