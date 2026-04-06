@@ -54,6 +54,55 @@ struct TableTogetherApp: App {
                     handleDeepLink(url)
                 }
         }
+        #if targetEnvironment(macCatalyst)
+        .commands {
+            CommandGroup(after: .newItem) {
+                Button("New Recipe") {
+                    NotificationCenter.default.post(name: .newRecipeRequested, object: nil)
+                }
+                .keyboardShortcut("n", modifiers: [.command])
+
+                Button("Import from URL…") {
+                    NotificationCenter.default.post(name: .importFromURLRequested, object: nil)
+                }
+                .keyboardShortcut("i", modifiers: [.command, .shift])
+            }
+
+            CommandGroup(after: .sidebar) {
+                Button("Plan") {
+                    NotificationCenter.default.post(name: .navigateToSection, object: SidebarSection.plan)
+                }
+                .keyboardShortcut("1", modifiers: .command)
+
+                Button("Recipes") {
+                    NotificationCenter.default.post(name: .navigateToSection, object: SidebarSection.recipes)
+                }
+                .keyboardShortcut("2", modifiers: .command)
+
+                Button("Shopping") {
+                    NotificationCenter.default.post(name: .navigateToSection, object: SidebarSection.grocery)
+                }
+                .keyboardShortcut("3", modifiers: .command)
+
+                Button("Meal Log") {
+                    NotificationCenter.default.post(name: .navigateToSection, object: SidebarSection.log)
+                }
+                .keyboardShortcut("4", modifiers: .command)
+
+                Button("Insights") {
+                    NotificationCenter.default.post(name: .navigateToSection, object: SidebarSection.insights)
+                }
+                .keyboardShortcut("5", modifiers: .command)
+            }
+
+            CommandGroup(replacing: .appSettings) {
+                Button("Settings…") {
+                    NotificationCenter.default.post(name: .openSettingsRequested, object: nil)
+                }
+                .keyboardShortcut(",", modifiers: .command)
+            }
+        }
+        #endif
     }
 
     /// Handle deep links from calendar events.

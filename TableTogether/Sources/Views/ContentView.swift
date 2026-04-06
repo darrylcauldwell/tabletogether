@@ -140,6 +140,7 @@ struct RegularNavigationView: View {
     }()
     @State private var columnVisibility: NavigationSplitViewVisibility = .doubleColumn
     @State private var sidebarMode: SidebarMode = .navigation
+    @State private var showSettings = false
 
     var body: some View {
         NavigationSplitView(columnVisibility: $columnVisibility) {
@@ -153,6 +154,20 @@ struct RegularNavigationView: View {
         }
         .navigationSplitViewStyle(.balanced)
         .tint(Theme.Colors.primary)
+        #if targetEnvironment(macCatalyst)
+        .onReceive(NotificationCenter.default.publisher(for: .navigateToSection)) { notification in
+            if let section = notification.object as? SidebarSection {
+                selectedSection = section
+                sidebarMode = .navigation
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .openSettingsRequested)) { _ in
+            showSettings = true
+        }
+        .sheet(isPresented: $showSettings) {
+            SettingsView()
+        }
+        #endif
     }
 }
 

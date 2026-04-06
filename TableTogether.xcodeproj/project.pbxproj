@@ -25,6 +25,7 @@
 		4F85C111103555A09EE5CDEB /* Preview+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11B499F6625951C3A2D37D7E /* Preview+Extensions.swift */; };
 		D91C069AB4255A02A5AEA71C /* SwiftData+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 949034F0425B5C83887EEAB9 /* SwiftData+Extensions.swift */; };
 		4A68B7949F67541B94A7888C /* View+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F822C6F84BC5A499A407E61 /* View+Extensions.swift */; };
+		A1B2C3D4E5F6071829304152 /* Notification+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2C3D4E5F60718293041A253 /* Notification+Extensions.swift */; };
 		796393791349578BA5FA9E84 /* CommonPortion.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48008D36CEF15F5FAA70CE6F /* CommonPortion.swift */; };
 		9DEF63B44EB75142B7840DF5 /* Enums.swift in Sources */ = {isa = PBXBuildFile; fileRef = 700F899BA08E5E81875F42AF /* Enums.swift */; };
 		BBDB0EA0074D511CAE1C0E46 /* MacroSummary.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7828D75334F055E1B129F546 /* MacroSummary.swift */; };
@@ -124,6 +125,7 @@
 		11B499F6625951C3A2D37D7E /* Preview+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TableTogether/Sources/Extensions/Preview+Extensions.swift"; sourceTree = "<group>"; };
 		949034F0425B5C83887EEAB9 /* SwiftData+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TableTogether/Sources/Extensions/SwiftData+Extensions.swift"; sourceTree = "<group>"; };
 		9F822C6F84BC5A499A407E61 /* View+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TableTogether/Sources/Extensions/View+Extensions.swift"; sourceTree = "<group>"; };
+		B2C3D4E5F60718293041A253 /* Notification+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TableTogether/Sources/Extensions/Notification+Extensions.swift"; sourceTree = "<group>"; };
 		48008D36CEF15F5FAA70CE6F /* CommonPortion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TableTogether/Sources/Models/CommonPortion.swift"; sourceTree = "<group>"; };
 		700F899BA08E5E81875F42AF /* Enums.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TableTogether/Sources/Models/Enums.swift"; sourceTree = "<group>"; };
 		7828D75334F055E1B129F546 /* MacroSummary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TableTogether/Sources/Models/MacroSummary.swift"; sourceTree = "<group>"; };
@@ -232,6 +234,7 @@
 				11B499F6625951C3A2D37D7E /* Preview+Extensions.swift */,
 				949034F0425B5C83887EEAB9 /* SwiftData+Extensions.swift */,
 				9F822C6F84BC5A499A407E61 /* View+Extensions.swift */,
+				B2C3D4E5F60718293041A253 /* Notification+Extensions.swift */,
 				48008D36CEF15F5FAA70CE6F /* CommonPortion.swift */,
 				700F899BA08E5E81875F42AF /* Enums.swift */,
 				7828D75334F055E1B129F546 /* MacroSummary.swift */,
@@ -398,6 +401,7 @@
 				4F85C111103555A09EE5CDEB /* Preview+Extensions.swift in Sources */,
 				D91C069AB4255A02A5AEA71C /* SwiftData+Extensions.swift in Sources */,
 				4A68B7949F67541B94A7888C /* View+Extensions.swift in Sources */,
+				A1B2C3D4E5F6071829304152 /* Notification+Extensions.swift in Sources */,
 				796393791349578BA5FA9E84 /* CommonPortion.swift in Sources */,
 				9DEF63B44EB75142B7840DF5 /* Enums.swift in Sources */,
 				BBDB0EA0074D511CAE1C0E46 /* MacroSummary.swift in Sources */,

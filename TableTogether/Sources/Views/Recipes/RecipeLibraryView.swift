@@ -204,6 +204,14 @@ struct RecipeLibraryView: View {
                 CookbookScannerSheet()
             }
             #endif
+            #if targetEnvironment(macCatalyst)
+            .onReceive(NotificationCenter.default.publisher(for: .newRecipeRequested)) { _ in
+                showingEditorSheet = true
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .importFromURLRequested)) { _ in
+                showingImportSheet = true
+            }
+            #endif
         }
     }
 
