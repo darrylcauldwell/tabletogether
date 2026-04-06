@@ -737,7 +737,36 @@ final class PersistenceController {
         sharedPersistentStore = nil
         existingShare = nil
 
-        // Re-load all stores from the original descriptions
+        // Re-add stores manually (loadPersistentStores requires descriptions)
+        let storeDirectory = NSPersistentContainer.defaultDirectoryURL()
+
+        // Private store
+        let privateDescription = NSPersistentStoreDescription(
+            url: storeDirectory.appendingPathComponent("private.sqlite")
+        )
+        privateDescription.configuration = "Private"
+        privateDescription.cloudKitContainerOptions = NSPersistentCloudKitContainerOptions(
+            containerIdentifier: Self.cloudKitContainerID
+        )
+        privateDescription.cloudKitContainerOptions?.databaseScope = .private
+        privateDescription.setOption(true as NSNumber, forKey: NSPersistentHistoryTrackingKey)
+        privateDescription.setOption(true as NSNumber, forKey: NSPersistentStoreRemoteChangeNotificationPostOptionKey)
+
+        // Shared store
+        let sharedDescription = NSPersistentStoreDescription(
+            url: storeDirectory.appendingPathComponent("shared.sqlite")
+        )
+        sharedDescription.configuration = "Shared"
+        let sharedOptions = NSPersistentCloudKitContainerOptions(
+            containerIdentifier: Self.cloudKitContainerID
+        )
+        sharedOptions.databaseScope = .shared
+        sharedDescription.cloudKitContainerOptions = sharedOptions
+        sharedDescription.setOption(true as NSNumber, forKey: NSPersistentHistoryTrackingKey)
+        sharedDescription.setOption(true as NSNumber, forKey: NSPersistentStoreRemoteChangeNotificationPostOptionKey)
+
+        container.persistentStoreDescriptions = [privateDescription, sharedDescription]
+
         container.loadPersistentStores { description, error in
             if let error {
                 AppLogger.sync.fault("Failed to reload store '\(description.configuration ?? "default")': \(error.localizedDescription)")
