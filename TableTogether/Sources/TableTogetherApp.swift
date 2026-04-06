@@ -83,6 +83,16 @@ struct TableTogetherApp: App {
         // Ensure a Household exists first — all new records will be linked to it
         let household = ensureHousehold(context: context)
 
+        // Save the household immediately so it syncs to CloudKit before anything else is created
+        if context.hasChanges {
+            do {
+                try context.save()
+                AppLogger.app.info("Saved household")
+            } catch {
+                AppLogger.swiftData.error("Failed to save household", error: error)
+            }
+        }
+
         // Check if archetypes already exist
         let archetypeRequest = NSFetchRequest<MealArchetype>(entityName: "MealArchetype")
         let existingArchetypes = context.fetchWithLogging(archetypeRequest, context: "system archetypes check")

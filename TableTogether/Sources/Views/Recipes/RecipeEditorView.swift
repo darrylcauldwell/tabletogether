@@ -541,6 +541,11 @@ struct RecipeEditorView: View {
             newRecipe.household = households.first
         }
 
+        do {
+            try viewContext.save()
+        } catch {
+            AppLogger.swiftData.error("Failed to save recipe: \(error.localizedDescription)")
+        }
         dismiss()
     }
 
