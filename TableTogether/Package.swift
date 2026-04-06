@@ -1,5 +1,4 @@
 // swift-tools-version: 6.2
-// The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
 
@@ -7,24 +6,26 @@ let package = Package(
     name: "TableTogether",
     platforms: [
         .iOS(.v26),
+        .macCatalyst(.v18),
         .tvOS(.v26)
     ],
     products: [
         .library(
-            name: "TableTogether",
-            targets: ["TableTogether"]
+            name: "TableTogetherLib",
+            targets: ["TableTogetherLib"]
         ),
     ],
-    dependencies: [],
     targets: [
         .target(
-            name: "TableTogether",
-            dependencies: [],
-            path: "Sources"
+            name: "TableTogetherLib",
+            path: "Sources",
+            resources: [
+                .process("CoreData/TableTogether.xcdatamodeld")
+            ]
         ),
         .testTarget(
             name: "TableTogetherTests",
-            dependencies: ["TableTogether"],
+            dependencies: ["TableTogetherLib"],
             path: "Tests"
         ),
     ]

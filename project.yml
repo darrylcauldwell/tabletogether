@@ -1,0 +1,58 @@
+name: TableTogether
+
+packages:
+  TableTogetherPkg:
+    path: TableTogether
+
+targets:
+  TableTogether:
+    type: application
+    platform: iOS
+    deploymentTarget: "26.0"
+    dependencies:
+      - package: TableTogetherPkg
+        product: TableTogetherLib
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: dev.dreamfold.tabletogether
+        CODE_SIGN_ENTITLEMENTS: TableTogether/TableTogether.entitlements
+        CODE_SIGN_STYLE: Automatic
+        DEVELOPMENT_TEAM: N6BK2WX94Z
+        CURRENT_PROJECT_VERSION: "1"
+        MARKETING_VERSION: "1.1"
+        VERSIONING_SYSTEM: apple-generic
+        GENERATE_INFOPLIST_FILE: "YES"
+        SWIFT_VERSION: "6.2"
+        SWIFT_STRICT_CONCURRENCY: complete
+        SUPPORTS_MACCATALYST: "YES"
+        DERIVE_MACCATALYST_PRODUCT_BUNDLE_IDENTIFIER: "NO"
+        TARGETED_DEVICE_FAMILY: "1,2"
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS: "YES"
+        INFOPLIST_KEY_ITSAppUsesNonExemptEncryption: "NO"
+        INFOPLIST_KEY_UIApplicationSceneManifest_Generation: "YES"
+        INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: "YES"
+        INFOPLIST_KEY_UILaunchScreen_Generation: "YES"
+        INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad: "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
+        INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone: "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
+        INFOPLIST_KEY_NSCalendarsUsageDescription: "TableTogether adds meal plans to your calendar so you know when to start cooking."
+        INFOPLIST_KEY_NSCalendarsFullAccessUsageDescription: "TableTogether adds meal plans to your calendar so you know when to start cooking."
+        INFOPLIST_KEY_NSHealthShareUsageDescription: "TableTogether reads your nutrition data to help track your meals and dietary goals."
+        INFOPLIST_KEY_NSHealthUpdateUsageDescription: "TableTogether saves your meal nutrition data to help you track your dietary intake."
+        INFOPLIST_KEY_NSCameraUsageDescription: "TableTogether uses your camera to scan cookbook pages and import recipes."
+        INFOPLIST_KEY_UIBackgroundModes: remote-notification
+        INFOPLIST_KEY_CKSharingSupported: "YES"
+        INFOPLIST_FILE: TableTogether/Info.plist
+      configs:
+        Debug:
+          SWIFT_ACTIVE_COMPILATION_CONDITIONS: DEBUG
+          SWIFT_OPTIMIZATION_LEVEL: "-Onone"
+          DEBUG_INFORMATION_FORMAT: dwarf
+          ONLY_ACTIVE_ARCH: "YES"
+        Release:
+          SWIFT_OPTIMIZATION_LEVEL: "-O"
+          DEBUG_INFORMATION_FORMAT: dwarf-with-dsym
+          VALIDATE_PRODUCT: "YES"
+          DEAD_CODE_STRIPPING: "YES"
+    resources:
+      - TableTogether/Assets.xcassets
