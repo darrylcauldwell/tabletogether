@@ -170,7 +170,12 @@ final class PersistenceController {
     // MARK: - Initialization
 
     init(inMemory: Bool = false) {
-        container = NSPersistentCloudKitContainer(name: "TableTogether")
+        // Load Core Data model from SPM resource bundle (not main bundle)
+        guard let modelURL = Bundle.module.url(forResource: "TableTogether", withExtension: "momd"),
+              let model = NSManagedObjectModel(contentsOf: modelURL) else {
+            fatalError("Failed to load Core Data model from SPM resource bundle")
+        }
+        container = NSPersistentCloudKitContainer(name: "TableTogether", managedObjectModel: model)
 
         if inMemory {
             let description = NSPersistentStoreDescription()
