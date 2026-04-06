@@ -35,7 +35,11 @@ struct SettingsView: View {
     @State private var healthService = HealthKitService.shared
 
     @State private var showingPaprikaFilePicker = false
+    @State private var recipeExporter = RecipeExporter()
+    @State private var showingExportFilePicker = false
+    @State private var exportDocument: RecipeExportDocument?
     @FetchRequest(sortDescriptors: [SortDescriptor(\.name)]) private var households: FetchedResults<Household>
+    @FetchRequest(sortDescriptors: [SortDescriptor(\.title)]) private var allRecipes: FetchedResults<Recipe>
 
     private var selectedAppearanceMode: AppearanceMode {
         AppearanceMode(rawValue: appearanceMode) ?? .system
@@ -234,9 +238,16 @@ struct SettingsView: View {
                         showingFilePicker: $showingPaprikaFilePicker
                     )
 
-                    Button("Export Data") {
-                        // Export functionality
+                    Button("Export Recipes") {
+                        do {
+                            let data = try recipeExporter.exportRecipes(Array(allRecipes))
+                            exportDocument = RecipeExportDocument(data: data)
+                            showingExportFilePicker = true
+                        } catch {
+                            AppLogger.app.error("Export failed: \(error.localizedDescription)")
+                        }
                     }
+                    .disabled(allRecipes.isEmpty)
                 }
 
                 // MARK: - Diagnostics
@@ -385,6 +396,17 @@ struct SettingsView: View {
                 case .failure(let error):
                     paprikaImporter.errorMessage = error.localizedDescription
                 }
+            }
+            .fileExporter(
+                isPresented: $showingExportFilePicker,
+                document: exportDocument,
+                contentType: .json,
+                defaultFilename: "TableTogether-Recipes.json"
+            ) { result in
+                if case .failure(let error) = result {
+                    AppLogger.app.error("Export save failed: \(error.localizedDescription)")
+                }
+                exportDocument = nil
             }
             .onAppear {
                 demoDataManager.configure(

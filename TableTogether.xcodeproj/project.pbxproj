@@ -31,6 +31,7 @@
 		BBDB0EA0074D511CAE1C0E46 /* MacroSummary.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7828D75334F055E1B129F546 /* MacroSummary.swift */; };
 		6993514324FB5F85AA2B42FF /* ParsedIngredient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6AFB6D04DD6A59C4BCD24220 /* ParsedIngredient.swift */; };
 		C4800373DA285A85A6425843 /* PersonalSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED6CBA604488560E97ED0F15 /* PersonalSettings.swift */; };
+		D1E2F3A4B5C607182930C1D2 /* CodableRecipe.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2F3A4B5C60718293041D2E3 /* CodableRecipe.swift */; };
 		2791F778A3535924B20560EE /* PrivateMealLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = F66BCE6960F8575699D0A1AF /* PrivateMealLog.swift */; };
 		1B407660F35B5B9EB2A01F6B /* AppLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CEBC868AB865726B0F1CD33 /* AppLogger.swift */; };
 		AD5FDA36269C5124B9095BCC /* CalendarService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DB0E1FAED6B50D291A9D7EF /* CalendarService.swift */; };
@@ -47,6 +48,7 @@
 		36B7A4F9CC4E58CAA14EC607 /* NaturalLanguageMealParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = C49F03E546D95A0399C7FE02 /* NaturalLanguageMealParser.swift */; };
 		AD5FEA7BB52E559D8EB847D4 /* NetworkMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 849593BC0EDF593790A40A81 /* NetworkMonitor.swift */; };
 		2F1E193C72E15E1683071216 /* PaprikaImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FC14F11F56D514D93791438 /* PaprikaImporter.swift */; };
+		F3A4B5C6071829304152E3F4 /* RecipeExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4B5C60718293041D2E3F4A5 /* RecipeExporter.swift */; };
 		851F95AC3BDE5866801CA3CB /* PrivateDataManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBCF35391D885757A6C5D281 /* PrivateDataManager.swift */; };
 		CC09C74C6C415DEE8A0FED9F /* RecipeGeneratorService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E16715F6735D5FA3BE5BDD37 /* RecipeGeneratorService.swift */; };
 		635A4E5DF1335D5A830A2A5A /* RecipeParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EA5930BCA725B83B172D40D /* RecipeParser.swift */; };
@@ -131,6 +133,7 @@
 		7828D75334F055E1B129F546 /* MacroSummary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TableTogether/Sources/Models/MacroSummary.swift"; sourceTree = "<group>"; };
 		6AFB6D04DD6A59C4BCD24220 /* ParsedIngredient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TableTogether/Sources/Models/ParsedIngredient.swift"; sourceTree = "<group>"; };
 		ED6CBA604488560E97ED0F15 /* PersonalSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TableTogether/Sources/Models/PersonalSettings.swift"; sourceTree = "<group>"; };
+		E2F3A4B5C60718293041D2E3 /* CodableRecipe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TableTogether/Sources/Models/CodableRecipe.swift"; sourceTree = "<group>"; };
 		F66BCE6960F8575699D0A1AF /* PrivateMealLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TableTogether/Sources/Models/PrivateMealLog.swift"; sourceTree = "<group>"; };
 		2CEBC868AB865726B0F1CD33 /* AppLogger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TableTogether/Sources/Services/AppLogger.swift"; sourceTree = "<group>"; };
 		5DB0E1FAED6B50D291A9D7EF /* CalendarService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TableTogether/Sources/Services/CalendarService.swift"; sourceTree = "<group>"; };
@@ -147,6 +150,7 @@
 		C49F03E546D95A0399C7FE02 /* NaturalLanguageMealParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TableTogether/Sources/Services/NaturalLanguageMealParser.swift"; sourceTree = "<group>"; };
 		849593BC0EDF593790A40A81 /* NetworkMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TableTogether/Sources/Services/NetworkMonitor.swift"; sourceTree = "<group>"; };
 		3FC14F11F56D514D93791438 /* PaprikaImporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TableTogether/Sources/Services/PaprikaImporter.swift"; sourceTree = "<group>"; };
+		A4B5C60718293041D2E3F4A5 /* RecipeExporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TableTogether/Sources/Services/RecipeExporter.swift"; sourceTree = "<group>"; };
 		FBCF35391D885757A6C5D281 /* PrivateDataManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TableTogether/Sources/Services/PrivateDataManager.swift"; sourceTree = "<group>"; };
 		E16715F6735D5FA3BE5BDD37 /* RecipeGeneratorService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TableTogether/Sources/Services/RecipeGeneratorService.swift"; sourceTree = "<group>"; };
 		6EA5930BCA725B83B172D40D /* RecipeParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TableTogether/Sources/Services/RecipeParser.swift"; sourceTree = "<group>"; };
@@ -240,6 +244,7 @@
 				7828D75334F055E1B129F546 /* MacroSummary.swift */,
 				6AFB6D04DD6A59C4BCD24220 /* ParsedIngredient.swift */,
 				ED6CBA604488560E97ED0F15 /* PersonalSettings.swift */,
+				E2F3A4B5C60718293041D2E3 /* CodableRecipe.swift */,
 				F66BCE6960F8575699D0A1AF /* PrivateMealLog.swift */,
 				2CEBC868AB865726B0F1CD33 /* AppLogger.swift */,
 				5DB0E1FAED6B50D291A9D7EF /* CalendarService.swift */,
@@ -256,6 +261,7 @@
 				C49F03E546D95A0399C7FE02 /* NaturalLanguageMealParser.swift */,
 				849593BC0EDF593790A40A81 /* NetworkMonitor.swift */,
 				3FC14F11F56D514D93791438 /* PaprikaImporter.swift */,
+				A4B5C60718293041D2E3F4A5 /* RecipeExporter.swift */,
 				FBCF35391D885757A6C5D281 /* PrivateDataManager.swift */,
 				E16715F6735D5FA3BE5BDD37 /* RecipeGeneratorService.swift */,
 				6EA5930BCA725B83B172D40D /* RecipeParser.swift */,
@@ -407,6 +413,7 @@
 				BBDB0EA0074D511CAE1C0E46 /* MacroSummary.swift in Sources */,
 				6993514324FB5F85AA2B42FF /* ParsedIngredient.swift in Sources */,
 				C4800373DA285A85A6425843 /* PersonalSettings.swift in Sources */,
+				D1E2F3A4B5C607182930C1D2 /* CodableRecipe.swift in Sources */,
 				2791F778A3535924B20560EE /* PrivateMealLog.swift in Sources */,
 				1B407660F35B5B9EB2A01F6B /* AppLogger.swift in Sources */,
 				AD5FDA36269C5124B9095BCC /* CalendarService.swift in Sources */,
@@ -423,6 +430,7 @@
 				36B7A4F9CC4E58CAA14EC607 /* NaturalLanguageMealParser.swift in Sources */,
 				AD5FEA7BB52E559D8EB847D4 /* NetworkMonitor.swift in Sources */,
 				2F1E193C72E15E1683071216 /* PaprikaImporter.swift in Sources */,
+				F3A4B5C6071829304152E3F4 /* RecipeExporter.swift in Sources */,
 				851F95AC3BDE5866801CA3CB /* PrivateDataManager.swift in Sources */,
 				CC09C74C6C415DEE8A0FED9F /* RecipeGeneratorService.swift in Sources */,
 				635A4E5DF1335D5A830A2A5A /* RecipeParser.swift in Sources */,
