@@ -805,6 +805,178 @@
     "isFavorite": false
   },
   {
+    "title": "Bao Buns (Matt Pritchard)",
+    "summary": "Soft steamed bao buns filled with sticky marinated tofu, pickled vegetables and coriander. From Dirty Vegan: Another Bite by Matt Pritchard.",
+    "sourceURL": "https://foodies.co.uk/dirty-vegan-bao-buns/",
+    "cookbook": "Dirty Vegan: Another Bite",
+    "imageURL": "https://media.foodies.co.uk/uploads/2019/12/bao-buns-scaled.jpg",
+    "servings": 2,
+    "prepTimeMinutes": 150,
+    "cookTimeMinutes": 30,
+    "instructions": [
+      "Combine the ginger, garlic, rice wine, soy sauce, agave syrup and five spice in a shallow bowl. Cut the tofu into 6 equal slabs and coat thoroughly in marinade. Set aside while preparing the dough.",
+      "Mix warm water, milk, oil, sugar and yeast in a bowl. Let rest 15 minutes until foamy. Add flour, baking powder and salt. Knead for 10 minutes until glossy and elastic. Form into a ball, cover and leave in a warm location until doubled (about 2 hours).",
+      "Turn the risen dough onto a floured surface and deflate. Divide into 6 equal pieces and shape into balls. Roll each into an oval, brush with oil, place a chopstick across the centre then fold gently in half. Remove the chopstick and place each bun on a parchment square. Cover loosely and prove for 30-60 minutes.",
+      "Steam the buns on parchment squares for 12-15 minutes until light and risen. Work in batches if necessary.",
+      "Heat oil in a frying pan. Scrape marinade from tofu (reserve marinade) and fry the tofu 2-3 minutes per side until golden. Add the reserved marinade to the pan and simmer until thick and sticky, coating the tofu.",
+      "Open the steamed buns along the chopstick crease. Fill each with a tofu slice, reserved marinade, pickled vegetables, torn coriander and sesame seeds. Add sriracha if desired."
+    ],
+    "tags": [
+      "vegan",
+      "asian",
+      "tofu",
+      "steamed",
+      "street food"
+    ],
+    "suggestedArchetypes": [
+      "newExperimental",
+      "comfort"
+    ],
+    "ingredients": [
+      {
+        "name": "fresh root ginger",
+        "quantity": 1.0,
+        "unit": "piece",
+        "preparationNote": "2cm piece, finely grated, for the tofu marinade",
+        "isOptional": false
+      },
+      {
+        "name": "garlic clove",
+        "quantity": 1.0,
+        "unit": "clove",
+        "preparationNote": "finely chopped, for the tofu marinade",
+        "isOptional": false
+      },
+      {
+        "name": "rice wine",
+        "quantity": 2.0,
+        "unit": "tablespoon",
+        "preparationNote": "for the tofu marinade",
+        "isOptional": false
+      },
+      {
+        "name": "soy sauce",
+        "quantity": 2.0,
+        "unit": "tablespoon",
+        "preparationNote": "for the tofu marinade",
+        "isOptional": false
+      },
+      {
+        "name": "agave syrup",
+        "quantity": 2.0,
+        "unit": "tablespoon",
+        "preparationNote": "for the tofu marinade",
+        "isOptional": false
+      },
+      {
+        "name": "Chinese five spice",
+        "quantity": 1.0,
+        "unit": "teaspoon",
+        "preparationNote": "for the tofu marinade",
+        "isOptional": false
+      },
+      {
+        "name": "firm tofu",
+        "quantity": 300.0,
+        "unit": "gram",
+        "preparationNote": "for the tofu marinade",
+        "isOptional": false
+      },
+      {
+        "name": "flavourless vegetable oil",
+        "quantity": 2.0,
+        "unit": "tablespoon",
+        "preparationNote": "for frying",
+        "isOptional": false
+      },
+      {
+        "name": "warm water",
+        "quantity": 80.0,
+        "unit": "milliliter",
+        "preparationNote": "for the bun dough",
+        "isOptional": false
+      },
+      {
+        "name": "unsweetened rice or oat milk",
+        "quantity": 40.0,
+        "unit": "milliliter",
+        "preparationNote": "for the bun dough",
+        "isOptional": false
+      },
+      {
+        "name": "vegetable oil",
+        "quantity": 1.0,
+        "unit": "teaspoon",
+        "preparationNote": "plus extra for brushing, for the bun dough",
+        "isOptional": false
+      },
+      {
+        "name": "sugar",
+        "quantity": 1.0,
+        "unit": "teaspoon",
+        "preparationNote": "for the bun dough",
+        "isOptional": false
+      },
+      {
+        "name": "fast-action dried yeast",
+        "quantity": 1.0,
+        "unit": "teaspoon",
+        "preparationNote": "for the bun dough",
+        "isOptional": false
+      },
+      {
+        "name": "plain flour",
+        "quantity": 200.0,
+        "unit": "gram",
+        "preparationNote": "plus extra for dusting, for the bun dough",
+        "isOptional": false
+      },
+      {
+        "name": "baking powder",
+        "quantity": 0.5,
+        "unit": "teaspoon",
+        "preparationNote": "for the bun dough",
+        "isOptional": false
+      },
+      {
+        "name": "salt",
+        "quantity": 0.25,
+        "unit": "teaspoon",
+        "preparationNote": "for the bun dough",
+        "isOptional": false
+      },
+      {
+        "name": "pickled vegetables",
+        "quantity": 1.0,
+        "unit": "toTaste",
+        "preparationNote": "for topping",
+        "isOptional": false
+      },
+      {
+        "name": "fresh coriander leaves",
+        "quantity": 1.0,
+        "unit": "bunch",
+        "preparationNote": "small, for topping",
+        "isOptional": false
+      },
+      {
+        "name": "sesame seeds",
+        "quantity": 0.5,
+        "unit": "tablespoon",
+        "preparationNote": "for topping",
+        "isOptional": false
+      },
+      {
+        "name": "sriracha sauce",
+        "quantity": 1.0,
+        "unit": "toTaste",
+        "preparationNote": "for topping",
+        "isOptional": true
+      }
+    ],
+    "isFavorite": false
+  },
+  {
     "title": "Beef Baked with Yoghurt and Black Pepper (Madhur Jaffrey)",
     "summary": "This warming baked beef curry recipe from Madhur Jaffrey is a real crowd-pleaser. Perfect served with chapatis or pullao rice on a cold winter's night. Adapted from Madhur Jaffrey via The Happy Foodie.",
     "sourceURL": "https://thehappyfoodie.co.uk/recipes/beef-baked-with-yoghurt-and-black-pepper/",
@@ -3618,6 +3790,266 @@
     "isFavorite": false
   },
   {
+    "title": "Doner Kebabs with Pink Pickle (Matt Pritchard)",
+    "summary": "Seitan kofta sausages stuffed into pittas with hummus, pink pickled vegetables and minty yogurt. From Dirty Vegan by Matt Pritchard.",
+    "sourceURL": "https://www.livingnorth.com/article/donner-kebabs-with-pink-pickles",
+    "cookbook": "Dirty Vegan: Proper Banging Vegan Food",
+    "imageURL": "https://www.livingnorth.com/articles/food-and-drink/recipes/New/cropped-images/Day4_Kebab20878-0-144-500-399-1627654711.jpg",
+    "servings": 4,
+    "prepTimeMinutes": 30,
+    "cookTimeMinutes": 75,
+    "instructions": [
+      "Heat vinegar, sugar, bay leaf, spices and salt until dissolved. Pack sliced vegetables into a sterilised 500ml jar and pour the warm liquid to the top. Close and leave several hours until cold, or preferably days.",
+      "Mix all the dry sausage ingredients in a bowl. Add the wet ingredients and knead like bread for 5 minutes until a firm dough forms.",
+      "Divide the mixture into 2 equal portions and form each into a rough log shape. Roll each in clingfilm, twist the ends and roll along the work surface until tight.",
+      "Wrap each log neatly in kitchen foil.",
+      "Place the wrapped sausages in a large saucepan of water. Bring to a low simmer and poach gently for 1 hour, topping up water as needed, until very firm.",
+      "Remove the logs from the water, cool, then refrigerate overnight. Do not unwrap until completely chilled.",
+      "Slice the seitan and fry in a little oil over medium-high heat for 3 minutes per side until coloured and crispy.",
+      "Heat 2 tbsp oil in a large frying pan, add the seitan and cook 3-4 minutes until nicely coloured and heated through.",
+      "Mix mint into the yogurt. Lightly toast the pittas and split open along one side.",
+      "Slather hummus inside each pitta, add a spoonful of drained pink pickles, salad leaves, a generous serving of seitan, a drizzle of yogurt, chilli sauce to taste and a scatter of dukkah."
+    ],
+    "tags": [
+      "vegan",
+      "seitan",
+      "street food",
+      "kebab",
+      "middle eastern"
+    ],
+    "suggestedArchetypes": [
+      "comfort",
+      "newExperimental"
+    ],
+    "ingredients": [
+      {
+        "name": "cider vinegar",
+        "quantity": 150.0,
+        "unit": "milliliter",
+        "preparationNote": "for the pink pickle",
+        "isOptional": false
+      },
+      {
+        "name": "brown sugar",
+        "quantity": 2.0,
+        "unit": "tablespoon",
+        "preparationNote": "for the pink pickle",
+        "isOptional": false
+      },
+      {
+        "name": "bay leaf",
+        "quantity": 1.0,
+        "unit": "piece",
+        "preparationNote": "for the pink pickle",
+        "isOptional": false
+      },
+      {
+        "name": "caraway seeds",
+        "quantity": 0.25,
+        "unit": "teaspoon",
+        "preparationNote": "for the pink pickle",
+        "isOptional": false
+      },
+      {
+        "name": "ground allspice",
+        "quantity": 0.25,
+        "unit": "teaspoon",
+        "preparationNote": "for the pink pickle",
+        "isOptional": false
+      },
+      {
+        "name": "salt",
+        "quantity": 1.0,
+        "unit": "teaspoon",
+        "preparationNote": "for the pink pickle",
+        "isOptional": false
+      },
+      {
+        "name": "beetroot",
+        "quantity": 1.0,
+        "unit": "piece",
+        "preparationNote": "peeled, cut into fine matchsticks, for the pink pickle",
+        "isOptional": false
+      },
+      {
+        "name": "shallot",
+        "quantity": 1.0,
+        "unit": "piece",
+        "preparationNote": "thinly sliced, for the pink pickle",
+        "isOptional": false
+      },
+      {
+        "name": "fennel bulb",
+        "quantity": 0.5,
+        "unit": "piece",
+        "preparationNote": "very thinly sliced, for the pink pickle",
+        "isOptional": false
+      },
+      {
+        "name": "radishes",
+        "quantity": 3.0,
+        "unit": "piece",
+        "preparationNote": "thinly sliced, for the pink pickle",
+        "isOptional": false
+      },
+      {
+        "name": "vital wheat gluten",
+        "quantity": 230.0,
+        "unit": "gram",
+        "preparationNote": "for the kofta seitan sausage",
+        "isOptional": false
+      },
+      {
+        "name": "nutritional yeast flakes",
+        "quantity": 30.0,
+        "unit": "gram",
+        "preparationNote": "for the kofta seitan sausage",
+        "isOptional": false
+      },
+      {
+        "name": "plain flour",
+        "quantity": 2.0,
+        "unit": "tablespoon",
+        "preparationNote": "for the kofta seitan sausage",
+        "isOptional": false
+      },
+      {
+        "name": "ground cumin",
+        "quantity": 2.0,
+        "unit": "teaspoon",
+        "preparationNote": "for the kofta seitan sausage",
+        "isOptional": false
+      },
+      {
+        "name": "ground coriander",
+        "quantity": 1.0,
+        "unit": "teaspoon",
+        "preparationNote": "for the kofta seitan sausage",
+        "isOptional": false
+      },
+      {
+        "name": "ground cinnamon",
+        "quantity": 0.5,
+        "unit": "teaspoon",
+        "preparationNote": "for the kofta seitan sausage",
+        "isOptional": false
+      },
+      {
+        "name": "garlic clove",
+        "quantity": 1.0,
+        "unit": "clove",
+        "preparationNote": "finely chopped, for the kofta seitan sausage",
+        "isOptional": false
+      },
+      {
+        "name": "black pepper",
+        "quantity": 1.0,
+        "unit": "pinch",
+        "preparationNote": "for the kofta seitan sausage",
+        "isOptional": false
+      },
+      {
+        "name": "salt",
+        "quantity": 1.0,
+        "unit": "teaspoon",
+        "preparationNote": "for the kofta seitan sausage",
+        "isOptional": false
+      },
+      {
+        "name": "vegetable stock",
+        "quantity": 320.0,
+        "unit": "milliliter",
+        "preparationNote": "for the kofta seitan sausage",
+        "isOptional": false
+      },
+      {
+        "name": "soy sauce",
+        "quantity": 2.0,
+        "unit": "tablespoon",
+        "preparationNote": "for the kofta seitan sausage",
+        "isOptional": false
+      },
+      {
+        "name": "cider vinegar",
+        "quantity": 2.0,
+        "unit": "tablespoon",
+        "preparationNote": "for the kofta seitan sausage",
+        "isOptional": false
+      },
+      {
+        "name": "harissa paste",
+        "quantity": 2.0,
+        "unit": "tablespoon",
+        "preparationNote": "for the kofta seitan sausage",
+        "isOptional": false
+      },
+      {
+        "name": "olive oil",
+        "quantity": 2.0,
+        "unit": "tablespoon",
+        "preparationNote": "for the kofta seitan sausage",
+        "isOptional": false
+      },
+      {
+        "name": "sunflower or vegetable oil",
+        "quantity": 2.0,
+        "unit": "tablespoon",
+        "preparationNote": "for frying, for assembly",
+        "isOptional": false
+      },
+      {
+        "name": "mint",
+        "quantity": 1.0,
+        "unit": "bunch",
+        "preparationNote": "small, chopped, for assembly",
+        "isOptional": false
+      },
+      {
+        "name": "vegan yogurt",
+        "quantity": 200.0,
+        "unit": "milliliter",
+        "preparationNote": "for assembly",
+        "isOptional": false
+      },
+      {
+        "name": "pitta breads",
+        "quantity": 4.0,
+        "unit": "piece",
+        "preparationNote": "for assembly",
+        "isOptional": false
+      },
+      {
+        "name": "hummus",
+        "quantity": 200.0,
+        "unit": "gram",
+        "preparationNote": "for assembly",
+        "isOptional": false
+      },
+      {
+        "name": "mixed salad leaves",
+        "quantity": 80.0,
+        "unit": "gram",
+        "preparationNote": "for assembly",
+        "isOptional": false
+      },
+      {
+        "name": "hot chilli sauce",
+        "quantity": 1.0,
+        "unit": "toTaste",
+        "preparationNote": "for assembly",
+        "isOptional": true
+      },
+      {
+        "name": "dukkah",
+        "quantity": 2.0,
+        "unit": "tablespoon",
+        "preparationNote": "for assembly",
+        "isOptional": false
+      }
+    ],
+    "isFavorite": false
+  },
+  {
     "title": "Eggs Benedict with Smoked Haddock (Rick Stein)",
     "summary": "A classic breakfast dish with a seafood twist. This Rick Stein recipe combines flaky smoked haddock and good quality hollandaise on toasted English muffins. Adapted from Rick Stein via The Happy Foodie.",
     "sourceURL": "https://thehappyfoodie.co.uk/recipes/eggs-benedict-with-smoked-haddock/",
@@ -6287,6 +6719,161 @@
         "quantity": 125.0,
         "unit": "milliliter",
         "preparationNote": null,
+        "isOptional": false
+      }
+    ],
+    "isFavorite": false
+  },
+  {
+    "title": "Jackfruit and Red Pepper Goulash (Matt Pritchard)",
+    "summary": "A hearty Hungarian-inspired goulash with jackfruit, chickpeas and smoked paprika. From Dirty Vegan by Matt Pritchard.",
+    "sourceURL": "https://motherrunningvegan.com/2019/01/22/%EF%BB%BFdirty-vegan/",
+    "cookbook": "Dirty Vegan: Proper Banging Vegan Food",
+    "imageURL": "https://motherrunningvegan.com/wp-content/uploads/2019/01/day4_goulash20823.jpg",
+    "servings": 4,
+    "prepTimeMinutes": 10,
+    "cookTimeMinutes": 50,
+    "instructions": [
+      "Gently cook the onion and peppers in half the oil over medium-low heat for 15 minutes until softened.",
+      "Add garlic, tomato puree, caraway and oregano; cook for 2 minutes.",
+      "Add tomatoes, drained chickpeas and stock; season with salt, pepper and cayenne.",
+      "Bring to a simmer and cook for 30 minutes, adding water if needed.",
+      "Season jackfruit chunks with salt and pepper.",
+      "Mix flour and paprika in a shallow bowl; coat the jackfruit chunks.",
+      "Heat the remaining oil in a frying pan and fry the jackfruit until browned on all sides.",
+      "Add jackfruit to the goulash with the remaining flour mixture; simmer 15-20 minutes.",
+      "Taste and adjust seasoning; add lemon juice to taste.",
+      "Garnish with dill and serve with your chosen carbohydrate."
+    ],
+    "tags": [
+      "vegan",
+      "hungarian",
+      "stew",
+      "jackfruit",
+      "comfort"
+    ],
+    "suggestedArchetypes": [
+      "comfort",
+      "slowCook"
+    ],
+    "ingredients": [
+      {
+        "name": "onion",
+        "quantity": 1.0,
+        "unit": "piece",
+        "preparationNote": "sliced",
+        "isOptional": false
+      },
+      {
+        "name": "red peppers",
+        "quantity": 2.0,
+        "unit": "piece",
+        "preparationNote": "deseeded and sliced",
+        "isOptional": false
+      },
+      {
+        "name": "sunflower or vegetable oil",
+        "quantity": 4.0,
+        "unit": "tablespoon",
+        "preparationNote": null,
+        "isOptional": false
+      },
+      {
+        "name": "garlic cloves",
+        "quantity": 2.0,
+        "unit": "clove",
+        "preparationNote": "finely chopped",
+        "isOptional": false
+      },
+      {
+        "name": "tomato puree",
+        "quantity": 2.0,
+        "unit": "tablespoon",
+        "preparationNote": null,
+        "isOptional": false
+      },
+      {
+        "name": "caraway seeds",
+        "quantity": 1.0,
+        "unit": "teaspoon",
+        "preparationNote": null,
+        "isOptional": false
+      },
+      {
+        "name": "dried oregano",
+        "quantity": 1.0,
+        "unit": "teaspoon",
+        "preparationNote": null,
+        "isOptional": false
+      },
+      {
+        "name": "chopped tomatoes",
+        "quantity": 400.0,
+        "unit": "gram",
+        "preparationNote": "can",
+        "isOptional": false
+      },
+      {
+        "name": "chickpeas",
+        "quantity": 400.0,
+        "unit": "gram",
+        "preparationNote": "can, drained",
+        "isOptional": false
+      },
+      {
+        "name": "vegetable stock",
+        "quantity": 400.0,
+        "unit": "milliliter",
+        "preparationNote": null,
+        "isOptional": false
+      },
+      {
+        "name": "cayenne pepper",
+        "quantity": 1.0,
+        "unit": "pinch",
+        "preparationNote": "plus extra to taste",
+        "isOptional": false
+      },
+      {
+        "name": "young jackfruit",
+        "quantity": 400.0,
+        "unit": "gram",
+        "preparationNote": "can, cut into chunks",
+        "isOptional": false
+      },
+      {
+        "name": "plain flour",
+        "quantity": 1.0,
+        "unit": "tablespoon",
+        "preparationNote": null,
+        "isOptional": false
+      },
+      {
+        "name": "sweet paprika",
+        "quantity": 2.0,
+        "unit": "tablespoon",
+        "preparationNote": null,
+        "isOptional": false
+      },
+      {
+        "name": "lemon juice",
+        "quantity": 1.0,
+        "unit": "toTaste",
+        "preparationNote": null,
+        "isOptional": false
+      },
+      {
+        "name": "salt and pepper",
+        "quantity": 1.0,
+        "unit": "toTaste",
+        "preparationNote": null,
+        "isOptional": false
+      },
+      {
+        "name": "dill",
+        "quantity": 1.0,
+        "unit": "bunch",
+        "preparationNote": "small, chopped, for garnish",
         "isOptional": false
       }
     ],
@@ -11598,6 +12185,128 @@
         "quantity": 1.0,
         "unit": "piece",
         "preparationNote": null,
+        "isOptional": false
+      }
+    ],
+    "isFavorite": false
+  },
+  {
+    "title": "Puffed Pears with Chocolate and Olive Oil Sauce (Matt Pritchard)",
+    "summary": "Poached pears wrapped in spiralled puff pastry and served with a glossy chocolate and olive oil sauce. From Dirty Vegan: Another Bite by Matt Pritchard.",
+    "sourceURL": "https://foodies.co.uk/dirty-vegan-puffed-pears-with-chocolate-and-olive-oil-sauce/",
+    "cookbook": "Dirty Vegan: Another Bite",
+    "imageURL": "https://media.foodies.co.uk/uploads/2019/12/Day2_PastryPears_154-copy-scaled.jpg",
+    "servings": 4,
+    "prepTimeMinutes": 30,
+    "cookTimeMinutes": 30,
+    "instructions": [
+      "Peel the pears leaving the stalks attached. Combine the poaching ingredients in a saucepan, bring to the boil over medium heat while stirring to dissolve the sugar, then reduce to a simmer. Add the pears and simmer gently for 10 minutes until soft. Cool in the liquid.",
+      "Preheat the oven to 180C. Roll the pastry into a thin rectangle approximately 5mm thick. Cut into 1.5cm strips. Remove the bottom of each pear for stability. Wrap each pear with tightly spiralled pastry strips from bottom up, joining strips with almond milk as needed.",
+      "Brush the wrapped pears lightly with almond milk and scatter demerara sugar over them. Transfer to a baking tray and bake for 20 minutes until golden.",
+      "Rest for 10 minutes before serving.",
+      "Break the chocolate into pieces and place in a small saucepan with the olive oil and water. Swirl the pan to melt without whisking, applying low heat if needed and avoiding boiling. Stir with a metal spoon once the chocolate almost loses shape and blend into a smooth glossy sauce. Add salt and serve warm, spooning sauce onto plates with a pastry-wrapped pear on top."
+    ],
+    "tags": [
+      "vegan",
+      "dessert",
+      "pastry",
+      "chocolate",
+      "pears"
+    ],
+    "suggestedArchetypes": [
+      "comfort",
+      "newExperimental"
+    ],
+    "ingredients": [
+      {
+        "name": "firm pears",
+        "quantity": 4.0,
+        "unit": "piece",
+        "preparationNote": "peeled, stalks attached",
+        "isOptional": false
+      },
+      {
+        "name": "vegan puff pastry",
+        "quantity": 320.0,
+        "unit": "gram",
+        "preparationNote": "block",
+        "isOptional": false
+      },
+      {
+        "name": "unsweetened almond milk",
+        "quantity": 1.0,
+        "unit": "toTaste",
+        "preparationNote": "to glaze",
+        "isOptional": false
+      },
+      {
+        "name": "demerara sugar",
+        "quantity": 40.0,
+        "unit": "gram",
+        "preparationNote": null,
+        "isOptional": false
+      },
+      {
+        "name": "unrefined caster sugar",
+        "quantity": 200.0,
+        "unit": "gram",
+        "preparationNote": "for poaching",
+        "isOptional": false
+      },
+      {
+        "name": "water",
+        "quantity": 500.0,
+        "unit": "milliliter",
+        "preparationNote": "for poaching",
+        "isOptional": false
+      },
+      {
+        "name": "unwaxed lemon",
+        "quantity": 1.0,
+        "unit": "piece",
+        "preparationNote": "juice plus a strip of zest, for poaching",
+        "isOptional": false
+      },
+      {
+        "name": "cinnamon stick",
+        "quantity": 1.0,
+        "unit": "piece",
+        "preparationNote": "for poaching",
+        "isOptional": false
+      },
+      {
+        "name": "vanilla pod",
+        "quantity": 0.5,
+        "unit": "piece",
+        "preparationNote": "seeds scraped, for poaching",
+        "isOptional": false
+      },
+      {
+        "name": "dark vegan cooking chocolate",
+        "quantity": 100.0,
+        "unit": "gram",
+        "preparationNote": "for the sauce",
+        "isOptional": false
+      },
+      {
+        "name": "olive oil",
+        "quantity": 4.0,
+        "unit": "tablespoon",
+        "preparationNote": "for the sauce",
+        "isOptional": false
+      },
+      {
+        "name": "boiling water",
+        "quantity": 60.0,
+        "unit": "milliliter",
+        "preparationNote": "for the sauce",
+        "isOptional": false
+      },
+      {
+        "name": "sea salt flakes",
+        "quantity": 1.0,
+        "unit": "pinch",
+        "preparationNote": "for the sauce",
         "isOptional": false
       }
     ],
@@ -23537,6 +24246,141 @@
     "isFavorite": false
   },
   {
+    "title": "Scandi Beetroot, Potato and Fennel Salad (Matt Pritchard)",
+    "summary": "A Scandinavian-style salad of roasted beetroot, new potatoes and fennel with horseradish creme fraiche and dill. From Dirty Vegan: Another Bite by Matt Pritchard.",
+    "sourceURL": "https://foodies.co.uk/dirty-vegan-scandi-beetroot-potato-and-fennel-salad/",
+    "cookbook": "Dirty Vegan: Another Bite",
+    "imageURL": "https://media.foodies.co.uk/uploads/2019/12/05_14_19_SG_DV2_Day2_ScandiSalad_251-scaled.jpg",
+    "servings": 2,
+    "prepTimeMinutes": 15,
+    "cookTimeMinutes": 50,
+    "instructions": [
+      "Preheat the oven to 200C. Peel the beetroots and cut into wedges. Place in a roasting tin with the caraway, half the orange juice, olive oil, salt and pepper. Mix well, cover with foil and roast for 40 minutes until tender.",
+      "Boil the potatoes in salted water for 10-12 minutes until cooked. Drain and slice into thick discs when cool.",
+      "Add the potatoes, fennel, radishes, onion, horseradish and vinegar to the beetroot pan. Mix and season.",
+      "Fold in the creme fraiche and watercress just before serving. Add more orange juice if needed.",
+      "Plate and garnish with dill and orange zest. Serve with rye bread."
+    ],
+    "tags": [
+      "vegan",
+      "salad",
+      "scandinavian",
+      "beetroot",
+      "lightFresh"
+    ],
+    "suggestedArchetypes": [
+      "lightFresh"
+    ],
+    "ingredients": [
+      {
+        "name": "small summer beetroots",
+        "quantity": 400.0,
+        "unit": "gram",
+        "preparationNote": null,
+        "isOptional": false
+      },
+      {
+        "name": "caraway seeds",
+        "quantity": 0.5,
+        "unit": "teaspoon",
+        "preparationNote": null,
+        "isOptional": false
+      },
+      {
+        "name": "orange",
+        "quantity": 1.0,
+        "unit": "piece",
+        "preparationNote": "finely grated zest and juice",
+        "isOptional": false
+      },
+      {
+        "name": "olive oil",
+        "quantity": 2.0,
+        "unit": "tablespoon",
+        "preparationNote": null,
+        "isOptional": false
+      },
+      {
+        "name": "waxy new potatoes",
+        "quantity": 300.0,
+        "unit": "gram",
+        "preparationNote": null,
+        "isOptional": false
+      },
+      {
+        "name": "fennel bulb",
+        "quantity": 1.0,
+        "unit": "piece",
+        "preparationNote": "small, thinly sliced",
+        "isOptional": false
+      },
+      {
+        "name": "radishes",
+        "quantity": 100.0,
+        "unit": "gram",
+        "preparationNote": "cut into wedges and slices",
+        "isOptional": false
+      },
+      {
+        "name": "red onion",
+        "quantity": 0.5,
+        "unit": "piece",
+        "preparationNote": "small, very thinly sliced",
+        "isOptional": false
+      },
+      {
+        "name": "horseradish",
+        "quantity": 1.0,
+        "unit": "tablespoon",
+        "preparationNote": "freshly grated",
+        "isOptional": false
+      },
+      {
+        "name": "red wine vinegar",
+        "quantity": 1.0,
+        "unit": "tablespoon",
+        "preparationNote": null,
+        "isOptional": false
+      },
+      {
+        "name": "vegan creme fraiche",
+        "quantity": 2.0,
+        "unit": "tablespoon",
+        "preparationNote": null,
+        "isOptional": false
+      },
+      {
+        "name": "watercress",
+        "quantity": 50.0,
+        "unit": "gram",
+        "preparationNote": "any coarse stalks removed",
+        "isOptional": false
+      },
+      {
+        "name": "dill",
+        "quantity": 1.0,
+        "unit": "bunch",
+        "preparationNote": "finely chopped",
+        "isOptional": false
+      },
+      {
+        "name": "salt and pepper",
+        "quantity": 1.0,
+        "unit": "toTaste",
+        "preparationNote": null,
+        "isOptional": false
+      },
+      {
+        "name": "dark rye bread",
+        "quantity": 1.0,
+        "unit": "toTaste",
+        "preparationNote": "to serve",
+        "isOptional": false
+      }
+    ],
+    "isFavorite": false
+  },
+  {
     "title": "Seafood Paella (Rick Stein)",
     "summary": "A Spanish classic! This seafood paella recipe from Rick Stein actually uses risotto rice as a base for lobster, mussels, monkfish fillet and slices of squid. Adapted from Rick Stein via The Happy Foodie.",
     "sourceURL": "https://thehappyfoodie.co.uk/recipes/seafood-paella/",
@@ -26877,6 +27721,480 @@
         "quantity": 1.0,
         "unit": "tablespoon",
         "preparationNote": null,
+        "isOptional": false
+      }
+    ],
+    "isFavorite": false
+  },
+  {
+    "title": "The Full Vegan English Breakfast (Matt Pritchard)",
+    "summary": "A complete plant-based fry-up with tofu scramble, smokey baked beans, smashed potato cakes, garlic mushrooms and seitan breakfast sausages. From Dirty Vegan by Matt Pritchard.",
+    "sourceURL": "https://balance.media/recipe-full-vegan-english-breakfast/",
+    "cookbook": "Dirty Vegan: Proper Banging Vegan Food",
+    "imageURL": "https://balance.media/wp-content/uploads/2019/01/coverDay3_VeganPileUp20359.jpg",
+    "servings": 4,
+    "prepTimeMinutes": 30,
+    "cookTimeMinutes": 90,
+    "instructions": [
+      "BREAKFAST SAUSAGES: Mix all the dry sausage ingredients in a bowl. Add the wet ingredients and knead for 5 minutes until a firm dough forms.",
+      "Divide into 2 portions, shape into logs, wrap tightly in clingfilm and then foil. Poach in simmering water for 1 hour until firm. Cool and refrigerate overnight before slicing and frying.",
+      "SMOKEY BAKED BEANS: Sweat the sliced red onion in a little olive oil until soft. Stir in tomato puree and cook briefly.",
+      "Add the passata, balsamic vinegar, smoked paprika, bay leaf and brown sugar. Simmer for 10 minutes.",
+      "Stir in the drained haricot beans, season with salt and pepper, and simmer 10 more minutes until thick.",
+      "SMASHED POTATO CAKES: Boil the new potatoes until tender. Drain, then lightly smash each with the bottom of a glass.",
+      "Heat olive oil in a frying pan, add the potatoes with thyme leaves and fry until crisp and golden on both sides. Season.",
+      "GARLIC MUSHROOMS: Cream the garlic into the soft vegan spread with a squeeze of lemon juice. Spread over the Portobello mushrooms.",
+      "Heat olive oil in a pan, add mushrooms and cook until tender, basting with the garlicky butter. Season.",
+      "TOFU SCRAMBLE: Heat oil in a frying pan. Add red onion and broccoli, cook until softened.",
+      "Crumble in the tofu and add salt, garlic powder, turmeric, chilli flakes and smoked paprika. Stir-fry until heated through and golden.",
+      "TO SERVE: Slice the chilled sausages and fry in a little oil for 3 minutes per side until crispy. Plate up the sausages, beans, potato cakes, mushrooms and tofu scramble together."
+    ],
+    "tags": [
+      "vegan",
+      "breakfast",
+      "brunch",
+      "british",
+      "comfort"
+    ],
+    "suggestedArchetypes": [
+      "comfort",
+      "bigBatch"
+    ],
+    "ingredients": [
+      {
+        "name": "olive or coconut oil",
+        "quantity": 2.0,
+        "unit": "teaspoon",
+        "preparationNote": "for the tofu scramble",
+        "isOptional": false
+      },
+      {
+        "name": "red onion",
+        "quantity": 0.5,
+        "unit": "piece",
+        "preparationNote": "finely sliced, for the tofu scramble",
+        "isOptional": false
+      },
+      {
+        "name": "broccoli florets",
+        "quantity": 4.0,
+        "unit": "piece",
+        "preparationNote": "finely chopped, for the tofu scramble",
+        "isOptional": false
+      },
+      {
+        "name": "extra-firm tofu",
+        "quantity": 225.0,
+        "unit": "gram",
+        "preparationNote": "for the tofu scramble",
+        "isOptional": false
+      },
+      {
+        "name": "Himalayan salt",
+        "quantity": 0.5,
+        "unit": "teaspoon",
+        "preparationNote": "for the tofu scramble",
+        "isOptional": false
+      },
+      {
+        "name": "garlic powder",
+        "quantity": 0.5,
+        "unit": "teaspoon",
+        "preparationNote": "for the tofu scramble",
+        "isOptional": false
+      },
+      {
+        "name": "turmeric",
+        "quantity": 0.5,
+        "unit": "teaspoon",
+        "preparationNote": "for the tofu scramble",
+        "isOptional": false
+      },
+      {
+        "name": "chilli flakes",
+        "quantity": 0.5,
+        "unit": "teaspoon",
+        "preparationNote": "for the tofu scramble",
+        "isOptional": false
+      },
+      {
+        "name": "smoked paprika",
+        "quantity": 0.25,
+        "unit": "teaspoon",
+        "preparationNote": "for the tofu scramble",
+        "isOptional": false
+      },
+      {
+        "name": "red onion",
+        "quantity": 1.0,
+        "unit": "piece",
+        "preparationNote": "sliced, for the smokey baked beans",
+        "isOptional": false
+      },
+      {
+        "name": "olive oil",
+        "quantity": 2.0,
+        "unit": "tablespoon",
+        "preparationNote": "for the smokey baked beans",
+        "isOptional": false
+      },
+      {
+        "name": "tomato puree",
+        "quantity": 1.0,
+        "unit": "tablespoon",
+        "preparationNote": "for the smokey baked beans",
+        "isOptional": false
+      },
+      {
+        "name": "passata",
+        "quantity": 500.0,
+        "unit": "gram",
+        "preparationNote": "for the smokey baked beans",
+        "isOptional": false
+      },
+      {
+        "name": "balsamic vinegar",
+        "quantity": 1.0,
+        "unit": "tablespoon",
+        "preparationNote": "for the smokey baked beans",
+        "isOptional": false
+      },
+      {
+        "name": "sweet smoked paprika",
+        "quantity": 2.0,
+        "unit": "teaspoon",
+        "preparationNote": "for the smokey baked beans",
+        "isOptional": false
+      },
+      {
+        "name": "bay leaf",
+        "quantity": 1.0,
+        "unit": "piece",
+        "preparationNote": "for the smokey baked beans",
+        "isOptional": false
+      },
+      {
+        "name": "brown sugar",
+        "quantity": 2.0,
+        "unit": "teaspoon",
+        "preparationNote": "for the smokey baked beans",
+        "isOptional": false
+      },
+      {
+        "name": "haricot beans",
+        "quantity": 400.0,
+        "unit": "gram",
+        "preparationNote": "can, for the smokey baked beans",
+        "isOptional": false
+      },
+      {
+        "name": "new potatoes",
+        "quantity": 12.0,
+        "unit": "piece",
+        "preparationNote": "small, for the smashed potato cakes",
+        "isOptional": false
+      },
+      {
+        "name": "olive oil",
+        "quantity": 2.0,
+        "unit": "tablespoon",
+        "preparationNote": "for the smashed potato cakes",
+        "isOptional": false
+      },
+      {
+        "name": "thyme",
+        "quantity": 4.0,
+        "unit": "piece",
+        "preparationNote": "sprigs, leaves picked, for the smashed potato cakes",
+        "isOptional": false
+      },
+      {
+        "name": "olive oil",
+        "quantity": 2.0,
+        "unit": "tablespoon",
+        "preparationNote": "for the garlic mushrooms",
+        "isOptional": false
+      },
+      {
+        "name": "garlic cloves",
+        "quantity": 2.0,
+        "unit": "clove",
+        "preparationNote": "crushed, for the garlic mushrooms",
+        "isOptional": false
+      },
+      {
+        "name": "soft vegan spread",
+        "quantity": 75.0,
+        "unit": "gram",
+        "preparationNote": "for the garlic mushrooms",
+        "isOptional": false
+      },
+      {
+        "name": "lemon juice",
+        "quantity": 1.0,
+        "unit": "toTaste",
+        "preparationNote": "for the garlic mushrooms",
+        "isOptional": false
+      },
+      {
+        "name": "Portobello mushrooms",
+        "quantity": 4.0,
+        "unit": "piece",
+        "preparationNote": "for the garlic mushrooms",
+        "isOptional": false
+      },
+      {
+        "name": "vital wheat gluten",
+        "quantity": 230.0,
+        "unit": "gram",
+        "preparationNote": "for the breakfast sausages",
+        "isOptional": false
+      },
+      {
+        "name": "nutritional yeast flakes",
+        "quantity": 30.0,
+        "unit": "gram",
+        "preparationNote": "for the breakfast sausages",
+        "isOptional": false
+      },
+      {
+        "name": "plain flour",
+        "quantity": 2.0,
+        "unit": "tablespoon",
+        "preparationNote": "for the breakfast sausages",
+        "isOptional": false
+      },
+      {
+        "name": "dried sage",
+        "quantity": 0.5,
+        "unit": "tablespoon",
+        "preparationNote": "for the breakfast sausages",
+        "isOptional": false
+      },
+      {
+        "name": "dried thyme",
+        "quantity": 1.0,
+        "unit": "teaspoon",
+        "preparationNote": "for the breakfast sausages",
+        "isOptional": false
+      },
+      {
+        "name": "white pepper",
+        "quantity": 1.0,
+        "unit": "pinch",
+        "preparationNote": "for the breakfast sausages",
+        "isOptional": false
+      },
+      {
+        "name": "nutmeg",
+        "quantity": 1.0,
+        "unit": "pinch",
+        "preparationNote": "for the breakfast sausages",
+        "isOptional": false
+      },
+      {
+        "name": "allspice",
+        "quantity": 1.0,
+        "unit": "pinch",
+        "preparationNote": "for the breakfast sausages",
+        "isOptional": false
+      },
+      {
+        "name": "garlic clove",
+        "quantity": 1.0,
+        "unit": "clove",
+        "preparationNote": "finely chopped, for the breakfast sausages",
+        "isOptional": false
+      },
+      {
+        "name": "salt",
+        "quantity": 1.0,
+        "unit": "teaspoon",
+        "preparationNote": "for the breakfast sausages",
+        "isOptional": false
+      },
+      {
+        "name": "mushroom stock",
+        "quantity": 320.0,
+        "unit": "milliliter",
+        "preparationNote": "for the breakfast sausages",
+        "isOptional": false
+      },
+      {
+        "name": "vegan Worcestershire sauce",
+        "quantity": 2.0,
+        "unit": "tablespoon",
+        "preparationNote": "for the breakfast sausages",
+        "isOptional": false
+      },
+      {
+        "name": "cider vinegar",
+        "quantity": 2.0,
+        "unit": "tablespoon",
+        "preparationNote": "for the breakfast sausages",
+        "isOptional": false
+      },
+      {
+        "name": "tomato puree",
+        "quantity": 1.0,
+        "unit": "tablespoon",
+        "preparationNote": "for the breakfast sausages",
+        "isOptional": false
+      },
+      {
+        "name": "olive oil",
+        "quantity": 2.0,
+        "unit": "tablespoon",
+        "preparationNote": "for the breakfast sausages",
+        "isOptional": false
+      },
+      {
+        "name": "salt and pepper",
+        "quantity": 1.0,
+        "unit": "toTaste",
+        "preparationNote": null,
+        "isOptional": false
+      }
+    ],
+    "isFavorite": false
+  },
+  {
+    "title": "The Scarlet Salad (Matt Pritchard)",
+    "summary": "A vibrant salad of marinated fennel and orange with kale, rocket and toasted seeds. From Dirty Vegan by Matt Pritchard.",
+    "sourceURL": "https://www.psychologies.co.uk/matt-pritchards-vegan-scarlet-salad/",
+    "cookbook": "Dirty Vegan: Proper Banging Vegan Food",
+    "imageURL": "https://www.psychologies.co.uk/wp-content/uploads/sites/3/2019/03/Scarlet_Salad-1-scaled.jpg",
+    "servings": 4,
+    "prepTimeMinutes": 15,
+    "cookTimeMinutes": 5,
+    "instructions": [
+      "Combine the orange segments, juice, fennel slices and paprika in a bowl. Allow to stand overnight or as long as possible.",
+      "Toast the sunflower seeds and pine nuts in a heavy-based pan over low heat for 5 minutes until rich brown; avoid charring.",
+      "Whisk together the olive oil, vinegar, mustard, garlic and maple syrup in a bowl. Season to taste; the mustard will emulsify the mixture.",
+      "Remove the kale stems and slice the leaves into bite-sized pieces. Place salad leaves, cucumber, kale, rocket and tomatoes in a serving bowl.",
+      "Pour over half the dressing and toss by hand. Drain the fennel from the marinade, reserving the orange slices. Add the fennel to the bowl, sprinkle with seeds and nuts, arrange orange slices on top, drizzle with the remaining dressing and garnish with edible flowers. Serve immediately."
+    ],
+    "tags": [
+      "vegan",
+      "salad",
+      "lightFresh",
+      "fennel",
+      "citrus"
+    ],
+    "suggestedArchetypes": [
+      "lightFresh"
+    ],
+    "ingredients": [
+      {
+        "name": "oranges",
+        "quantity": 2.0,
+        "unit": "piece",
+        "preparationNote": "segmented and juice collected, for the marinade",
+        "isOptional": false
+      },
+      {
+        "name": "fennel bulbs",
+        "quantity": 2.0,
+        "unit": "piece",
+        "preparationNote": "cut into wafer-thin slices, for the marinade",
+        "isOptional": false
+      },
+      {
+        "name": "paprika",
+        "quantity": 1.0,
+        "unit": "teaspoon",
+        "preparationNote": "for the marinade",
+        "isOptional": false
+      },
+      {
+        "name": "extra virgin olive oil",
+        "quantity": 4.0,
+        "unit": "tablespoon",
+        "preparationNote": "for the dressing",
+        "isOptional": false
+      },
+      {
+        "name": "white wine vinegar",
+        "quantity": 2.0,
+        "unit": "tablespoon",
+        "preparationNote": "for the dressing",
+        "isOptional": false
+      },
+      {
+        "name": "wholegrain mustard",
+        "quantity": 1.0,
+        "unit": "teaspoon",
+        "preparationNote": "for the dressing",
+        "isOptional": false
+      },
+      {
+        "name": "garlic clove",
+        "quantity": 1.0,
+        "unit": "clove",
+        "preparationNote": "small, crushed, for the dressing",
+        "isOptional": false
+      },
+      {
+        "name": "maple syrup",
+        "quantity": 1.0,
+        "unit": "teaspoon",
+        "preparationNote": "for the dressing",
+        "isOptional": false
+      },
+      {
+        "name": "sunflower seeds",
+        "quantity": 3.0,
+        "unit": "tablespoon",
+        "preparationNote": "for the salad",
+        "isOptional": false
+      },
+      {
+        "name": "pine nuts",
+        "quantity": 3.0,
+        "unit": "tablespoon",
+        "preparationNote": "for the salad",
+        "isOptional": false
+      },
+      {
+        "name": "Russian or regular kale",
+        "quantity": 150.0,
+        "unit": "gram",
+        "preparationNote": "for the salad",
+        "isOptional": false
+      },
+      {
+        "name": "mixed salad leaves",
+        "quantity": 100.0,
+        "unit": "gram",
+        "preparationNote": "for the salad",
+        "isOptional": false
+      },
+      {
+        "name": "cucumber",
+        "quantity": 0.5,
+        "unit": "piece",
+        "preparationNote": "for the salad",
+        "isOptional": false
+      },
+      {
+        "name": "rocket",
+        "quantity": 300.0,
+        "unit": "gram",
+        "preparationNote": "for the salad",
+        "isOptional": false
+      },
+      {
+        "name": "cherry tomatoes",
+        "quantity": 10.0,
+        "unit": "piece",
+        "preparationNote": "halved, for the salad",
+        "isOptional": false
+      },
+      {
+        "name": "edible flowers",
+        "quantity": 1.0,
+        "unit": "bunch",
+        "preparationNote": "handful, for garnish",
         "isOptional": false
       }
     ],
