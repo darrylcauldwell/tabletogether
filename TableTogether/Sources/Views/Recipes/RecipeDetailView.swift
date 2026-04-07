@@ -459,45 +459,156 @@ struct InstructionStepView: View {
     }
 }
 
-// MARK: - Add to Plan Sheet (Placeholder)
+// MARK: - Add to Plan Sheet
 
+/// Lets the user add a recipe to a meal slot directly from the recipe detail
+/// view. Picks an existing WeekPlan, day of week, and meal type, then either
+/// finds the matching slot or creates one and adds the recipe to it.
 struct AddToPlanSheet: View {
     let recipe: Recipe
     let servings: Int
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.managedObjectContext) private var viewContext
+
+    @FetchRequest(
+        sortDescriptors: [SortDescriptor(\.weekStartDate, order: .reverse)]
+    ) private var weekPlans: FetchedResults<WeekPlan>
+
+    @FetchRequest(
+        sortDescriptors: [SortDescriptor(\.displayName)]
+    ) private var users: FetchedResults<User>
+
+    @State private var selectedWeekPlan: WeekPlan?
+    @State private var selectedDay: DayOfWeek = Self.defaultDay()
+    @State private var selectedMealType: MealType = .dinner
+    @State private var errorMessage: String?
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 20) {
-                Text("Add \"\(recipe.title)\" to your meal plan")
-                    .font(.headline)
-                    .multilineTextAlignment(.center)
-
-                Text("This feature will be available when the planning module is complete.")
-                    .font(.body)
-                    .foregroundColor(.appTextSecondary)
-                    .multilineTextAlignment(.center)
-
-                Button("Done") {
-                    dismiss()
+            Form {
+                Section {
+                    Text(recipe.title)
+                        .font(.headline)
+                    if let cookbook = recipe.cookbook, !cookbook.isEmpty {
+                        Text("From \(cookbook)")
+                            .font(.caption)
+                            .italic()
+                            .foregroundStyle(Theme.Colors.textSecondary)
+                    }
                 }
-                .buttonStyle(PrimaryButtonStyle())
+
+                Section("Week") {
+                    if weekPlans.isEmpty {
+                        Text("No active week plans yet. Create one in the planner first.")
+                            .font(.callout)
+                            .foregroundStyle(Theme.Colors.textSecondary)
+                    } else {
+                        Picker("Week", selection: $selectedWeekPlan) {
+                            ForEach(weekPlans, id: \.id) { plan in
+                                Text(plan.shortWeekDisplay)
+                                    .tag(plan as WeekPlan?)
+                            }
+                        }
+                        .pickerStyle(.menu)
+                    }
+                }
+
+                Section("Day") {
+                    Picker("Day", selection: $selectedDay) {
+                        ForEach(DayOfWeek.allCases, id: \.self) { day in
+                            Text(day.fullName).tag(day)
+                        }
+                    }
+                    .pickerStyle(.menu)
+                }
+
+                Section("Meal") {
+                    Picker("Meal type", selection: $selectedMealType) {
+                        ForEach(MealType.allCases, id: \.self) { type in
+                            Label(type.displayName, systemImage: type.iconName)
+                                .tag(type)
+                        }
+                    }
+                    .pickerStyle(.menu)
+                }
+
+                if let errorMessage {
+                    Section {
+                        Label(errorMessage, systemImage: "exclamationmark.triangle")
+                            .font(.caption)
+                            .foregroundStyle(.red)
+                    }
+                }
             }
-            .padding()
             .navigationTitle("Add to Plan")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
             .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Add", action: addToPlan)
+                        .fontWeight(.semibold)
+                        .disabled(selectedWeekPlan == nil)
+                }
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
-                        dismiss()
-                    }
+                    Button("Cancel") { dismiss() }
+                }
+            }
+            .onAppear {
+                if selectedWeekPlan == nil {
+                    selectedWeekPlan = weekPlans.first
                 }
             }
         }
-        .presentationDetents([.medium])
+    }
+
+    /// Find an existing slot for the chosen (week, day, meal) combination — or
+    /// create one if none exists — then add the recipe to it. Designed so that
+    /// adding the same recipe to a slot that already contains other recipes
+    /// appends rather than replaces.
+    private func addToPlan() {
+        guard let weekPlan = selectedWeekPlan else {
+            errorMessage = "Please choose a week plan."
+            return
+        }
+
+        let slot: MealSlot
+        if let existing = weekPlan.slot(for: selectedDay, mealType: selectedMealType) {
+            slot = existing
+        } else {
+            let newSlot = MealSlot(
+                context: viewContext,
+                dayOfWeek: selectedDay,
+                mealType: selectedMealType
+            )
+            newSlot.weekPlan = weekPlan
+            slot = newSlot
+        }
+
+        if let user = users.first {
+            slot.addRecipe(recipe, by: user)
+        } else {
+            slot.addToRecipes(recipe)
+            slot.modifiedAt = Date()
+        }
+
+        do {
+            try viewContext.save()
+            dismiss()
+        } catch {
+            errorMessage = "Couldn't save: \(error.localizedDescription)"
+        }
+    }
+
+    /// Today as a `DayOfWeek`, defaulting to Monday if the system locale gives
+    /// us something unexpected.
+    private static func defaultDay() -> DayOfWeek {
+        let weekday = Calendar.current.component(.weekday, from: Date())
+        // Calendar weekday: Sunday = 1, Monday = 2, … Saturday = 7
+        // DayOfWeek raw values: Monday = 1, … Sunday = 7
+        let mapped = weekday == 1 ? 7 : weekday - 1
+        return DayOfWeek(rawValue: mapped) ?? .monday
     }
 }
 
