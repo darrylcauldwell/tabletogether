@@ -23,28 +23,20 @@ A personal, version-controlled collection of recipes that can be imported into T
 
 Importing a recipe whose title already exists in your library is a no-op (case-insensitive duplicate check).
 
-## Folder layout
+## Layout
 
-Organise however suits the collection. Suggested patterns:
+This directory is **flat** — no subfolders. Categorisation lives in each recipe's `tags` field, not in the folder structure. A single recipe can carry as many tags as suits it (e.g. `["indian", "vegetarian", "weeknight"]`).
 
-```
-Recipes/
-├── README.md
-├── weeknight/
-│   ├── lemon-chicken-pasta.json
-│   └── ...
-├── indian/
-│   ├── butter-chicken.json
-│   └── ...
-└── batch-cooking/
-    └── ...
-```
+The default file is `recipes.json` — one big JSON array containing every curated recipe. Importing it brings the whole library in one tap.
 
-A single `.json` file may contain either:
-- **One recipe** (a JSON object), or
-- **An array of recipes** (a JSON array of objects)
+### File format flexibility
 
-The importer accepts both. Use individual files for diff-friendliness; use array files for bulk import convenience.
+The importer accepts either shape, so you can split things up if you ever want to:
+
+- **A JSON array** (`[ {recipe1}, {recipe2}, ... ]`) — used by `recipes.json`
+- **A single JSON object** (`{recipe}`) — useful for sharing or testing one recipe at a time
+
+Both produce the same result — the importer detects which shape it's reading.
 
 ## File format
 

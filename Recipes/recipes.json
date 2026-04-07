@@ -1,0 +1,137 @@
+[
+  {
+    "title": "Masoor Dal (Madhur Jaffrey)",
+    "summary": "A simple, fragrant red-lentil dal finished with a tarka of cumin seeds, dried chillies and asafoetida. Adapted from Madhur Jaffrey via The Happy Foodie.",
+    "sourceURL": "https://thehappyfoodie.co.uk/recipes/masoor-dal/",
+    "servings": 6,
+    "prepTimeMinutes": 5,
+    "cookTimeMinutes": 40,
+    "instructions": [
+      "Pick over the lentils for grit, then wash in several changes of water and drain.",
+      "Place the lentils in a heavy-based pan with 1.2 litres of water and the turmeric. Stir and bring to a simmer. Cover with the lid slightly ajar.",
+      "Cook over low heat for 35–40 minutes until tender, stirring occasionally.",
+      "Add the salt, mix, and leave covered over very low heat.",
+      "Heat the ghee or oil in a small frying pan over fairly high heat. Add the asafoetida and then the cumin seeds and let them sizzle for a few seconds.",
+      "Add the chillies and cook until they turn dark red — just a few seconds. Pour the contents of the pan over the lentils and stir."
+    ],
+    "tags": ["indian", "vegetarian", "dal", "weeknight"],
+    "suggestedArchetypes": ["quickWeeknight", "lightFresh"],
+    "ingredients": [
+      { "name": "split red lentils (masoor dal)", "quantity": 350, "unit": "gram", "preparationNote": null, "isOptional": false },
+      { "name": "ground turmeric", "quantity": 0.5, "unit": "teaspoon", "preparationNote": null, "isOptional": false },
+      { "name": "salt", "quantity": 1.25, "unit": "teaspoon", "preparationNote": null, "isOptional": false },
+      { "name": "ghee or vegetable oil", "quantity": 3, "unit": "tablespoon", "preparationNote": null, "isOptional": false },
+      { "name": "ground asafoetida", "quantity": 1, "unit": "pinch", "preparationNote": "generous", "isOptional": false },
+      { "name": "cumin seeds", "quantity": 1, "unit": "teaspoon", "preparationNote": null, "isOptional": false },
+      { "name": "dried hot red chillies", "quantity": 4, "unit": "piece", "preparationNote": null, "isOptional": false }
+    ],
+    "isFavorite": false
+  },
+  {
+    "title": "Creamy Chicken Korma with Almonds (Madhur Jaffrey)",
+    "summary": "A mildly spiced korma with a blended almond-and-ginger paste, finished with single cream and garam masala. Adapted from Madhur Jaffrey's Simple Indian Cookery via The Happy Foodie.",
+    "sourceURL": "https://thehappyfoodie.co.uk/recipes/creamy-chicken-korma-with-almonds/",
+    "servings": 4,
+    "prepTimeMinutes": 15,
+    "cookTimeMinutes": 40,
+    "instructions": [
+      "Skin the chicken pieces and cut into serving portions; set aside.",
+      "Blend the garlic, ginger, almonds and 6 tablespoons of water into a smooth paste.",
+      "Heat the oil in a wide pan over medium-high heat. Add the bay leaves, cardamom pods, cloves and cinnamon stick and stir for 10 seconds.",
+      "Add the onion and cook, stirring, until browned.",
+      "Reduce the heat to medium. Add the almond paste with the cumin, coriander and cayenne. Stir for 3–4 minutes, then add the tomato purée and stir for a minute longer.",
+      "Add the chicken, salt, cream, garam masala and 150 ml of water. Bring to a simmer, cover, reduce the heat to low and simmer gently for 25 minutes until the chicken is cooked through.",
+      "Remove the cinnamon stick and bay leaves before serving."
+    ],
+    "tags": ["indian", "chicken", "curry", "korma"],
+    "suggestedArchetypes": ["comfort", "familyFavorite"],
+    "ingredients": [
+      { "name": "chicken pieces", "quantity": 1.5, "unit": "kilogram", "preparationNote": "skinned and jointed", "isOptional": false },
+      { "name": "garlic", "quantity": 6, "unit": "clove", "preparationNote": "coarsely chopped", "isOptional": false },
+      { "name": "fresh ginger", "quantity": 2.5, "unit": "piece", "preparationNote": "2.5cm piece, peeled and chopped", "isOptional": false },
+      { "name": "flaked almonds", "quantity": 50, "unit": "gram", "preparationNote": null, "isOptional": false },
+      { "name": "olive or groundnut oil", "quantity": 5, "unit": "tablespoon", "preparationNote": null, "isOptional": false },
+      { "name": "bay leaves", "quantity": 2, "unit": "piece", "preparationNote": null, "isOptional": false },
+      { "name": "cardamom pods", "quantity": 8, "unit": "piece", "preparationNote": null, "isOptional": false },
+      { "name": "cloves", "quantity": 4, "unit": "piece", "preparationNote": null, "isOptional": false },
+      { "name": "cinnamon stick", "quantity": 1, "unit": "piece", "preparationNote": "2.5cm length", "isOptional": false },
+      { "name": "onion", "quantity": 1, "unit": "piece", "preparationNote": "finely chopped", "isOptional": false },
+      { "name": "ground cumin", "quantity": 1, "unit": "tablespoon", "preparationNote": null, "isOptional": false },
+      { "name": "ground coriander", "quantity": 1, "unit": "tablespoon", "preparationNote": null, "isOptional": false },
+      { "name": "cayenne pepper", "quantity": 0.25, "unit": "teaspoon", "preparationNote": null, "isOptional": false },
+      { "name": "tomato purée", "quantity": 1, "unit": "tablespoon", "preparationNote": null, "isOptional": false },
+      { "name": "salt", "quantity": 1.25, "unit": "teaspoon", "preparationNote": null, "isOptional": false },
+      { "name": "single cream", "quantity": 3, "unit": "tablespoon", "preparationNote": null, "isOptional": false },
+      { "name": "garam masala", "quantity": 0.5, "unit": "tablespoon", "preparationNote": null, "isOptional": false }
+    ],
+    "isFavorite": false
+  },
+  {
+    "title": "Aloo Gobi (Madhur Jaffrey)",
+    "summary": "Punjabi-style cauliflower and potatoes with garlic, ginger, fenugreek and green chillies. The cauliflower and potatoes are deep-fried first for a deeper flavour. Adapted from Madhur Jaffrey via The Happy Foodie.",
+    "sourceURL": "https://thehappyfoodie.co.uk/recipes/cauliflower-with-potatoes-aloo-gobi-gurbax-kaur-bradford/",
+    "servings": 6,
+    "prepTimeMinutes": 20,
+    "cookTimeMinutes": 35,
+    "instructions": [
+      "Heat the sunflower oil in a karhai or wok over medium-high heat until very hot. Fry the cauliflower florets in two batches for about 2 minutes each until light brown. Drain on kitchen paper, allowing the oil to reheat between batches.",
+      "Carefully add the potato to the hot oil and fry for 5–6 minutes until golden. Drain on kitchen paper. Strain and reserve the oil.",
+      "In a clean karhai or heavy-based pan over medium heat, pour in 2 tablespoons of the oil. Add the onion and sauté for 2 minutes. Add the cumin seeds and stir for 3–5 minutes until the onion is light brown.",
+      "Add the garlic and ginger, stirring for 2 minutes (add a splash of water if needed to prevent sticking).",
+      "Add the tomato and cook for 5 minutes until fully integrated.",
+      "Sprinkle in the chillies and salt and stir for 1 minute. Crumble in the fenugreek leaves and stir for another minute. Add the turmeric and mix well.",
+      "Add the cauliflower stalks and leaves and cook, stirring, for 6 minutes until soft (add water if the pan dries out).",
+      "Add the deep-fried cauliflower florets, potato and coriander. Mix gently and cook for a final 2 minutes before serving."
+    ],
+    "tags": ["indian", "vegetarian", "vegan", "side", "punjabi"],
+    "suggestedArchetypes": ["lightFresh", "comfort"],
+    "ingredients": [
+      { "name": "sunflower oil for deep-frying", "quantity": 1, "unit": "liter", "preparationNote": "approximate; for deep-frying", "isOptional": false },
+      { "name": "cauliflower florets", "quantity": 600, "unit": "gram", "preparationNote": null, "isOptional": false },
+      { "name": "cauliflower stalks and leaves", "quantity": 150, "unit": "gram", "preparationNote": "chopped", "isOptional": false },
+      { "name": "potato", "quantity": 450, "unit": "gram", "preparationNote": "peeled and roughly chopped", "isOptional": false },
+      { "name": "olive or sunflower oil", "quantity": 2, "unit": "tablespoon", "preparationNote": null, "isOptional": false },
+      { "name": "onion", "quantity": 1, "unit": "piece", "preparationNote": "medium, finely chopped", "isOptional": false },
+      { "name": "cumin seeds", "quantity": 0.5, "unit": "teaspoon", "preparationNote": null, "isOptional": false },
+      { "name": "garlic", "quantity": 1, "unit": "tablespoon", "preparationNote": "finely grated or crushed", "isOptional": false },
+      { "name": "fresh ginger", "quantity": 1, "unit": "tablespoon", "preparationNote": "peeled and finely grated", "isOptional": false },
+      { "name": "tomato", "quantity": 1, "unit": "piece", "preparationNote": "medium, finely chopped", "isOptional": false },
+      { "name": "hot green chillies", "quantity": 4, "unit": "piece", "preparationNote": "finely chopped", "isOptional": false },
+      { "name": "salt", "quantity": 1.25, "unit": "teaspoon", "preparationNote": null, "isOptional": false },
+      { "name": "dried fenugreek leaves", "quantity": 1, "unit": "tablespoon", "preparationNote": null, "isOptional": false },
+      { "name": "turmeric", "quantity": 0.75, "unit": "teaspoon", "preparationNote": null, "isOptional": false },
+      { "name": "coriander leaves", "quantity": 2, "unit": "tablespoon", "preparationNote": "chopped", "isOptional": false }
+    ],
+    "isFavorite": false
+  },
+  {
+    "title": "Saag Paneer (Madhur Jaffrey)",
+    "summary": "Spinach cooked gently with a ginger-garlic-chilli paste, finished with golden-fried paneer cubes and a touch of cream. Adapted from Madhur Jaffrey via The Happy Foodie.",
+    "sourceURL": "https://thehappyfoodie.co.uk/recipes/spinach-with-paneer-saag-paneer/",
+    "servings": 4,
+    "prepTimeMinutes": 15,
+    "cookTimeMinutes": 30,
+    "instructions": [
+      "Blend the ginger, garlic and green chilli with 50 ml of water until smooth using a blender or food processor.",
+      "Heat the oil in a large sauté pan over medium heat. Fry the paneer pieces until golden brown on all sides, turning gently. Remove with a slotted spoon and sprinkle with one-eighth of a teaspoon of salt, the garam masala and the cayenne pepper.",
+      "Add the blended paste to the hot oil, stirring constantly for 30 seconds. Add the spinach and half a teaspoon of salt. Stir for 1 minute.",
+      "Cover the pan, lower the heat and cook the spinach gently for 15 minutes. Add a splash of water if the pan dries out.",
+      "Add the paneer and cream, stir gently and bring to a simmer. Cover and cook on low heat for 10 minutes, stirring occasionally."
+    ],
+    "tags": ["indian", "vegetarian", "spinach", "paneer", "punjabi"],
+    "suggestedArchetypes": ["comfort", "familyFavorite"],
+    "ingredients": [
+      { "name": "fresh ginger", "quantity": 2.5, "unit": "piece", "preparationNote": "2.5cm cube, peeled and coarsely chopped", "isOptional": false },
+      { "name": "garlic", "quantity": 4, "unit": "clove", "preparationNote": "peeled", "isOptional": false },
+      { "name": "fresh hot green chilli", "quantity": 1, "unit": "piece", "preparationNote": "sliced", "isOptional": false },
+      { "name": "vegetable oil", "quantity": 6, "unit": "tablespoon", "preparationNote": null, "isOptional": false },
+      { "name": "paneer", "quantity": 200, "unit": "gram", "preparationNote": "cut into bite-sized pieces", "isOptional": false },
+      { "name": "salt", "quantity": 0.75, "unit": "teaspoon", "preparationNote": "approximate, to taste", "isOptional": false },
+      { "name": "garam masala", "quantity": 0.25, "unit": "teaspoon", "preparationNote": null, "isOptional": false },
+      { "name": "cayenne pepper", "quantity": 0.25, "unit": "teaspoon", "preparationNote": null, "isOptional": true },
+      { "name": "spinach", "quantity": 675, "unit": "gram", "preparationNote": "washed, trimmed and very finely chopped", "isOptional": false },
+      { "name": "single cream", "quantity": 3, "unit": "tablespoon", "preparationNote": null, "isOptional": false }
+    ],
+    "isFavorite": false
+  }
+]
