@@ -63,39 +63,58 @@ final class PersistenceController {
         householdMembers.map(\.name)
     }
 
-    /// Rich participant data including name and acceptance status.
+    /// Rich participant data including name, contact info, and acceptance status.
     var householdMembers: [HouseholdMember] {
         guard let share = existingShare else { return [] }
         let localLabel = PendingInvitationStore.label(forShareRecordName: share.recordID.recordName)
         return share.participants
             .filter { $0.role != .owner }
-            .map { participant in
+            .enumerated()
+            .map { index, participant in
                 // CloudKit reveals the participant's identity only after they accept.
                 // For pending invites, fall back to the local label the owner typed
                 // when sending the invitation.
-                let cloudKitName = participant.userIdentity.nameComponents.flatMap {
+                let formattedName = participant.userIdentity.nameComponents.flatMap {
                     PersonNameComponentsFormatter.localizedString(from: $0, style: .default)
-                } ?? participant.userIdentity.lookupInfo?.emailAddress
-                  ?? participant.userIdentity.lookupInfo?.phoneNumber
+                }
+                let email = participant.userIdentity.lookupInfo?.emailAddress
+                let phone = participant.userIdentity.lookupInfo?.phoneNumber
 
-                let name = cloudKitName ?? localLabel ?? "Pending invitation"
+                let displayName = formattedName ?? email ?? phone ?? localLabel ?? "Pending invitation"
 
                 let status: HouseholdMember.Status = switch participant.acceptanceStatus {
                 case .accepted: .accepted
                 case .removed: .removed
                 case .pending: .pending
+                case .unknown: .pending
                 @unknown default: .pending
                 }
 
-                return HouseholdMember(name: name, status: status)
+                // Stable per-participant ID. Prefer the CloudKit user record name if
+                // available; fall back to email, then phone, then a positional index
+                // so two pending invitations don't collapse into one row.
+                let participantID = participant.userIdentity.userRecordID?.recordName
+                    ?? email
+                    ?? phone
+                    ?? "pending-\(index)"
+
+                return HouseholdMember(
+                    id: participantID,
+                    name: displayName,
+                    email: email,
+                    phone: phone,
+                    status: status
+                )
             }
     }
 
-    /// Represents a household member with their sharing status.
+    /// Represents a household member with their sharing status and contact details.
     struct HouseholdMember: Identifiable {
+        let id: String
         let name: String
+        let email: String?
+        let phone: String?
         let status: Status
-        var id: String { name }
 
         enum Status {
             case pending
@@ -449,6 +468,56 @@ final class PersistenceController {
         } catch {
             AppLogger.sharing.error("Failed to purge: \(error.localizedDescription)")
         }
+    }
+
+    /// Removes a single participant from the existing CKShare and persists the change.
+    /// Used by the household member detail sheet to revoke a specific invite without
+    /// stopping sharing entirely. If the removed participant was the last non-owner,
+    /// the share itself is preserved (the owner can still re-invite later).
+    /// - Parameter memberID: The stable participant ID from `HouseholdMember.id`.
+    /// - Throws: A CloudKit error if the share update cannot be persisted.
+    func removeParticipant(matching memberID: String) async throws {
+        guard let share = existingShare else {
+            AppLogger.sharing.warning("removeParticipant called with no existing share")
+            return
+        }
+        guard let store = privatePersistentStore else {
+            AppLogger.sharing.warning("removeParticipant called with no private store")
+            return
+        }
+
+        // Resolve the participant by the same ID rule used in householdMembers.
+        let pendingParticipants = share.participants
+            .filter { $0.role != .owner }
+            .enumerated()
+        let resolved = pendingParticipants.first { index, participant in
+            let id = participant.userIdentity.userRecordID?.recordName
+                ?? participant.userIdentity.lookupInfo?.emailAddress
+                ?? participant.userIdentity.lookupInfo?.phoneNumber
+                ?? "pending-\(index)"
+            return id == memberID
+        }
+
+        guard let (_, participant) = resolved else {
+            AppLogger.sharing.warning("removeParticipant: no participant matches id \(memberID)")
+            return
+        }
+
+        share.removeParticipant(participant)
+
+        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+            container.persistUpdatedShare(share, in: store) { _, error in
+                if let error {
+                    continuation.resume(throwing: error)
+                } else {
+                    continuation.resume()
+                }
+            }
+        }
+
+        // Refresh local share state so the UI updates.
+        await fetchExistingShare()
+        AppLogger.sharing.info("Removed participant \(memberID) from share")
     }
 
     // MARK: - History Processing (Serial Queue, Off Main Thread)

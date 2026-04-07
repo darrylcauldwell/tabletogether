@@ -24,10 +24,9 @@ struct SettingsView: View {
 
     @State private var sharingError: String?
     @State private var showingSharingError = false
-    @State private var showingRemoveParticipantConfirmation = false
-    @State private var participantToRemove: String?
     @State private var showingInviteNamePrompt = false
     @State private var inviteRecipientName: String = ""
+    @State private var selectedHouseholdMember: PersistenceController.HouseholdMember?
     @State private var showingRemoveDemoDataConfirmation = false
     @State private var showingRemoveContactConfirmation = false
     @State private var contactToRemove: User?
@@ -100,29 +99,27 @@ struct SettingsView: View {
                         }
                     }
 
-                    // Family members — swipe to remove
+                    // Family members — tap for details, swipe to remove
                     if persistenceController.isSharing {
                         ForEach(persistenceController.householdMembers) { member in
-                            HStack(spacing: 12) {
-                                Image(systemName: member.status.iconName)
-                                    .font(.title2)
-                                    .foregroundStyle(member.status == .accepted ? Theme.Colors.primary : .orange)
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text(member.name)
-                                        .font(.body)
-                                    Text(member.status.label)
-                                        .font(.caption)
-                                        .foregroundStyle(Theme.Colors.textSecondary)
-                                }
+                            #if os(iOS)
+                            Button {
+                                selectedHouseholdMember = member
+                            } label: {
+                                householdMemberRow(member)
                             }
+                            .buttonStyle(.plain)
                             .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                                 Button(role: .destructive) {
-                                    participantToRemove = member.name
-                                    showingRemoveParticipantConfirmation = true
+                                    selectedHouseholdMember = member
                                 } label: {
-                                    Label("Remove", systemImage: "person.badge.minus")
+                                    Label("Manage", systemImage: "person.crop.circle.badge.questionmark")
                                 }
+                                .tint(Theme.Colors.primary)
                             }
+                            #else
+                            householdMemberRow(member)
+                            #endif
                         }
                     }
 
@@ -319,32 +316,6 @@ struct SettingsView: View {
                 inviteRecipientName: $inviteRecipientName,
                 onContinue: startInvite
             ))
-            .confirmationDialog(
-                "Remove from Household?",
-                isPresented: $showingRemoveParticipantConfirmation,
-                titleVisibility: .visible
-            ) {
-                Button("Remove", role: .destructive) {
-                    Task {
-                        // TODO: Remove specific participant from CKShare
-                        // For now, if this is the last participant, stop sharing entirely
-                        if persistenceController.participantCount <= 1 {
-                            if let share = persistenceController.existingShare {
-                                await persistenceController.purgeObjectsAndRecords(for: share)
-                            }
-                        }
-                        await persistenceController.fetchExistingShare()
-                        participantToRemove = nil
-                    }
-                }
-                Button("Cancel", role: .cancel) {
-                    participantToRemove = nil
-                }
-            } message: {
-                if let name = participantToRemove {
-                    Text("\(name) will lose access to your shared meal plans, recipes, and grocery lists.")
-                }
-            }
             #endif
             .confirmationDialog(
                 "Remove Contact?",
@@ -437,7 +408,39 @@ struct SettingsView: View {
                     privateDataManager: privateDataManager
                 )
             }
+            #if os(iOS)
+            .sheet(item: $selectedHouseholdMember) { member in
+                HouseholdMemberDetailSheet(member: member) {
+                    selectedHouseholdMember = nil
+                }
+            }
+            #endif
         }
+    }
+
+    /// One row in the Household section showing avatar + name + status.
+    @ViewBuilder
+    private func householdMemberRow(_ member: PersistenceController.HouseholdMember) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: member.status.iconName)
+                .font(.title2)
+                .foregroundStyle(member.status == .accepted ? Theme.Colors.primary : .orange)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(member.name)
+                    .font(.body)
+                    .foregroundStyle(Theme.Colors.textPrimary)
+                Text(member.status.label)
+                    .font(.caption)
+                    .foregroundStyle(Theme.Colors.textSecondary)
+            }
+            Spacer()
+            #if os(iOS)
+            Image(systemName: "chevron.right")
+                .font(.caption)
+                .foregroundStyle(Theme.Colors.textSecondary)
+            #endif
+        }
+        .contentShape(Rectangle())
     }
 
     // Sharing actions are handled directly by SharingPresenter.shared
