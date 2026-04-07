@@ -120,7 +120,7 @@ struct CompactNavigationView: View {
                 InsightsView()
             }
             .tabItem {
-                Label("Insights", systemImage: "chart.line.uptrend.xyaxis")
+                Label("Nutrition", systemImage: "chart.line.uptrend.xyaxis")
             }
             .tag(Tab.insights)
         }
@@ -236,7 +236,7 @@ struct SidebarView: View {
                         Label("Meal Log", systemImage: "square.and.pencil")
                             .tag(SidebarSection.log)
 
-                        Label("Insights", systemImage: "chart.line.uptrend.xyaxis")
+                        Label("Nutrition", systemImage: "chart.line.uptrend.xyaxis")
                             .tag(SidebarSection.insights)
                     }
                 }
@@ -296,10 +296,10 @@ struct ContentColumnView: View {
         case .insights:
             InsightsView()
         case .none:
-            ContentUnavailableView(
-                "Select a Section",
-                systemImage: "sidebar.left",
-                description: Text("Choose a section from the sidebar to get started.")
+            EmptyStateView(
+                icon: "sidebar.left",
+                title: "Select a Section",
+                message: "Choose a section from the sidebar to get started."
             )
         }
     }

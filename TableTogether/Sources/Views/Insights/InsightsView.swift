@@ -102,7 +102,7 @@ struct InsightsView: View {
                 .padding(.vertical)
             }
             .background(Theme.Colors.background)
-            .navigationTitle("Insights")
+            .navigationTitle("Nutrition")
             .toolbar {
                 #if os(iOS)
                 ToolbarItem(placement: .topBarTrailing) {

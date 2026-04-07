@@ -271,7 +271,7 @@ struct WeekStatusBadge: View {
     private var statusColor: Color {
         switch status {
         case .draft: return .orange
-        case .active: return .green
+        case .active: return Theme.Colors.primary
         case .completed: return .gray
         }
     }

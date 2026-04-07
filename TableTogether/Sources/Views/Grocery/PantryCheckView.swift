@@ -252,25 +252,15 @@ struct PantryCheckView: View {
     }
 
     private var emptyStateView: some View {
-        ContentUnavailableView {
-            Label("No Ingredients", systemImage: "checklist.checked")
-        } description: {
-            if hasPlannedRecipes {
-                Text("Generate a pantry list from your planned meals.")
-            } else {
-                Text("Plan some meals first, then generate your pantry list.")
-            }
-        } actions: {
-            if hasPlannedRecipes {
-                Button {
-                    generatePantryList()
-                } label: {
-                    Label("Generate Pantry List", systemImage: "checklist.checked")
-                }
-                .buttonStyle(.borderedProminent)
-            }
-        }
-        .frame(maxHeight: .infinity)
+        EmptyStateView(
+            icon: "checklist.checked",
+            title: "No Ingredients",
+            message: hasPlannedRecipes
+                ? "Generate a pantry list from your planned meals."
+                : "Plan some meals first, then generate your pantry list.",
+            action: hasPlannedRecipes ? { generatePantryList() } : nil,
+            actionLabel: hasPlannedRecipes ? "Generate Pantry List" : nil
+        )
     }
 
     private var completionStateView: some View {

@@ -163,31 +163,23 @@ struct GroceryListView: View {
     // MARK: - Subviews
 
     private var emptyStateView: some View {
-        ContentUnavailableView {
-            Label("No Shopping Items", systemImage: "cart")
-        } description: {
-            Text("No items to buy yet. Plan some meals and check your pantry to build your list.")
-        } actions: {
-            Button("Add Item Manually") {
-                showingAddItem = true
-            }
-            .buttonStyle(.bordered)
-        }
-        .frame(maxHeight: .infinity)
+        EmptyStateView(
+            icon: "cart",
+            title: "No Shopping Items",
+            message: "No items to buy yet. Plan some meals and check your pantry to build your list.",
+            action: { showingAddItem = true },
+            actionLabel: "Add Item Manually"
+        )
     }
 
     private var pantryOnlyEmptyStateView: some View {
-        ContentUnavailableView {
-            Label("All Items in Pantry", systemImage: "checkmark.circle")
-        } description: {
-            Text("Check your pantry to see what you still need to buy.")
-        } actions: {
-            Button("Add Item Manually") {
-                showingAddItem = true
-            }
-            .buttonStyle(.bordered)
-        }
-        .frame(maxHeight: .infinity)
+        EmptyStateView(
+            icon: "checkmark.circle",
+            title: "All Items in Pantry",
+            message: "Check your pantry to see what you still need to buy.",
+            action: { showingAddItem = true },
+            actionLabel: "Add Item Manually"
+        )
     }
 
     private var groceryListContent: some View {
