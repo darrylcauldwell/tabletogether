@@ -139,6 +139,13 @@ struct RecipeDetailView: View {
                     .fontWeight(.bold)
                     .foregroundColor(.white)
 
+                if let cookbook = recipe.cookbook, !cookbook.isEmpty {
+                    Text("From \(cookbook)")
+                        .font(.subheadline)
+                        .italic()
+                        .foregroundColor(.white.opacity(0.85))
+                }
+
                 if let sourceURL = recipe.sourceURL {
                     Button {
                         openURL(sourceURL)

@@ -75,6 +75,16 @@ struct RecipeCardView: View {
                     }
                 }
 
+                // Cookbook attribution (subtle, only when set)
+                if let cookbook = recipe.cookbook, !cookbook.isEmpty {
+                    Text(cookbook)
+                        .font(.caption2)
+                        .italic()
+                        .foregroundColor(.appTextSecondary)
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                }
+
                 // Archetype tags
                 if !recipe.suggestedArchetypes.isEmpty {
                     ScrollView(.horizontal, showsIndicators: false) {
@@ -130,6 +140,16 @@ struct RecipeCardView: View {
                             .font(.caption)
                             .foregroundColor(.appSecondary)
                     }
+                }
+
+                // Cookbook attribution (subtle, only when set)
+                if let cookbook = recipe.cookbook, !cookbook.isEmpty {
+                    Text(cookbook)
+                        .font(.caption2)
+                        .italic()
+                        .foregroundColor(.appTextSecondary)
+                        .lineLimit(1)
+                        .truncationMode(.tail)
                 }
 
                 // Archetype tags

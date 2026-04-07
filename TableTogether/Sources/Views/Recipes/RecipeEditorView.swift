@@ -18,6 +18,7 @@ struct RecipeEditorView: View {
     // Editable state
     @State private var title: String
     @State private var summary: String
+    @State private var cookbook: String
     @State private var servings: Int
     @State private var prepTimeMinutes: String
     @State private var cookTimeMinutes: String
@@ -44,6 +45,7 @@ struct RecipeEditorView: View {
         // Initialize state from recipe or defaults
         _title = State(initialValue: recipe?.title ?? "")
         _summary = State(initialValue: recipe?.summary ?? "")
+        _cookbook = State(initialValue: recipe?.cookbook ?? "")
         _servings = State(initialValue: recipe.map { Int($0.servings) } ?? 4)
         _prepTimeMinutes = State(initialValue: recipe.flatMap { $0.prepTimeMinutes > 0 ? String($0.prepTimeMinutes) : nil } ?? "")
         _cookTimeMinutes = State(initialValue: recipe.flatMap { $0.cookTimeMinutes > 0 ? String($0.cookTimeMinutes) : nil } ?? "")
@@ -132,6 +134,9 @@ struct RecipeEditorView: View {
 
             TextField("Summary (optional)", text: $summary, axis: .vertical)
                 .lineLimit(2...4)
+
+            TextField("Cookbook (optional)", text: $cookbook)
+                .textInputAutocapitalization(.words)
 
             HStack {
                 Text("Servings")
@@ -480,6 +485,7 @@ struct RecipeEditorView: View {
             // Update existing recipe
             existingRecipe.title = title
             existingRecipe.summary = summary.isEmpty ? nil : summary
+            existingRecipe.cookbook = cookbook.isEmpty ? nil : cookbook
             existingRecipe.servings = Int32(servings)
             existingRecipe.prepTimeMinutes = Int32(Int(prepTimeMinutes) ?? 0)
             existingRecipe.cookTimeMinutes = Int32(Int(cookTimeMinutes) ?? 0)
@@ -515,6 +521,7 @@ struct RecipeEditorView: View {
                 context: viewContext,
                 title: title,
                 summary: summary.isEmpty ? nil : summary,
+                cookbook: cookbook.isEmpty ? nil : cookbook,
                 servings: servings,
                 prepTimeMinutes: Int(prepTimeMinutes),
                 cookTimeMinutes: Int(cookTimeMinutes),
