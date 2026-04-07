@@ -66,14 +66,19 @@ final class PersistenceController {
     /// Rich participant data including name and acceptance status.
     var householdMembers: [HouseholdMember] {
         guard let share = existingShare else { return [] }
+        let localLabel = PendingInvitationStore.label(forShareRecordName: share.recordID.recordName)
         return share.participants
             .filter { $0.role != .owner }
             .map { participant in
-                let name = participant.userIdentity.nameComponents.flatMap {
+                // CloudKit reveals the participant's identity only after they accept.
+                // For pending invites, fall back to the local label the owner typed
+                // when sending the invitation.
+                let cloudKitName = participant.userIdentity.nameComponents.flatMap {
                     PersonNameComponentsFormatter.localizedString(from: $0, style: .default)
                 } ?? participant.userIdentity.lookupInfo?.emailAddress
                   ?? participant.userIdentity.lookupInfo?.phoneNumber
-                  ?? "Invited Person"
+
+                let name = cloudKitName ?? localLabel ?? "Pending invitation"
 
                 let status: HouseholdMember.Status = switch participant.acceptanceStatus {
                 case .accepted: .accepted
@@ -420,6 +425,7 @@ final class PersistenceController {
                     }
                 }
             }
+            PendingInvitationStore.removeLabel(forShareRecordName: share.recordID.recordName)
             existingShare = nil
             AppLogger.sharing.info("Purged shared objects and records")
         } catch {

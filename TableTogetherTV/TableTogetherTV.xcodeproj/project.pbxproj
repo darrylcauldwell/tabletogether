@@ -35,6 +35,7 @@
 		E4DAFCA7DA20530DB65196D9 /* PersonalSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19612A2CA3D357AA81B342C4 /* PersonalSettings.swift */; };
 		361E9BAA02EB541684945984 /* PrivateMealLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63A12A84798D5D86B22D4DB8 /* PrivateMealLog.swift */; };
 		B976F518A6505E288D358225 /* AppLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3ADBD49CE1358E5A08BB466 /* AppLogger.swift */; };
+		884B7543FB805D6DB831C4D1 /* PendingInvitationStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21DEA84429595EDB837EE166 /* PendingInvitationStore.swift */; };
 		BA1EF3402A5154919F74B8C3 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5AD1822310295147B4847C80 /* Theme.swift */; };
 		7984C9BEE74258A6849CD7D8 /* TVDemoDataSeeder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FF83528F6585E1EB750689D /* TVDemoDataSeeder.swift */; };
 		83B135E37A5453DCB4688B39 /* TableTogetherTVApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3568B866A23E5C7EAFE6A67C /* TableTogetherTVApp.swift */; };
@@ -78,6 +79,7 @@
 		19612A2CA3D357AA81B342C4 /* PersonalSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "../TableTogether/Sources/Models/PersonalSettings.swift"; sourceTree = "<group>"; };
 		63A12A84798D5D86B22D4DB8 /* PrivateMealLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "../TableTogether/Sources/Models/PrivateMealLog.swift"; sourceTree = "<group>"; };
 		C3ADBD49CE1358E5A08BB466 /* AppLogger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "../TableTogether/Sources/Services/AppLogger.swift"; sourceTree = "<group>"; };
+		21DEA84429595EDB837EE166 /* PendingInvitationStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "../TableTogether/Sources/Services/PendingInvitationStore.swift"; sourceTree = "<group>"; };
 		5AD1822310295147B4847C80 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "../TableTogether/Sources/Views/Shared/Theme.swift"; sourceTree = "<group>"; };
 		1FF83528F6585E1EB750689D /* TVDemoDataSeeder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/TVDemoDataSeeder.swift"; sourceTree = "<group>"; };
 		3568B866A23E5C7EAFE6A67C /* TableTogetherTVApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/TableTogetherTVApp.swift"; sourceTree = "<group>"; };
@@ -132,6 +134,7 @@
 				19612A2CA3D357AA81B342C4 /* PersonalSettings.swift */,
 				63A12A84798D5D86B22D4DB8 /* PrivateMealLog.swift */,
 				C3ADBD49CE1358E5A08BB466 /* AppLogger.swift */,
+				21DEA84429595EDB837EE166 /* PendingInvitationStore.swift */,
 				5AD1822310295147B4847C80 /* Theme.swift */,
 				1FF83528F6585E1EB750689D /* TVDemoDataSeeder.swift */,
 				3568B866A23E5C7EAFE6A67C /* TableTogetherTVApp.swift */,
@@ -245,6 +248,7 @@
 				E4DAFCA7DA20530DB65196D9 /* PersonalSettings.swift in Sources */,
 				361E9BAA02EB541684945984 /* PrivateMealLog.swift in Sources */,
 				B976F518A6505E288D358225 /* AppLogger.swift in Sources */,
+				884B7543FB805D6DB831C4D1 /* PendingInvitationStore.swift in Sources */,
 				BA1EF3402A5154919F74B8C3 /* Theme.swift in Sources */,
 				7984C9BEE74258A6849CD7D8 /* TVDemoDataSeeder.swift in Sources */,
 				83B135E37A5453DCB4688B39 /* TableTogetherTVApp.swift in Sources */,

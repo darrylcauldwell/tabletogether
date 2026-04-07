@@ -22,7 +22,10 @@ final class SharingPresenter: NSObject {
     /// Creates a new CKShare and presents UIActivityViewController for the user to send invitations.
     /// Pre-creates the share first, then uses NSItemProvider.registerCKShare(_:container:allowedSharingOptions:)
     /// to present the activity view controller with the existing share.
-    func presentInvite(for household: Household) async {
+    /// - Parameter recipientLabel: Optional user-provided label (e.g. "Alice") stored locally
+    ///   so the pending invitation row in Settings shows a meaningful name until the
+    ///   participant accepts.
+    func presentInvite(for household: Household, recipientLabel: String? = nil) async {
         let pc = PersistenceController.shared
 
         // Save pending changes before sharing
@@ -44,6 +47,14 @@ final class SharingPresenter: NSObject {
             return
         }
 
+        // Store the recipient label locally so the pending invitation row shows it
+        if let recipientLabel, !recipientLabel.isEmpty {
+            PendingInvitationStore.setLabel(
+                recipientLabel,
+                forShareRecordName: share.recordID.recordName
+            )
+        }
+
         // Now register the existing share and present
         let itemProvider = NSItemProvider()
         itemProvider.registerCKShare(
@@ -59,8 +70,18 @@ final class SharingPresenter: NSObject {
 
     /// Presents UIActivityViewController for an existing share so the user can invite more people.
     /// Uses NSItemProvider.registerCKShare(_:container:allowedSharingOptions:)
-    func presentInviteMore(share: CKShare) {
+    /// - Parameter recipientLabel: Optional label for the new invitee. Note that with an
+    ///   existing share, all pending invites share the same label key (the share recordName),
+    ///   so this overwrites any prior label.
+    func presentInviteMore(share: CKShare, recipientLabel: String? = nil) {
         let pc = PersistenceController.shared
+
+        if let recipientLabel, !recipientLabel.isEmpty {
+            PendingInvitationStore.setLabel(
+                recipientLabel,
+                forShareRecordName: share.recordID.recordName
+            )
+        }
 
         let itemProvider = NSItemProvider()
         itemProvider.registerCKShare(
