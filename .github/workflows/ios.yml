@@ -73,6 +73,17 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             -quiet
 
+      # --- Run iOS Unit Tests ---
+      - name: Run Tests
+        run: |
+          xcodebuild test \
+            -project TableTogether.xcodeproj \
+            -scheme TableTogether \
+            -destination 'platform=iOS Simulator,name=iPhone 17 Pro,OS=latest' \
+            -configuration Debug \
+            CODE_SIGNING_ALLOWED=NO \
+            -quiet
+
       # --- Build Mac Catalyst ---
       - name: Build Mac Catalyst
         run: |

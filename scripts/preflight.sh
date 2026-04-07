@@ -136,6 +136,30 @@ else
   pass "tvOS Simulator build succeeded"
 fi
 
+stage "Unit Tests"
+
+# Find a booted iOS simulator, or fall back to a generic one
+SIM_ID=$(xcrun simctl list devices booted | grep -E "iOS|iPhone" | head -1 | grep -oE '\([A-F0-9-]{36}\)' | tr -d '()')
+if [ -z "$SIM_ID" ]; then
+  SIM_ID=$(xcrun simctl list devices available | grep "iPhone" | head -1 | grep -oE '\([A-F0-9-]{36}\)' | tr -d '()')
+fi
+
+if [ -n "$SIM_ID" ]; then
+  if xcodebuild test \
+    -project TableTogether.xcodeproj \
+    -scheme TableTogether \
+    -destination "id=$SIM_ID" \
+    -configuration Debug \
+    CODE_SIGNING_ALLOWED=NO \
+    -quiet 2>&1 | grep -q "TEST FAILED"; then
+    fail "Unit tests failed"
+  else
+    pass "Unit tests passed"
+  fi
+else
+  pass "No iOS simulator available — skipping tests"
+fi
+
 # --- Summary ---
 echo ""
 echo "==============================="
