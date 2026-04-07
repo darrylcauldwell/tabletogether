@@ -314,7 +314,9 @@ struct RecipePickerView: View {
 
     private func recipeRowLabel(_ recipe: Recipe) -> some View {
         HStack(spacing: 12) {
-            RecipeThumbnailSmall(imageData: recipe.imageData)
+            RecipeImageView(imageData: recipe.imageData, imageURL: recipe.imageURL)
+                .frame(width: 60, height: 60)
+                .clipShape(RoundedRectangle(cornerRadius: 8))
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(recipe.title)
@@ -342,38 +344,6 @@ struct RecipePickerView: View {
                 Image(systemName: "checkmark")
                     .foregroundStyle(.green)
             }
-        }
-    }
-}
-
-// MARK: - Recipe Thumbnail Small
-
-struct RecipeThumbnailSmall: View {
-    let imageData: Data?
-
-    var body: some View {
-        Group {
-            #if canImport(UIKit) && !os(watchOS)
-            if let imageData = imageData, let uiImage = UIImage(data: imageData) {
-                Image(uiImage: uiImage)
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-            } else {
-                placeholderImage
-            }
-            #else
-            placeholderImage
-            #endif
-        }
-        .frame(width: 50, height: 50)
-        .clipShape(RoundedRectangle(cornerRadius: 8))
-    }
-
-    private var placeholderImage: some View {
-        ZStack {
-            Color.gray.opacity(0.2)
-            Image(systemName: "fork.knife")
-                .foregroundStyle(.secondary)
         }
     }
 }

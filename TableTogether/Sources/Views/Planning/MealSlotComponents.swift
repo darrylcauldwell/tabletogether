@@ -120,27 +120,9 @@ struct RecipeSlotCard: View {
             // Recipe thumbnail — only show on iPhone (compact) to save space on iPad grid
             if isCompact {
                 if let recipe = firstRecipe {
-                    #if canImport(UIKit)
-                    if let imageData = recipe.imageData, let uiImage = UIImage(data: imageData) {
-                        Image(uiImage: uiImage)
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
-                            .frame(width: 50, height: 50)
-                            .clipShape(RoundedRectangle(cornerRadius: 6))
-                    } else {
-                        RecipePlaceholderImage(size: 50)
-                    }
-                    #elseif canImport(AppKit)
-                    if let imageData = recipe.imageData, let nsImage = NSImage(data: imageData) {
-                        Image(nsImage: nsImage)
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
-                            .frame(width: 50, height: 50)
-                            .clipShape(RoundedRectangle(cornerRadius: 6))
-                    } else {
-                        RecipePlaceholderImage(size: 50)
-                    }
-                    #endif
+                    RecipeImageView(imageData: recipe.imageData, imageURL: recipe.imageURL)
+                        .frame(width: 50, height: 50)
+                        .clipShape(RoundedRectangle(cornerRadius: 6))
                 } else {
                     RecipePlaceholderImage(size: 50)
                 }
@@ -419,27 +401,9 @@ struct RecipeRowView: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            #if canImport(UIKit)
-            if let imageData = recipe.imageData, let uiImage = UIImage(data: imageData) {
-                Image(uiImage: uiImage)
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .frame(width: 44, height: 44)
-                    .clipShape(RoundedRectangle(cornerRadius: 6))
-            } else {
-                RecipePlaceholderImage(size: 44)
-            }
-            #elseif canImport(AppKit)
-            if let imageData = recipe.imageData, let nsImage = NSImage(data: imageData) {
-                Image(nsImage: nsImage)
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .frame(width: 44, height: 44)
-                    .clipShape(RoundedRectangle(cornerRadius: 6))
-            } else {
-                RecipePlaceholderImage(size: 44)
-            }
-            #endif
+            RecipeImageView(imageData: recipe.imageData, imageURL: recipe.imageURL)
+                .frame(width: 44, height: 44)
+                .clipShape(RoundedRectangle(cornerRadius: 6))
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(recipe.title)

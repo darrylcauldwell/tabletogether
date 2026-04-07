@@ -177,25 +177,7 @@ struct RecipeCardView: View {
 
     @ViewBuilder
     private var recipeImage: some View {
-        #if canImport(UIKit)
-        if let imageData = recipe.imageData,
-           let uiImage = UIImage(data: imageData) {
-            Image(uiImage: uiImage)
-                .resizable()
-                .aspectRatio(contentMode: .fill)
-        } else {
-            recipeImagePlaceholder
-        }
-        #elseif canImport(AppKit)
-        if let imageData = recipe.imageData,
-           let nsImage = NSImage(data: imageData) {
-            Image(nsImage: nsImage)
-                .resizable()
-                .aspectRatio(contentMode: .fill)
-        } else {
-            recipeImagePlaceholder
-        }
-        #endif
+        RecipeImageView(imageData: recipe.imageData, imageURL: recipe.imageURL)
     }
 
     private var recipeImagePlaceholder: some View {

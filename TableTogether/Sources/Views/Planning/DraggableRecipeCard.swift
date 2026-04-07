@@ -18,7 +18,9 @@ struct DraggableRecipeCard: View {
         VStack(alignment: .leading, spacing: 6) {
             // Recipe thumbnail with optional "new" badge
             ZStack(alignment: .topTrailing) {
-                RecipeThumbnail(imageData: recipe.imageData)
+                RecipeImageView(imageData: recipe.imageData, imageURL: recipe.imageURL)
+                    .frame(width: 104, height: 70)
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
 
                 if isNew {
                     NewBadge()
@@ -55,40 +57,6 @@ struct DraggableRecipeCard: View {
             return false
         }
         #endif
-    }
-}
-
-// MARK: - RecipeThumbnail
-
-struct RecipeThumbnail: View {
-    let imageData: Data?
-
-    var body: some View {
-        Group {
-            #if canImport(UIKit)
-            if let imageData = imageData, let uiImage = UIImage(data: imageData) {
-                Image(uiImage: uiImage)
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-            } else {
-                placeholderView
-            }
-            #else
-            placeholderView
-            #endif
-        }
-        .frame(width: 104, height: 70)
-        .clipShape(RoundedRectangle(cornerRadius: 8))
-    }
-
-    private var placeholderView: some View {
-        ZStack {
-            Color.gray.opacity(0.15)
-
-            Image(systemName: "fork.knife")
-                .font(.title2)
-                .foregroundColor(.secondary)
-        }
     }
 }
 
@@ -178,30 +146,9 @@ struct DragPreviewCard: View {
 
     @ViewBuilder
     private var dragPreviewThumbnail: some View {
-        #if canImport(UIKit)
-        if let imageData = recipe.imageData, let uiImage = UIImage(data: imageData) {
-            Image(uiImage: uiImage)
-                .resizable()
-                .aspectRatio(contentMode: .fill)
-                .frame(width: 50, height: 50)
-                .clipShape(RoundedRectangle(cornerRadius: 6))
-        } else {
-            thumbnailPlaceholder
-        }
-        #else
-        thumbnailPlaceholder
-        #endif
-    }
-
-    private var thumbnailPlaceholder: some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: 6)
-                .fill(Color.gray.opacity(0.15))
-
-            Image(systemName: "fork.knife")
-                .foregroundColor(.secondary)
-        }
-        .frame(width: 50, height: 50)
+        RecipeImageView(imageData: recipe.imageData, imageURL: recipe.imageURL)
+            .frame(width: 50, height: 50)
+            .clipShape(RoundedRectangle(cornerRadius: 6))
     }
 }
 

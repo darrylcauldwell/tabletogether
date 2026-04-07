@@ -118,30 +118,10 @@ struct RecipeDetailView: View {
 
     private var heroImageSection: some View {
         ZStack(alignment: .bottomLeading) {
-            // Image
-            #if canImport(UIKit)
-            if let imageData = recipe.imageData,
-               let uiImage = UIImage(data: imageData) {
-                Image(uiImage: uiImage)
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .frame(height: 280)
-                    .clipped()
-            } else {
-                imagePlaceholder
-            }
-            #elseif canImport(AppKit)
-            if let imageData = recipe.imageData,
-               let nsImage = NSImage(data: imageData) {
-                Image(nsImage: nsImage)
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .frame(height: 280)
-                    .clipped()
-            } else {
-                imagePlaceholder
-            }
-            #endif
+            // Image — local imageData → remote imageURL → placeholder
+            RecipeImageView(imageData: recipe.imageData, imageURL: recipe.imageURL)
+                .frame(height: 280)
+                .clipped()
 
             // Gradient overlay
             LinearGradient(
