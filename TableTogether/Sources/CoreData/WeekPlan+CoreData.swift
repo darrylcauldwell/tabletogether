@@ -97,7 +97,7 @@ public class WeekPlan: NSManagedObject {
         slotsArray.first { $0.dayOfWeek == day && $0.mealType == mealType }
     }
 
-    func createDefaultSlots(context: NSManagedObjectContext, mealTypes: [MealType] = [.breakfast, .lunch, .dinner]) {
+    func createDefaultSlots(context: NSManagedObjectContext, mealTypes: [MealType] = MealType.defaultPlannedMeals) {
         for day in DayOfWeek.allCases {
             for mealType in mealTypes {
                 let slotID = MealSlot.deterministicID(

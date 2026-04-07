@@ -138,20 +138,8 @@ struct WeekPlannerView: View {
             status: .draft
         )
 
-        // Create default meal slots for each day and meal type
-        for day in DayOfWeek.allCases {
-            for mealType in MealType.allCases {
-                let slot = MealSlot(
-                    context: viewContext,
-                    dayOfWeek: day,
-                    mealType: mealType,
-                    servingsPlanned: 2
-                )
-                slot.weekPlan = newPlan
-                newPlan.addToSlots(slot)
-            }
-        }
-
+        // Use the shared helper which generates deterministic slot IDs
+        newPlan.createDefaultSlots(context: viewContext)
         newPlan.household = households.first
         viewContext.saveWithLogging(context: "new week plan")
     }

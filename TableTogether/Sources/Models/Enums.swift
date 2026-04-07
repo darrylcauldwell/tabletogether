@@ -314,6 +314,11 @@ enum MealType: String, Codable, CaseIterable, Hashable, Sendable {
         case .snack: return 3
         }
     }
+
+    /// The default set of meal types used when creating a new week plan.
+    /// Single source of truth — used by both TableTogetherApp.initializeDataIfNeeded
+    /// and WeekPlannerView.ensureWeekPlanExists to keep slot counts consistent.
+    static let defaultPlannedMeals: [MealType] = MealType.allCases
 }
 
 // MARK: - WeekPlanStatus

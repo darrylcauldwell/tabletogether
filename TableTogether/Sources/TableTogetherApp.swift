@@ -125,7 +125,7 @@ struct TableTogetherApp: App {
         if existingPlans.isEmpty {
             // Create current week plan with default slots
             let weekPlan = WeekPlan(context: context, weekStartDate: today)
-            weekPlan.createDefaultSlots(context: context, mealTypes: [.breakfast, .lunch, .dinner])
+            weekPlan.createDefaultSlots(context: context, mealTypes: MealType.defaultPlannedMeals)
             weekPlan.household = household
 
             do {
