@@ -1,0 +1,60 @@
+# SwiftLint configuration for TableTogether
+# Run via: swiftlint
+# Or via Scripts/preflight.sh
+
+included:
+  - TableTogether/Sources
+  - TableTogetherTV/Sources
+  - TableTogether/Tests
+
+excluded:
+  - .build
+  - DerivedData
+  - build
+  - .swiftpm
+  - "**/*.generated.swift"
+
+# Rules to disable (avoid noise that doesn't add value)
+disabled_rules:
+  - todo                     # We use TODO comments intentionally
+  - line_length              # Allow long lines for readability of SwiftUI/Core Data
+  - file_length              # Some view files are intentionally long
+  - type_body_length         # Some Core Data NSManagedObject classes are long by necessity
+  - function_body_length     # Some SwiftUI view bodies are large
+  - cyclomatic_complexity    # SwiftUI body complexity is hard to reduce
+  - identifier_name          # We use short variable names like `id`, `db`, `ck`
+  - nesting                  # SwiftUI views nest deeply
+
+# Opt-in rules that add value
+opt_in_rules:
+  - empty_count
+  - empty_string
+  - explicit_init
+  - first_where
+  - last_where
+  - reduce_into
+  - sorted_first_last
+  - toggle_bool
+  - unneeded_parentheses_in_closure_argument
+
+# Stricter limits (warnings only — not errors)
+type_name:
+  min_length: 2
+  max_length: 60
+  severity: warning
+
+# Demote rules from error to warning so CI doesn't fail on existing code.
+# These can be promoted back to error after the codebase is cleaned up.
+empty_count:
+  severity: warning
+
+large_tuple:
+  warning: 3
+  error: 5
+
+shorthand_operator: warning
+
+trailing_whitespace:
+  ignores_empty_lines: true
+
+reporter: "xcode"

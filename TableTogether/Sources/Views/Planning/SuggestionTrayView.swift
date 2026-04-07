@@ -233,7 +233,7 @@ private struct SuggestionTrayPreviewWrapper: View {
         .environment(\.managedObjectContext, PersistenceController.preview.viewContext)
 }
 
-struct SuggestionTrayView_WithContentPreview: PreviewProvider {
+struct SuggestionTrayViewWithContentPreview: PreviewProvider {
     static var previews: some View {
         let context = PersistenceController.preview.viewContext
         let sampleRecipes: [Recipe] = (1...6).map { i in

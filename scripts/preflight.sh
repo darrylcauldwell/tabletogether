@@ -24,6 +24,19 @@ stage() { STAGE=$((STAGE + 1)); echo ""; echo "=== Stage $STAGE: $1 ==="; }
 # Ensure we're in the repo root
 cd "$(git rev-parse --show-toplevel)"
 
+# --- Stage 0: SwiftLint ---
+stage "SwiftLint"
+
+if command -v swiftlint > /dev/null 2>&1; then
+  if swiftlint --quiet 2>&1 | tee /tmp/swiftlint.log | grep -q "error:"; then
+    fail "SwiftLint found errors"
+  else
+    pass "SwiftLint passed (warnings allowed)"
+  fi
+else
+  pass "SwiftLint not installed — skipping (brew install swiftlint)"
+fi
+
 # --- Stage 1: Version Consistency ---
 stage "Version Consistency"
 
