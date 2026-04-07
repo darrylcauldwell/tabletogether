@@ -701,6 +701,56 @@ struct PaprikaImportRow: View {
     }
 }
 
+// MARK: - JSON Recipe Import Row
+
+struct JSONRecipeImportRow: View {
+    var importer: JSONRecipeImporter
+    @Binding var showingFilePicker: Bool
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            if importer.isImporting {
+                HStack {
+                    ProgressView()
+                        .scaleEffect(0.8)
+                    Text(importer.progress)
+                        .font(.subheadline)
+                        .foregroundStyle(Theme.Colors.textSecondary)
+                }
+            } else if let result = importer.result {
+                VStack(alignment: .leading, spacing: 4) {
+                    Label("Import complete", systemImage: "checkmark.circle.fill")
+                        .foregroundStyle(.green)
+                        .font(.subheadline)
+
+                    Text("\(result.imported) imported, \(result.skipped) skipped")
+                        .font(.caption)
+                        .foregroundStyle(Theme.Colors.textSecondary)
+
+                    if !result.errors.isEmpty {
+                        Text(result.errors.joined(separator: ". "))
+                            .font(.caption)
+                            .foregroundStyle(.orange)
+                    }
+                }
+            } else {
+                Button {
+                    showingFilePicker = true
+                } label: {
+                    Label("Import Recipe JSON", systemImage: "doc.badge.plus")
+                }
+            }
+
+            if let error = importer.errorMessage {
+                Text(error)
+                    .font(.caption)
+                    .foregroundStyle(.red)
+            }
+        }
+        .disabled(importer.isImporting)
+    }
+}
+
 // MARK: - Nutrition Disclaimer View
 
 struct NutritionDisclaimerView: View {

@@ -34,9 +34,11 @@ struct SettingsView: View {
 
     @State private var demoDataManager = DemoDataManager()
     @State private var paprikaImporter = PaprikaImporter()
+    @State private var jsonRecipeImporter = JSONRecipeImporter()
     @State private var healthService = HealthKitService.shared
 
     @State private var showingPaprikaFilePicker = false
+    @State private var showingJSONFilePicker = false
     @State private var recipeExporter = RecipeExporter()
     @State private var showingExportFilePicker = false
     @State private var exportDocument: RecipeExportDocument?
@@ -231,6 +233,12 @@ struct SettingsView: View {
                         showingFilePicker: $showingPaprikaFilePicker
                     )
 
+                    // JSON Recipe Import (curated library)
+                    JSONRecipeImportRow(
+                        importer: jsonRecipeImporter,
+                        showingFilePicker: $showingJSONFilePicker
+                    )
+
                     Button("Export Recipes") {
                         do {
                             let data = try recipeExporter.exportRecipes(Array(allRecipes))
@@ -390,6 +398,26 @@ struct SettingsView: View {
                     }
                 case .failure(let error):
                     paprikaImporter.errorMessage = error.localizedDescription
+                }
+            }
+            .fileImporter(
+                isPresented: $showingJSONFilePicker,
+                allowedContentTypes: [.json],
+                allowsMultipleSelection: false
+            ) { result in
+                switch result {
+                case .success(let urls):
+                    if let url = urls.first {
+                        Task {
+                            await jsonRecipeImporter.importRecipes(
+                                from: url,
+                                context: viewContext,
+                                household: households.first
+                            )
+                        }
+                    }
+                case .failure(let error):
+                    jsonRecipeImporter.errorMessage = error.localizedDescription
                 }
             }
             .fileExporter(
