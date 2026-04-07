@@ -174,8 +174,26 @@ final class PersistenceController {
 
     // MARK: - Initialization
 
+    /// Locate the Core Data model in either the SPM resource bundle or the main bundle.
+    /// Both locations are used: the app bundle (via XcodeGen sources) for normal launches,
+    /// and the SPM resource bundle for hostless test targets that don't load the app.
+    private static func loadManagedObjectModel() -> NSManagedObjectModel {
+        #if SWIFT_PACKAGE
+        if let url = Bundle.module.url(forResource: "TableTogether", withExtension: "momd"),
+           let model = NSManagedObjectModel(contentsOf: url) {
+            return model
+        }
+        #endif
+        if let url = Bundle.main.url(forResource: "TableTogether", withExtension: "momd"),
+           let model = NSManagedObjectModel(contentsOf: url) {
+            return model
+        }
+        fatalError("Failed to load Core Data model 'TableTogether' from any bundle")
+    }
+
     init(inMemory: Bool = false) {
-        container = NSPersistentCloudKitContainer(name: "TableTogether")
+        let model = Self.loadManagedObjectModel()
+        container = NSPersistentCloudKitContainer(name: "TableTogether", managedObjectModel: model)
 
         if inMemory {
             let description = NSPersistentStoreDescription()

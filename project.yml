@@ -65,13 +65,10 @@ targets:
     sources:
       - path: TableTogether/Tests
     dependencies:
-      - target: TableTogether
       - package: TableTogetherPkg
         product: TableTogetherLib
     settings:
       base:
-        BUNDLE_LOADER: "$(TEST_HOST)"
-        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/TableTogether.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/TableTogether"
         SWIFT_VERSION: "6.2"
         GENERATE_INFOPLIST_FILE: "YES"
 
