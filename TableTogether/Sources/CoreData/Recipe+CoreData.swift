@@ -10,6 +10,7 @@ public class Recipe: NSManagedObject {
     @NSManaged public var title: String
     @NSManaged public var summary: String?
     @NSManaged public var sourceURL: URL?
+    @NSManaged public var cookbook: String?
     @NSManaged public var servings: Int32
     @NSManaged public var prepTimeMinutes: Int32
     @NSManaged public var cookTimeMinutes: Int32
@@ -222,6 +223,7 @@ public class Recipe: NSManagedObject {
         title: String,
         summary: String? = nil,
         sourceURL: URL? = nil,
+        cookbook: String? = nil,
         servings: Int = 4,
         prepTimeMinutes: Int? = nil,
         cookTimeMinutes: Int? = nil,
@@ -240,6 +242,7 @@ public class Recipe: NSManagedObject {
         self.title = title
         self.summary = summary
         self.sourceURL = sourceURL
+        self.cookbook = cookbook
         self.servings = Int32(servings)
         self.prepTimeMinutes = Int32(prepTimeMinutes ?? 0)
         self.cookTimeMinutes = Int32(cookTimeMinutes ?? 0)

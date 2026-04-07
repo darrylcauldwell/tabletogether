@@ -26,6 +26,7 @@
         <relationship name="modifiedMealSlots" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="MealSlot" inverseName="modifiedBy" inverseEntity="MealSlot"/>
     </entity>
     <entity name="Recipe" representedClassName="Recipe" syncable="YES">
+        <attribute name="cookbook" optional="YES" attributeType="String"/>
         <attribute name="cookTimeMinutes" optional="YES" attributeType="Integer 32" usesScalarValueType="YES"/>
         <attribute name="createdAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>

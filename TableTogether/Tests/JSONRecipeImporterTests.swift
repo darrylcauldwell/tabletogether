@@ -167,4 +167,45 @@ struct JSONRecipeImporterTests {
         #expect(redecoded[0].ingredients[0].name == "spaghetti")
         #expect(redecoded[0].ingredients[1].preparationNote == "zested and juiced")
     }
+
+    @Test("Cookbook field round-trips through import and export")
+    func cookbookFieldRoundTrip() throws {
+        let context = makeContext()
+        let importer = JSONRecipeImporter()
+
+        let json = """
+        {
+          "title": "Cookbook Test",
+          "summary": "Has a cookbook.",
+          "sourceURL": null,
+          "cookbook": "Curry Easy",
+          "servings": 2,
+          "prepTimeMinutes": 0,
+          "cookTimeMinutes": 0,
+          "instructions": ["Cook it."],
+          "tags": [],
+          "suggestedArchetypes": [],
+          "ingredients": [],
+          "isFavorite": false,
+          "imageDataBase64": null
+        }
+        """
+        let decoded = try importer.decode(data: Data(json.utf8))
+        _ = importer.importDecoded(decoded, context: context, household: nil)
+
+        let fetched = try context.fetch(NSFetchRequest<Recipe>(entityName: "Recipe")).first!
+        #expect(fetched.cookbook == "Curry Easy")
+
+        // Round-trip through CodableRecipe should preserve the cookbook
+        let exported = CodableRecipe(from: fetched)
+        #expect(exported.cookbook == "Curry Easy")
+    }
+
+    @Test("Recipe with no cookbook field decodes with nil cookbook")
+    func recipeWithoutCookbook() throws {
+        let importer = JSONRecipeImporter()
+        // sampleRecipeJSON intentionally has no cookbook field
+        let decoded = try importer.decode(data: sampleRecipeJSON(title: "No Book"))
+        #expect(decoded[0].cookbook == nil)
+    }
 }

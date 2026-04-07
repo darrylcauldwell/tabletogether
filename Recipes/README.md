@@ -49,6 +49,7 @@ Each recipe matches the `CodableRecipe` schema used by the app's existing Export
   "title": "Lemon Chicken Pasta",          // required
   "summary": "A bright, 20-minute dinner.", // optional
   "sourceURL": "https://example.com/...",   // optional
+  "cookbook": "Curry Easy",                 // optional — cookbook of origin
   "servings": 4,                            // required, integer
   "prepTimeMinutes": 10,                    // 0 means "not set"
   "cookTimeMinutes": 15,                    // 0 means "not set"
@@ -74,6 +75,7 @@ Each recipe matches the `CodableRecipe` schema used by the app's existing Export
 
 ### Field notes
 
+- **`cookbook`**: optional. The cookbook the recipe was originally published in (e.g. `"Curry Easy"`, `"Rick Stein's Secret France"`). Useful for provenance and for grouping by source. Leave `null` or omit if not applicable.
 - **`prepTimeMinutes` / `cookTimeMinutes`**: use `0` to mean "not set". Any positive value is treated as the time in minutes.
 - **`unit`**: must match a `MeasurementUnit` raw value. Valid values: `gram`, `kilogram`, `milliliter`, `liter`, `cup`, `tablespoon`, `teaspoon`, `piece`, `slice`, `clove`, `bunch`, `pinch`, `toTaste`. Unknown values fall back to `gram` on import.
 - **`suggestedArchetypes`**: must match `ArchetypeType` raw values. Unknown values are silently dropped.
