@@ -29,6 +29,7 @@ public class FoodItem: NSManagedObject {
     // MARK: - Relationships
 
     @NSManaged public var household: Household?
+    @NSManaged public var mealSlotComponents: NSSet?
 
     // MARK: - Computed Properties
 

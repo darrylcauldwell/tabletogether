@@ -31,6 +31,7 @@ public class Recipe: NSManagedObject {
 
     @NSManaged public var recipeIngredients: NSSet?
     @NSManaged public var mealSlots: NSSet?
+    @NSManaged public var mealSlotComponents: NSSet?
     @NSManaged public var createdBy: User?
     @NSManaged public var suggestionMemory: SuggestionMemory?
     @NSManaged public var household: Household?

@@ -47,6 +47,7 @@
         <relationship name="createdBy" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="User" inverseName="createdRecipes" inverseEntity="User"/>
         <relationship name="household" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Household" inverseName="recipes" inverseEntity="Household"/>
         <relationship name="mealSlots" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="MealSlot" inverseName="recipes" inverseEntity="MealSlot"/>
+        <relationship name="mealSlotComponents" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="MealSlotComponent" inverseName="recipe" inverseEntity="MealSlotComponent"/>
         <relationship name="recipeIngredients" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="RecipeIngredient" inverseName="recipe" inverseEntity="RecipeIngredient"/>
         <relationship name="suggestionMemory" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="SuggestionMemory" inverseName="recipe" inverseEntity="SuggestionMemory"/>
     </entity>
@@ -77,6 +78,7 @@
         <relationship name="groceryItems" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="GroceryItem" inverseName="ingredient" inverseEntity="GroceryItem"/>
         <relationship name="household" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Household" inverseName="ingredients" inverseEntity="Household"/>
         <relationship name="recipeIngredients" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="RecipeIngredient" inverseName="ingredient" inverseEntity="RecipeIngredient"/>
+        <relationship name="mealSlotComponents" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="MealSlotComponent" inverseName="ingredient" inverseEntity="MealSlotComponent"/>
     </entity>
     <entity name="FoodItem" representedClassName="FoodItem" syncable="YES">
         <attribute name="brandOwner" optional="YES" attributeType="String"/>
@@ -97,6 +99,7 @@
         <attribute name="usdaDescription" attributeType="String" defaultValueString=""/>
         <attribute name="userAliases" optional="YES" attributeType="Transformable" valueTransformerName="NSSecureUnarchiveFromDataTransformer"/>
         <relationship name="household" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Household" inverseName="foodItems" inverseEntity="Household"/>
+        <relationship name="mealSlotComponents" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="MealSlotComponent" inverseName="foodItem" inverseEntity="MealSlotComponent"/>
     </entity>
     <entity name="MealSlot" representedClassName="MealSlot" syncable="YES">
         <attribute name="createdAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
@@ -113,7 +116,22 @@
         <relationship name="groceryItems" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="GroceryItem" inverseName="sourceSlots" inverseEntity="GroceryItem"/>
         <relationship name="modifiedBy" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="User" inverseName="modifiedMealSlots" inverseEntity="User"/>
         <relationship name="recipes" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Recipe" inverseName="mealSlots" inverseEntity="Recipe"/>
+        <relationship name="components" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="MealSlotComponent" inverseName="slot" inverseEntity="MealSlotComponent"/>
         <relationship name="weekPlan" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="WeekPlan" inverseName="slots" inverseEntity="WeekPlan"/>
+    </entity>
+    <entity name="MealSlotComponent" representedClassName="MealSlotComponent" syncable="YES">
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="portionScale" attributeType="Double" defaultValueString="1.0" usesScalarValueType="YES"/>
+        <attribute name="quantity" optional="YES" attributeType="Double" usesScalarValueType="NO"/>
+        <attribute name="unit" optional="YES" attributeType="String"/>
+        <attribute name="portionLabel" optional="YES" attributeType="String"/>
+        <attribute name="order" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="createdAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="modifiedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <relationship name="slot" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="MealSlot" inverseName="components" inverseEntity="MealSlot"/>
+        <relationship name="recipe" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Recipe" inverseName="mealSlotComponents" inverseEntity="Recipe"/>
+        <relationship name="ingredient" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Ingredient" inverseName="mealSlotComponents" inverseEntity="Ingredient"/>
+        <relationship name="foodItem" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="FoodItem" inverseName="mealSlotComponents" inverseEntity="FoodItem"/>
     </entity>
     <entity name="WeekPlan" representedClassName="WeekPlan" syncable="YES">
         <attribute name="createdAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>

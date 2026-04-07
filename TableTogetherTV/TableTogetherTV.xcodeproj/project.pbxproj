@@ -13,6 +13,7 @@
 		6AACCD2B3A2254678CF63EAA /* Ingredient+CoreData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 744CBB0FAA0E5F73BE00FC34 /* Ingredient+CoreData.swift */; };
 		3D0039AF55A952D8A4A599FA /* MealArchetype+CoreData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6AE7AD09AD5E51219523FC4D /* MealArchetype+CoreData.swift */; };
 		49C14B7200785C8596C7D9A3 /* MealSlot+CoreData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A2E7F13C5C25C7FA5C6DD42 /* MealSlot+CoreData.swift */; };
+		BA0EB1EF0BCC55ECA9B0944E /* MealSlotComponent+CoreData.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7D994356C505FF6AE5B7B6F /* MealSlotComponent+CoreData.swift */; };
 		6D07DCCE0E3C576D82C46275 /* NSManagedObject+Identifiable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 28265224167D59EE8EFBD1FD /* NSManagedObject+Identifiable.swift */; };
 		75FD611AC70A51BCB817749B /* PersistenceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79453674C6085087933B7D13 /* PersistenceController.swift */; };
 		86918DF419ED5432926CFB5B /* Recipe+CoreData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B443C448BFF538B8D37F458 /* Recipe+CoreData.swift */; };
@@ -57,6 +58,7 @@
 		744CBB0FAA0E5F73BE00FC34 /* Ingredient+CoreData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "../TableTogether/Sources/CoreData/Ingredient+CoreData.swift"; sourceTree = "<group>"; };
 		6AE7AD09AD5E51219523FC4D /* MealArchetype+CoreData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "../TableTogether/Sources/CoreData/MealArchetype+CoreData.swift"; sourceTree = "<group>"; };
 		9A2E7F13C5C25C7FA5C6DD42 /* MealSlot+CoreData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "../TableTogether/Sources/CoreData/MealSlot+CoreData.swift"; sourceTree = "<group>"; };
+		A7D994356C505FF6AE5B7B6F /* MealSlotComponent+CoreData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "../TableTogether/Sources/CoreData/MealSlotComponent+CoreData.swift"; sourceTree = "<group>"; };
 		28265224167D59EE8EFBD1FD /* NSManagedObject+Identifiable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "../TableTogether/Sources/CoreData/NSManagedObject+Identifiable.swift"; sourceTree = "<group>"; };
 		79453674C6085087933B7D13 /* PersistenceController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "../TableTogether/Sources/CoreData/PersistenceController.swift"; sourceTree = "<group>"; };
 		5B443C448BFF538B8D37F458 /* Recipe+CoreData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "../TableTogether/Sources/CoreData/Recipe+CoreData.swift"; sourceTree = "<group>"; };
@@ -112,6 +114,7 @@
 				744CBB0FAA0E5F73BE00FC34 /* Ingredient+CoreData.swift */,
 				6AE7AD09AD5E51219523FC4D /* MealArchetype+CoreData.swift */,
 				9A2E7F13C5C25C7FA5C6DD42 /* MealSlot+CoreData.swift */,
+				A7D994356C505FF6AE5B7B6F /* MealSlotComponent+CoreData.swift */,
 				28265224167D59EE8EFBD1FD /* NSManagedObject+Identifiable.swift */,
 				79453674C6085087933B7D13 /* PersistenceController.swift */,
 				5B443C448BFF538B8D37F458 /* Recipe+CoreData.swift */,
@@ -226,6 +229,7 @@
 				6AACCD2B3A2254678CF63EAA /* Ingredient+CoreData.swift in Sources */,
 				3D0039AF55A952D8A4A599FA /* MealArchetype+CoreData.swift in Sources */,
 				49C14B7200785C8596C7D9A3 /* MealSlot+CoreData.swift in Sources */,
+				BA0EB1EF0BCC55ECA9B0944E /* MealSlotComponent+CoreData.swift in Sources */,
 				6D07DCCE0E3C576D82C46275 /* NSManagedObject+Identifiable.swift in Sources */,
 				75FD611AC70A51BCB817749B /* PersistenceController.swift in Sources */,
 				86918DF419ED5432926CFB5B /* Recipe+CoreData.swift in Sources */,

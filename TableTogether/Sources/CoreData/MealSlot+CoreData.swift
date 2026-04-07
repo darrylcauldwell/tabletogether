@@ -20,6 +20,7 @@ public class MealSlot: NSManagedObject {
     @NSManaged public var weekPlan: WeekPlan?
     @NSManaged public var archetype: MealArchetype?
     @NSManaged public var recipes: NSSet?
+    @NSManaged public var components: NSSet?
     @NSManaged public var assignedTo: NSSet?
     @NSManaged public var modifiedBy: User?
     @NSManaged public var groceryItems: NSSet?
@@ -40,6 +41,15 @@ public class MealSlot: NSManagedObject {
 
     var recipesArray: [Recipe] {
         (recipes?.allObjects as? [Recipe])?.sorted { $0.title < $1.title } ?? []
+    }
+
+    /// Stored MealSlotComponent rows for this slot, sorted by `order`.
+    /// May be empty during the transition period — use `componentsArray` for the
+    /// effective list which falls back to synthesised components from the legacy
+    /// `recipes` relationship when this is empty.
+    var storedComponents: [MealSlotComponent] {
+        (components?.allObjects as? [MealSlotComponent])?
+            .sorted { $0.order < $1.order } ?? []
     }
 
     var assignedToArray: [User] {
@@ -71,10 +81,51 @@ public class MealSlot: NSManagedObject {
         !isSkipped && recipesArray.isEmpty && (customMealName?.isEmpty ?? true)
     }
 
+    /// Aggregated macros for this meal slot — sums across all components (or legacy
+    /// recipes during the transition period) and scales by `servingsPlanned`.
+    /// Returns `nil` if there is no usable macro data, which the personal nutrition
+    /// view should render as plain "no data" without judgement.
     var plannedMacros: MacroSummary? {
+        let multiplier = Double(servingsPlanned)
+        let stored = storedComponents
+        if !stored.isEmpty {
+            return aggregateMacros(from: stored, multiplier: multiplier)
+        }
+        // Legacy fallback: if no MealSlotComponent rows exist yet, walk the
+        // legacy `recipes` relationship. This synthesises an equivalent
+        // aggregation without persisting any new rows, so reads work for
+        // CloudKit data created on older clients.
+        return aggregateMacrosFromLegacyRecipes(multiplier: multiplier)
+    }
+
+    private func aggregateMacros(from components: [MealSlotComponent], multiplier: Double) -> MacroSummary? {
+        var totalCalories: Double = 0
+        var totalProtein: Double = 0
+        var totalCarbs: Double = 0
+        var totalFat: Double = 0
+        var hasMacros = false
+
+        for component in components {
+            if let macros = component.macrosForOneSlotServing {
+                hasMacros = true
+                if let cal = macros.calories { totalCalories += cal * multiplier }
+                if let prot = macros.protein { totalProtein += prot * multiplier }
+                if let carb = macros.carbs { totalCarbs += carb * multiplier }
+                if let f = macros.fat { totalFat += f * multiplier }
+            }
+        }
+        guard hasMacros else { return nil }
+        return MacroSummary(
+            calories: totalCalories > 0 ? totalCalories : nil,
+            protein: totalProtein > 0 ? totalProtein : nil,
+            carbs: totalCarbs > 0 ? totalCarbs : nil,
+            fat: totalFat > 0 ? totalFat : nil
+        )
+    }
+
+    private func aggregateMacrosFromLegacyRecipes(multiplier: Double) -> MacroSummary? {
         let allRecipes = recipesArray
         guard !allRecipes.isEmpty else { return nil }
-        let multiplier = Double(servingsPlanned)
         var totalCalories: Double = 0
         var totalProtein: Double = 0
         var totalCarbs: Double = 0

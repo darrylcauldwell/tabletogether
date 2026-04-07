@@ -22,6 +22,7 @@ public class Ingredient: NSManagedObject {
     @NSManaged public var recipeIngredients: NSSet?
     @NSManaged public var groceryItems: NSSet?
     @NSManaged public var household: Household?
+    @NSManaged public var mealSlotComponents: NSSet?
 
     // MARK: - Enum Wrappers
 
