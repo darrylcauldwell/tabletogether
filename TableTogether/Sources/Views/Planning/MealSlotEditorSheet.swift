@@ -39,6 +39,7 @@ struct MealSlotEditorSheet: View {
                 }
                 assignedUsersSection
                 notesSection
+                nutritionSection
             }
             .navigationTitle("Edit Meal")
             #if os(iOS)
@@ -177,6 +178,25 @@ struct MealSlotEditorSheet: View {
                     slot.notes = newValue.isEmpty ? nil : newValue
                     slot.modifiedAt = Date()
                 }
+        }
+    }
+
+    /// Personal drill-down view of the meal's planned macros, aggregated across
+    /// all components (or legacy recipes) by `MealSlot.plannedMacros`. Per the
+    /// CLAUDE.md sharing spec, macro numbers never appear in the shared planning
+    /// grid — only here, when a household member opens a slot to inspect or
+    /// edit it. The "no data" case shows a neutral caption without nudge or
+    /// judgement.
+    private var nutritionSection: some View {
+        Section {
+            MacroSummaryRow(summary: slot.plannedMacros)
+                .padding(.vertical, 4)
+        } header: {
+            Text("Per serving")
+        } footer: {
+            Text("Visible only to you. Aggregated across the meal's components.")
+                .font(.caption2)
+                .foregroundStyle(Theme.Colors.textSecondary)
         }
     }
 

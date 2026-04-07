@@ -16,6 +16,7 @@ struct InsightsView: View {
 
     @FetchRequest(sortDescriptors: [SortDescriptor(\.displayName)]) private var users: FetchedResults<User>
     @FetchRequest(sortDescriptors: [SortDescriptor(\.title)]) private var recipes: FetchedResults<Recipe>
+    @FetchRequest(sortDescriptors: [SortDescriptor(\.weekStartDate, order: .reverse)]) private var weekPlans: FetchedResults<WeekPlan>
 
     @State private var showExpandedDailyView = false
     @State private var showHealthKitSection = false
@@ -46,6 +47,10 @@ struct InsightsView: View {
                 VStack(spacing: 20) {
                     // Apple Health integration card
                     HealthKitCard(healthService: healthService)
+                        .padding(.horizontal)
+
+                    // Forward-looking: planned macros for the active week
+                    WeekPlannedNutritionCard(weekPlan: weekPlans.first)
                         .padding(.horizontal)
 
                     // Weekly trend card (default view)
