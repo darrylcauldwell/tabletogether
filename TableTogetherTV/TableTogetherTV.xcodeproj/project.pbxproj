@@ -22,9 +22,12 @@
 		6C78682856D859139CA20F95 /* WeekPlan+CoreData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B01CD809D655DD9B34B02AD /* WeekPlan+CoreData.swift */; };
 		ED6DCB62F23E513F8D15E3C7 /* Color+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = EBD8D5C9861E53F3A1803720 /* Color+Extensions.swift */; };
 		7742DF044D5F55B5AD51B73F /* Date+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF1B19A88EF2524A861EEE75 /* Date+Extensions.swift */; };
+		BEC5C0FE761C551095EA7A7D /* Notification+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6956DD87B22D565CB0215E1B /* Notification+Extensions.swift */; };
 		8569E030368753EA833A18DB /* Preview+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F753E34CFF45C38BD329276 /* Preview+Extensions.swift */; };
 		18E3EBFA0E5750228A23DC81 /* SwiftData+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD7884CCD451579797A387F5 /* SwiftData+Extensions.swift */; };
+		9A7432D0FF3E5C3CBDACDF01 /* UUID+Deterministic.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF943120621C59D9B1EEB621 /* UUID+Deterministic.swift */; };
 		59FB46DA0A535C9384DF052D /* View+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC2BAC25825D52038BDD78A0 /* View+Extensions.swift */; };
+		1C6A249892775CF28E69CFAB /* CodableRecipe.swift in Sources */ = {isa = PBXBuildFile; fileRef = C361465FF43957709B305FFD /* CodableRecipe.swift */; };
 		A59FAFCBB1E3545B9054D1F9 /* CommonPortion.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B918ED5BF15B86A860FD38 /* CommonPortion.swift */; };
 		E50D462E9F0B5EEA94E73761 /* Enums.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53D2E26245AB580DBE1BB1B6 /* Enums.swift */; };
 		B95BB43CD1125B2B80B92A48 /* MacroSummary.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7542ED78D4A85D3F95BAC4F3 /* MacroSummary.swift */; };
@@ -62,9 +65,12 @@
 		8B01CD809D655DD9B34B02AD /* WeekPlan+CoreData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "../TableTogether/Sources/CoreData/WeekPlan+CoreData.swift"; sourceTree = "<group>"; };
 		EBD8D5C9861E53F3A1803720 /* Color+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "../TableTogether/Sources/Extensions/Color+Extensions.swift"; sourceTree = "<group>"; };
 		BF1B19A88EF2524A861EEE75 /* Date+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "../TableTogether/Sources/Extensions/Date+Extensions.swift"; sourceTree = "<group>"; };
+		6956DD87B22D565CB0215E1B /* Notification+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "../TableTogether/Sources/Extensions/Notification+Extensions.swift"; sourceTree = "<group>"; };
 		4F753E34CFF45C38BD329276 /* Preview+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "../TableTogether/Sources/Extensions/Preview+Extensions.swift"; sourceTree = "<group>"; };
 		BD7884CCD451579797A387F5 /* SwiftData+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "../TableTogether/Sources/Extensions/SwiftData+Extensions.swift"; sourceTree = "<group>"; };
+		DF943120621C59D9B1EEB621 /* UUID+Deterministic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "../TableTogether/Sources/Extensions/UUID+Deterministic.swift"; sourceTree = "<group>"; };
 		AC2BAC25825D52038BDD78A0 /* View+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "../TableTogether/Sources/Extensions/View+Extensions.swift"; sourceTree = "<group>"; };
+		C361465FF43957709B305FFD /* CodableRecipe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "../TableTogether/Sources/Models/CodableRecipe.swift"; sourceTree = "<group>"; };
 		A1B918ED5BF15B86A860FD38 /* CommonPortion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "../TableTogether/Sources/Models/CommonPortion.swift"; sourceTree = "<group>"; };
 		53D2E26245AB580DBE1BB1B6 /* Enums.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "../TableTogether/Sources/Models/Enums.swift"; sourceTree = "<group>"; };
 		7542ED78D4A85D3F95BAC4F3 /* MacroSummary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "../TableTogether/Sources/Models/MacroSummary.swift"; sourceTree = "<group>"; };
@@ -113,9 +119,12 @@
 				8B01CD809D655DD9B34B02AD /* WeekPlan+CoreData.swift */,
 				EBD8D5C9861E53F3A1803720 /* Color+Extensions.swift */,
 				BF1B19A88EF2524A861EEE75 /* Date+Extensions.swift */,
+				6956DD87B22D565CB0215E1B /* Notification+Extensions.swift */,
 				4F753E34CFF45C38BD329276 /* Preview+Extensions.swift */,
 				BD7884CCD451579797A387F5 /* SwiftData+Extensions.swift */,
+				DF943120621C59D9B1EEB621 /* UUID+Deterministic.swift */,
 				AC2BAC25825D52038BDD78A0 /* View+Extensions.swift */,
+				C361465FF43957709B305FFD /* CodableRecipe.swift */,
 				A1B918ED5BF15B86A860FD38 /* CommonPortion.swift */,
 				53D2E26245AB580DBE1BB1B6 /* Enums.swift */,
 				7542ED78D4A85D3F95BAC4F3 /* MacroSummary.swift */,
@@ -223,9 +232,12 @@
 				6C78682856D859139CA20F95 /* WeekPlan+CoreData.swift in Sources */,
 				ED6DCB62F23E513F8D15E3C7 /* Color+Extensions.swift in Sources */,
 				7742DF044D5F55B5AD51B73F /* Date+Extensions.swift in Sources */,
+				BEC5C0FE761C551095EA7A7D /* Notification+Extensions.swift in Sources */,
 				8569E030368753EA833A18DB /* Preview+Extensions.swift in Sources */,
 				18E3EBFA0E5750228A23DC81 /* SwiftData+Extensions.swift in Sources */,
+				9A7432D0FF3E5C3CBDACDF01 /* UUID+Deterministic.swift in Sources */,
 				59FB46DA0A535C9384DF052D /* View+Extensions.swift in Sources */,
+				1C6A249892775CF28E69CFAB /* CodableRecipe.swift in Sources */,
 				A59FAFCBB1E3545B9054D1F9 /* CommonPortion.swift in Sources */,
 				E50D462E9F0B5EEA94E73761 /* Enums.swift in Sources */,
 				B95BB43CD1125B2B80B92A48 /* MacroSummary.swift in Sources */,

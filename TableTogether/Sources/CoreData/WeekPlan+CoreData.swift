@@ -100,7 +100,12 @@ public class WeekPlan: NSManagedObject {
     func createDefaultSlots(context: NSManagedObjectContext, mealTypes: [MealType] = [.breakfast, .lunch, .dinner]) {
         for day in DayOfWeek.allCases {
             for mealType in mealTypes {
-                let slot = MealSlot(context: context, dayOfWeek: day, mealType: mealType)
+                let slotID = MealSlot.deterministicID(
+                    weekStartDate: weekStartDate,
+                    dayOfWeek: day,
+                    mealType: mealType
+                )
+                let slot = MealSlot(context: context, id: slotID, dayOfWeek: day, mealType: mealType)
                 slot.weekPlan = self
                 addToSlots(slot)
             }
@@ -270,17 +275,26 @@ public class WeekPlan: NSManagedObject {
 
     // MARK: - Convenience Initializer
 
+    /// Deterministic ID for a week plan, derived from its normalized start date.
+    /// Ensures all devices generate the same UUID for the same week.
+    static func deterministicID(for weekStartDate: Date) -> UUID {
+        let normalized = Self.normalizeToMonday(weekStartDate)
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withFullDate]
+        return UUID.deterministic(from: "weekplan:\(formatter.string(from: normalized))")
+    }
+
     @discardableResult
     convenience init(
         context: NSManagedObjectContext,
-        id: UUID = UUID(),
+        id: UUID? = nil,
         weekStartDate: Date,
         householdNote: String? = nil,
         status: WeekPlanStatus = .draft
     ) {
         let entity = NSEntityDescription.entity(forEntityName: "WeekPlan", in: context)!
         self.init(entity: entity, insertInto: context)
-        self.id = id
+        self.id = id ?? Self.deterministicID(for: weekStartDate)
         self.weekStartDate = Self.normalizeToMonday(weekStartDate)
         self.householdNote = householdNote
         self.statusRaw = status.rawValue

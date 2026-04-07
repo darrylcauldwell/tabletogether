@@ -54,6 +54,11 @@ public class User: NSManagedObject {
         return "??"
     }
 
+    /// Deterministic UUID for the default "Me" user. Each device's owner creates this
+    /// before CloudKit sync completes; using the same ID across devices prevents
+    /// duplicate user records.
+    static let defaultMeID = UUID(uuidString: "00000000-0000-0000-0000-000000000002")!
+
     // MARK: - Convenience Initializer
 
     @discardableResult

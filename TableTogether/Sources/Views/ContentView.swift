@@ -22,10 +22,25 @@ struct ContentView: View {
 
     @MainActor
     private func ensureUserExists() async {
-        guard users.isEmpty else { return }
+        // Skip if the default user already exists (by deterministic ID)
+        if users.contains(where: { $0.id == User.defaultMeID }) {
+            return
+        }
+        // Migrate legacy random-UUID "Me" users to the deterministic ID
+        if let legacy = users.first(where: { $0.displayName == "Me" }) {
+            legacy.id = User.defaultMeID
+            viewContext.saveWithLogging(context: "migrate legacy Me user to deterministic ID")
+            return
+        }
 
         let household = households.first
-        let user = User(context: viewContext, displayName: "Me", avatarEmoji: "", avatarColorHex: "34C759")
+        let user = User(
+            context: viewContext,
+            id: User.defaultMeID,
+            displayName: "Me",
+            avatarEmoji: "",
+            avatarColorHex: "34C759"
+        )
         user.household = household
 
         // Archetypes are created by TableTogetherApp, but ensure they exist

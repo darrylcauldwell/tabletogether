@@ -63,12 +63,18 @@ public class MealArchetype: NSManagedObject {
         self.isUserCreated = true
     }
 
+    /// Deterministic ID for a system archetype, derived from its enum raw value.
+    /// Ensures all devices generate the same UUID for the same archetype type.
+    static func deterministicID(for systemType: ArchetypeType) -> UUID {
+        UUID.deterministic(from: "archetype:\(systemType.rawValue)")
+    }
+
     /// Creates a system archetype from a predefined type.
     @discardableResult
     convenience init(context: NSManagedObjectContext, systemType: ArchetypeType) {
         let entity = NSEntityDescription.entity(forEntityName: "MealArchetype", in: context)!
         self.init(entity: entity, insertInto: context)
-        self.id = UUID()
+        self.id = Self.deterministicID(for: systemType)
         self.name = systemType.displayName
         self.systemTypeRaw = systemType.rawValue
         self.archetypeDescription = systemType.description
