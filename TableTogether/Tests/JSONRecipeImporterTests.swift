@@ -208,4 +208,46 @@ struct JSONRecipeImporterTests {
         let decoded = try importer.decode(data: sampleRecipeJSON(title: "No Book"))
         #expect(decoded[0].cookbook == nil)
     }
+
+    @Test("imageURL field round-trips through import and export")
+    func imageURLRoundTrip() throws {
+        let context = makeContext()
+        let importer = JSONRecipeImporter()
+
+        let json = """
+        {
+          "title": "Image Test",
+          "summary": "Has an image URL.",
+          "sourceURL": null,
+          "cookbook": null,
+          "imageURL": "https://example.com/thumbnail.jpg",
+          "servings": 2,
+          "prepTimeMinutes": 0,
+          "cookTimeMinutes": 0,
+          "instructions": ["Cook it."],
+          "tags": [],
+          "suggestedArchetypes": [],
+          "ingredients": [],
+          "isFavorite": false,
+          "imageDataBase64": null
+        }
+        """
+        let decoded = try importer.decode(data: Data(json.utf8))
+        _ = importer.importDecoded(decoded, context: context, household: nil)
+
+        let fetched = try context.fetch(NSFetchRequest<Recipe>(entityName: "Recipe")).first!
+        #expect(fetched.imageURL?.absoluteString == "https://example.com/thumbnail.jpg")
+
+        // Round-trip through CodableRecipe should preserve the URL
+        let exported = CodableRecipe(from: fetched)
+        #expect(exported.imageURL == "https://example.com/thumbnail.jpg")
+    }
+
+    @Test("Recipe with no imageURL decodes with nil imageURL")
+    func recipeWithoutImageURL() throws {
+        let importer = JSONRecipeImporter()
+        // sampleRecipeJSON intentionally has no imageURL field
+        let decoded = try importer.decode(data: sampleRecipeJSON(title: "No Image"))
+        #expect(decoded[0].imageURL == nil)
+    }
 }

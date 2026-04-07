@@ -11,6 +11,7 @@ public class Recipe: NSManagedObject {
     @NSManaged public var summary: String?
     @NSManaged public var sourceURL: URL?
     @NSManaged public var cookbook: String?
+    @NSManaged public var imageURL: URL?
     @NSManaged public var servings: Int32
     @NSManaged public var prepTimeMinutes: Int32
     @NSManaged public var cookTimeMinutes: Int32
@@ -224,6 +225,7 @@ public class Recipe: NSManagedObject {
         summary: String? = nil,
         sourceURL: URL? = nil,
         cookbook: String? = nil,
+        imageURL: URL? = nil,
         servings: Int = 4,
         prepTimeMinutes: Int? = nil,
         cookTimeMinutes: Int? = nil,
@@ -243,6 +245,7 @@ public class Recipe: NSManagedObject {
         self.summary = summary
         self.sourceURL = sourceURL
         self.cookbook = cookbook
+        self.imageURL = imageURL
         self.servings = Int32(servings)
         self.prepTimeMinutes = Int32(prepTimeMinutes ?? 0)
         self.cookTimeMinutes = Int32(cookTimeMinutes ?? 0)

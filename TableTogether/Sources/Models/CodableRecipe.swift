@@ -7,6 +7,7 @@ struct CodableRecipe: Codable {
     var summary: String?
     var sourceURL: String?
     var cookbook: String?
+    var imageURL: String?
     var servings: Int
     var prepTimeMinutes: Int
     var cookTimeMinutes: Int
@@ -22,6 +23,7 @@ struct CodableRecipe: Codable {
         self.summary = recipe.summary
         self.sourceURL = recipe.sourceURL?.absoluteString
         self.cookbook = recipe.cookbook
+        self.imageURL = recipe.imageURL?.absoluteString
         self.servings = Int(recipe.servings)
         self.prepTimeMinutes = Int(recipe.prepTimeMinutes)
         self.cookTimeMinutes = Int(recipe.cookTimeMinutes)
@@ -42,6 +44,7 @@ struct CodableRecipe: Codable {
             summary: summary,
             sourceURL: sourceURL.flatMap { URL(string: $0) },
             cookbook: cookbook,
+            imageURL: imageURL.flatMap { URL(string: $0) },
             servings: servings,
             prepTimeMinutes: prepTimeMinutes > 0 ? prepTimeMinutes : nil,
             cookTimeMinutes: cookTimeMinutes > 0 ? cookTimeMinutes : nil,
