@@ -89,11 +89,53 @@ struct SlotContentView: View {
     let isTargeted: Bool
     let onTapped: () -> Void
 
+    /// Resolved display names for the slot, drawn from MealSlotComponents
+    /// when present (the new path from #45) or from the legacy recipes
+    /// relationship as a fallback. Empty if the slot has neither.
+    private var resolvedNames: [String] {
+        let stored = slot.storedComponents
+        if !stored.isEmpty {
+            return stored.map(\.displayName)
+        }
+        return slot.recipesArray.map(\.title)
+    }
+
+    /// Recipe used for the thumbnail image — prefers the first stored
+    /// component's recipe if any, otherwise the first legacy recipe.
+    private var thumbnailRecipe: Recipe? {
+        if let firstStoredRecipe = slot.storedComponents.compactMap(\.recipe).first {
+            return firstStoredRecipe
+        }
+        return slot.recipesArray.first
+    }
+
+    /// Total cook+prep time across all recipe components, in minutes.
+    /// Ingredients and foodItems don't have times, so they're skipped.
+    private var totalTimeMinutes: Int? {
+        let stored = slot.storedComponents
+        let recipes: [Recipe]
+        if !stored.isEmpty {
+            recipes = stored.compactMap(\.recipe)
+        } else {
+            recipes = slot.recipesArray
+        }
+        let total = recipes.compactMap(\.totalTimeMinutes).reduce(0, +)
+        return total > 0 ? total : nil
+    }
+
     var body: some View {
         Group {
-            if !slot.recipesArray.isEmpty {
-                // Show recipe card(s)
-                RecipeSlotCard(recipes: slot.recipesArray, servings: Int(slot.servingsPlanned), isCompact: isCompact)
+            let names = resolvedNames
+            if !names.isEmpty {
+                // Show recipe card(s) with multi-component layout
+                RecipeSlotCard(
+                    primaryName: names[0],
+                    secondaryNames: Array(names.dropFirst()),
+                    thumbnailRecipe: thumbnailRecipe,
+                    totalTimeMinutes: totalTimeMinutes,
+                    servings: Int(slot.servingsPlanned),
+                    isCompact: isCompact
+                )
             } else if let customName = slot.customMealName, !customName.isEmpty {
                 // Show custom meal name
                 CustomMealCard(name: customName, isCompact: isCompact)
@@ -107,19 +149,36 @@ struct SlotContentView: View {
 
 // MARK: - RecipeSlotCard
 
-/// Compact recipe card shown in a meal slot, supports multiple recipes
+/// Compact recipe card shown in a meal slot. Supports multi-component meals
+/// (a primary recipe plus optional sides/branded foods) by showing the primary
+/// name on its own line and a dim secondary line listing the additional
+/// components when there are any. With a single component the secondary line
+/// is hidden — the layout collapses gracefully back to today's appearance.
 struct RecipeSlotCard: View {
-    let recipes: [Recipe]
+    let primaryName: String
+    let secondaryNames: [String]
+    let thumbnailRecipe: Recipe?
+    let totalTimeMinutes: Int?
     let servings: Int
     let isCompact: Bool
 
-    private var firstRecipe: Recipe? { recipes.first }
+    /// Inline summary of additional components, e.g. "+ Rice + Naan + Raita".
+    /// When there are 4+ extras, truncates to "+ Rice, Naan, +N more".
+    private var secondaryLine: String {
+        guard !secondaryNames.isEmpty else { return "" }
+        if secondaryNames.count <= 3 {
+            return "+ " + secondaryNames.joined(separator: " + ")
+        }
+        let firstTwo = secondaryNames.prefix(2).joined(separator: ", ")
+        let rest = secondaryNames.count - 2
+        return "+ \(firstTwo), +\(rest) more"
+    }
 
     var body: some View {
         HStack(spacing: isCompact ? 8 : 0) {
             // Recipe thumbnail — only show on iPhone (compact) to save space on iPad grid
             if isCompact {
-                if let recipe = firstRecipe {
+                if let recipe = thumbnailRecipe {
                     RecipeImageView(imageData: recipe.imageData, imageURL: recipe.imageURL)
                         .frame(width: 50, height: 50)
                         .clipShape(RoundedRectangle(cornerRadius: 6))
@@ -129,25 +188,24 @@ struct RecipeSlotCard: View {
             }
 
             VStack(alignment: .leading, spacing: isCompact ? 2 : 1) {
-                if isCompact {
-                    // iPhone: join recipe names on one line
-                    Text(recipes.map(\.title).joined(separator: " & "))
-                        .font(.subheadline)
-                        .fontWeight(.medium)
-                        .lineLimit(2)
-                } else {
-                    // iPad: show each recipe on its own line for readability
-                    ForEach(recipes) { recipe in
-                        Text(recipe.title)
-                            .font(.caption2)
-                            .fontWeight(.medium)
-                            .lineLimit(1)
-                    }
+                // Primary line — first component
+                Text(primaryName)
+                    .font(isCompact ? .subheadline : .caption2)
+                    .fontWeight(.medium)
+                    .lineLimit(isCompact ? 2 : 1)
+
+                // Secondary line — additional components, dimmed
+                if !secondaryNames.isEmpty {
+                    Text(secondaryLine)
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                        .lineLimit(1)
+                        .truncationMode(.tail)
                 }
 
                 if isCompact {
                     HStack(spacing: 8) {
-                        if let totalTime = recipes.compactMap(\.totalTimeMinutes).reduce(nil, { ($0 ?? 0) + $1 }) {
+                        if let totalTime = totalTimeMinutes {
                             Label("\(totalTime) min", systemImage: "clock")
                                 .font(.caption2)
                                 .foregroundColor(.secondary)
@@ -156,12 +214,6 @@ struct RecipeSlotCard: View {
                         Text("\(servings) servings")
                             .font(.caption2)
                             .foregroundColor(.secondary)
-
-                        if recipes.count > 1 {
-                            Text("\(recipes.count) recipes")
-                                .font(.caption2)
-                                .foregroundColor(.secondary)
-                        }
                     }
                 }
             }
@@ -246,18 +298,26 @@ struct DropTargetPlaceholder: View {
                         .foregroundColor(isTargeted ? .accentColor : .secondary)
                 }
             } else {
+                // iPad: was 9pt system text — barely readable. Bumped to .caption
+                // (~12pt) and .body icon, plus a soft sage-tinted background to
+                // give the empty slot visual weight without shouting.
                 Image(systemName: isTargeted ? "plus.circle.fill" : "plus.circle")
-                    .font(.system(size: 11))
+                    .font(.body)
                     .foregroundColor(isTargeted ? .accentColor : .secondary)
 
                 Text(isTargeted ? "Drop here" : "Add meal")
-                    .font(.system(size: 9))
+                    .font(.caption)
                     .foregroundColor(isTargeted ? .accentColor : .secondary)
             }
 
             Spacer(minLength: 0)
         }
-        .frame(minHeight: isCompact ? 50 : 20)
+        .frame(minHeight: isCompact ? 50 : 32)
+        .background(
+            isCompact
+                ? Color.clear
+                : Theme.Colors.primary.opacity(isTargeted ? 0.10 : 0.04)
+        )
     }
 }
 
