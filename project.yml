@@ -42,6 +42,7 @@ targets:
         INFOPLIST_KEY_NSCameraUsageDescription: "TableTogether uses your camera to scan cookbook pages and import recipes."
         INFOPLIST_KEY_UIBackgroundModes: remote-notification
         INFOPLIST_KEY_CKSharingSupported: "YES"
+        INFOPLIST_KEY_LSApplicationCategoryType: "public.app-category.food-and-drink"
         INFOPLIST_FILE: TableTogether/Info.plist
       configs:
         Debug:

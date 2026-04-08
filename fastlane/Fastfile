@@ -79,10 +79,27 @@ platform :ios do
       }
     )
 
-    upload_to_testflight(
-      api_key: api_key,
-      skip_waiting_for_build_processing: true,
-      app_platform: "osx"
+    # Upload via altool directly (not pilot). pilot's Mac Catalyst upload
+    # path calls altool --upload-app which tries to resolve Apple ID from
+    # bundle ID + platform — that lookup fails for any app that has never
+    # had a macOS build in App Store Connect with error:
+    #   "Cannot determine the Apple ID from Bundle ID ... and platform 'MAC_OS'"
+    # altool --upload-package with explicit --apple-id bypasses the lookup
+    # entirely. The App Store Connect API key is used for auth. Once this
+    # first upload succeeds and creates the macOS platform record in ASC,
+    # later runs would work via pilot too, but keeping altool direct keeps
+    # the lane deterministic.
+    sh(
+      "xcrun", "altool", "--upload-package",
+      "../TableTogether.pkg",
+      "--type", "macos",
+      "--asc-public-id", asc_issuer_id,
+      "--apple-id", "6758763074",
+      "--bundle-id", "dev.dreamfold.tabletogether",
+      "--bundle-version", new_build.to_s,
+      "--bundle-short-version-string", "1.1",
+      "--apiKey", asc_key_id,
+      "--apiIssuer", asc_issuer_id
     )
   end
 
