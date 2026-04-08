@@ -167,6 +167,67 @@ jobs:
           security delete-keychain build.keychain || true
           rm -f "$GITHUB_WORKSPACE/AuthKey_CI.p8"
 
+  deploy-mac:
+    name: Deploy Mac Catalyst to TestFlight
+    runs-on: macos-26
+    needs: validate
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode_26.2.app/Contents/Developer
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate Xcode project
+        run: xcodegen generate --spec project.yml
+
+      - name: Install fastlane
+        run: bundle install --jobs 4 --retry 3
+
+      - name: Create temporary keychain
+        run: |
+          security create-keychain -p "" build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain -p "" build.keychain
+          security set-keychain-settings -t 3600 -u build.keychain
+
+      - name: Install distribution certificate
+        env:
+          DIST_CERT_P12_BASE64: ${{ secrets.DIST_CERT_P12_BASE64 }}
+          DIST_CERT_PASSWORD: ${{ secrets.DIST_CERT_PASSWORD }}
+        run: |
+          echo "$DIST_CERT_P12_BASE64" | base64 --decode > /tmp/certificate.p12
+          security import /tmp/certificate.p12 \
+            -k build.keychain \
+            -P "$DIST_CERT_PASSWORD" \
+            -T /usr/bin/codesign \
+            -T /usr/bin/security
+          security set-key-partition-list -S apple-tool:,apple: -s -k "" build.keychain
+          rm /tmp/certificate.p12
+
+      - name: Write App Store Connect API key
+        env:
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+        run: echo "$ASC_KEY_P8" | base64 --decode > "$GITHUB_WORKSPACE/AuthKey_CI.p8"
+
+      - name: Deploy Mac Catalyst to TestFlight
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_PATH: ${{ github.workspace }}/AuthKey_CI.p8
+        run: bundle exec fastlane ios mac_beta
+
+      - name: Cleanup keychain
+        if: always()
+        run: |
+          security delete-keychain build.keychain || true
+          rm -f "$GITHUB_WORKSPACE/AuthKey_CI.p8"
+
   deploy-tvos:
     name: Deploy tvOS to TestFlight
     runs-on: macos-26
