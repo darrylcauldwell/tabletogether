@@ -63,13 +63,15 @@ platform :ios do
     )
     new_build = latest_build + 1
 
-    # Build Mac Catalyst — produces a .pkg installer that fastlane uploads to
-    # the macOS tab in TestFlight.
+    # Build Mac Catalyst — `catalyst_platform: "macos"` is critical. Without
+    # it, gym tries to produce an iOS .ipa from the Mac Catalyst archive and
+    # fails with "IPA invalid". With it, gym produces a .pkg installer that
+    # TestFlight accepts for the macOS tab.
     build_app(
       scheme: "TableTogether",
       export_method: "app-store",
       project: "TableTogether.xcodeproj",
-      destination: "generic/platform=macOS,variant=Mac Catalyst",
+      catalyst_platform: "macos",
       xcargs: "CURRENT_PROJECT_VERSION=#{new_build} MARKETING_VERSION=1.1 -allowProvisioningUpdates -authenticationKeyPath '#{File.expand_path(asc_key_path)}' -authenticationKeyID #{asc_key_id} -authenticationKeyIssuerID #{asc_issuer_id}",
       export_options: {
         signingStyle: "automatic",
