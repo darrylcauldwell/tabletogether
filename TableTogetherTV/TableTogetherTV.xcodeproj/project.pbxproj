@@ -244,7 +244,6 @@
 				18E3EBFA0E5750228A23DC81 /* SwiftData+Extensions.swift in Sources */,
 				9A7432D0FF3E5C3CBDACDF01 /* UUID+Deterministic.swift in Sources */,
 				59FB46DA0A535C9384DF052D /* View+Extensions.swift in Sources */,
-				1C6A249892775CF28E69CFAB /* CodableRecipe.swift in Sources */,
 				A59FAFCBB1E3545B9054D1F9 /* CommonPortion.swift in Sources */,
 				E50D462E9F0B5EEA94E73761 /* Enums.swift in Sources */,
 				B95BB43CD1125B2B80B92A48 /* MacroSummary.swift in Sources */,
