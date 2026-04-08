@@ -353,18 +353,35 @@ struct SettingsView: View {
                     }
                 }
             ))
-            .modifier(FileImportersModifier(
-                showingPaprikaFilePicker: $showingPaprikaFilePicker,
-                showingJSONFilePicker: $showingJSONFilePicker,
-                showingFoodItemFilePicker: $showingFoodItemFilePicker,
-                showingExportFilePicker: $showingExportFilePicker,
-                exportDocument: $exportDocument,
-                paprikaImporter: paprikaImporter,
-                jsonRecipeImporter: jsonRecipeImporter,
-                foodItemImporter: foodItemImporter,
-                viewContext: viewContext,
-                household: households.first
-            ))
+            .fileImporter(
+                isPresented: $showingPaprikaFilePicker,
+                allowedContentTypes: [.paprikaRecipes, .data],
+                allowsMultipleSelection: false,
+                onCompletion: handlePaprikaImportResult
+            )
+            .fileImporter(
+                isPresented: $showingJSONFilePicker,
+                allowedContentTypes: [.json],
+                allowsMultipleSelection: false,
+                onCompletion: handleJSONImportResult
+            )
+            .fileImporter(
+                isPresented: $showingFoodItemFilePicker,
+                allowedContentTypes: [.json],
+                allowsMultipleSelection: false,
+                onCompletion: handleFoodItemImportResult
+            )
+            .fileExporter(
+                isPresented: $showingExportFilePicker,
+                document: exportDocument,
+                contentType: .json,
+                defaultFilename: "TableTogether-Recipes.json"
+            ) { result in
+                if case .failure(let error) = result {
+                    AppLogger.app.error("Export save failed: \(error.localizedDescription)")
+                }
+                exportDocument = nil
+            }
             .onAppear {
                 demoDataManager.configure(
                     modelContext: viewContext,
@@ -404,6 +421,66 @@ struct SettingsView: View {
             #endif
         }
         .contentShape(Rectangle())
+    }
+
+    // MARK: - File Import Handlers
+    //
+    // Extracted from the body modifier chain (rather than living inside a
+    // ViewModifier) because SwiftUI's presentation-modifier stacking is flaky
+    // when multiple fileImporter modifiers are wrapped in a single
+    // ViewModifier — in practice on Mac Catalyst, tapping the import buttons
+    // did nothing. Inlining the fileImporters directly on the body with
+    // closures that dispatch to these methods is the proven pattern.
+
+    private func handlePaprikaImportResult(_ result: Result<[URL], Error>) {
+        switch result {
+        case .success(let urls):
+            if let url = urls.first {
+                Task {
+                    await paprikaImporter.importRecipes(
+                        from: url,
+                        context: viewContext,
+                        household: households.first
+                    )
+                }
+            }
+        case .failure(let error):
+            paprikaImporter.errorMessage = error.localizedDescription
+        }
+    }
+
+    private func handleJSONImportResult(_ result: Result<[URL], Error>) {
+        switch result {
+        case .success(let urls):
+            if let url = urls.first {
+                Task {
+                    await jsonRecipeImporter.importRecipes(
+                        from: url,
+                        context: viewContext,
+                        household: households.first
+                    )
+                }
+            }
+        case .failure(let error):
+            jsonRecipeImporter.errorMessage = error.localizedDescription
+        }
+    }
+
+    private func handleFoodItemImportResult(_ result: Result<[URL], Error>) {
+        switch result {
+        case .success(let urls):
+            if let url = urls.first {
+                Task {
+                    await foodItemImporter.importFoodItems(
+                        from: url,
+                        context: viewContext,
+                        household: households.first
+                    )
+                }
+            }
+        case .failure(let error):
+            foodItemImporter.errorMessage = error.localizedDescription
+        }
     }
 
     // MARK: - Data Section
@@ -498,115 +575,6 @@ struct SettingsView: View {
         }
     }
     #endif
-}
-
-// MARK: - File Importers Modifier
-//
-// Extracted to keep SettingsView.body within the SwiftUI type-checker's
-// complexity budget. Bundles the four file picker flows that the Data
-// section needs: Paprika import, JSON recipe import, JSON food item import,
-// and recipe export. Each fileImporter/fileExporter has a closure-heavy
-// callback and stacking four of them inline pushed the body over the
-// type-checker's limit.
-
-private struct FileImportersModifier: ViewModifier {
-    @Binding var showingPaprikaFilePicker: Bool
-    @Binding var showingJSONFilePicker: Bool
-    @Binding var showingFoodItemFilePicker: Bool
-    @Binding var showingExportFilePicker: Bool
-    @Binding var exportDocument: RecipeExportDocument?
-    let paprikaImporter: PaprikaImporter
-    let jsonRecipeImporter: JSONRecipeImporter
-    let foodItemImporter: FoodItemImporter
-    let viewContext: NSManagedObjectContext
-    let household: Household?
-
-    func body(content: Content) -> some View {
-        content
-            .fileImporter(
-                isPresented: $showingPaprikaFilePicker,
-                allowedContentTypes: [.paprikaRecipes, .data],
-                allowsMultipleSelection: false
-            ) { result in
-                handlePaprikaResult(result)
-            }
-            .fileImporter(
-                isPresented: $showingJSONFilePicker,
-                allowedContentTypes: [.json],
-                allowsMultipleSelection: false
-            ) { result in
-                handleJSONResult(result)
-            }
-            .fileImporter(
-                isPresented: $showingFoodItemFilePicker,
-                allowedContentTypes: [.json],
-                allowsMultipleSelection: false
-            ) { result in
-                handleFoodItemResult(result)
-            }
-            .fileExporter(
-                isPresented: $showingExportFilePicker,
-                document: exportDocument,
-                contentType: .json,
-                defaultFilename: "TableTogether-Recipes.json"
-            ) { result in
-                if case .failure(let error) = result {
-                    AppLogger.app.error("Export save failed: \(error.localizedDescription)")
-                }
-                exportDocument = nil
-            }
-    }
-
-    private func handlePaprikaResult(_ result: Result<[URL], Error>) {
-        switch result {
-        case .success(let urls):
-            if let url = urls.first {
-                Task {
-                    await paprikaImporter.importRecipes(
-                        from: url,
-                        context: viewContext,
-                        household: household
-                    )
-                }
-            }
-        case .failure(let error):
-            paprikaImporter.errorMessage = error.localizedDescription
-        }
-    }
-
-    private func handleJSONResult(_ result: Result<[URL], Error>) {
-        switch result {
-        case .success(let urls):
-            if let url = urls.first {
-                Task {
-                    await jsonRecipeImporter.importRecipes(
-                        from: url,
-                        context: viewContext,
-                        household: household
-                    )
-                }
-            }
-        case .failure(let error):
-            jsonRecipeImporter.errorMessage = error.localizedDescription
-        }
-    }
-
-    private func handleFoodItemResult(_ result: Result<[URL], Error>) {
-        switch result {
-        case .success(let urls):
-            if let url = urls.first {
-                Task {
-                    await foodItemImporter.importFoodItems(
-                        from: url,
-                        context: viewContext,
-                        household: household
-                    )
-                }
-            }
-        case .failure(let error):
-            foodItemImporter.errorMessage = error.localizedDescription
-        }
-    }
 }
 
 // MARK: - Backfill Alerts Modifier
