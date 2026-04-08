@@ -30,6 +30,7 @@ struct FoodItemDetailView: View {
 
     @State private var newAliasText: String = ""
     @State private var hasLoaded: Bool = false
+    @State private var showingMergePicker: Bool = false
 
     private var mealSlotComponents: [MealSlotComponent] {
         let raw = foodItem.mealSlotComponents?.allObjects as? [MealSlotComponent] ?? []
@@ -156,18 +157,13 @@ struct FoodItemDetailView: View {
 
             Section {
                 Button {
-                    // Phase 8 — disabled until merge service ships
+                    showingMergePicker = true
                 } label: {
                     HStack {
                         Image(systemName: "arrow.triangle.merge")
                         Text("Merge into another food item…")
-                        Spacer()
-                        Text("Coming soon")
-                            .font(.caption)
-                            .foregroundStyle(Theme.Colors.textSecondary)
                     }
                 }
-                .disabled(true)
             }
         }
         .navigationTitle(foodItem.displayName)
@@ -187,6 +183,11 @@ struct FoodItemDetailView: View {
             guard !hasLoaded else { return }
             loadDraftFromFoodItem()
             hasLoaded = true
+        }
+        .sheet(isPresented: $showingMergePicker) {
+            FoodItemMergePicker(source: foodItem) { _ in
+                dismiss()
+            }
         }
     }
 

@@ -26,6 +26,7 @@ struct IngredientDetailView: View {
 
     @State private var newAliasText: String = ""
     @State private var hasLoaded: Bool = false
+    @State private var showingMergePicker: Bool = false
 
     private var recipesUsingThis: [Recipe] {
         Set(ingredient.recipeIngredientsArray.compactMap { $0.recipe })
@@ -113,18 +114,13 @@ struct IngredientDetailView: View {
 
             Section {
                 Button {
-                    // Phase 8 — disabled until merge service ships
+                    showingMergePicker = true
                 } label: {
                     HStack {
                         Image(systemName: "arrow.triangle.merge")
                         Text("Merge into another ingredient…")
-                        Spacer()
-                        Text("Coming soon")
-                            .font(.caption)
-                            .foregroundStyle(Theme.Colors.textSecondary)
                     }
                 }
-                .disabled(true)
             }
         }
         .navigationTitle(ingredient.name)
@@ -144,6 +140,12 @@ struct IngredientDetailView: View {
             guard !hasLoaded else { return }
             loadDraftFromIngredient()
             hasLoaded = true
+        }
+        .sheet(isPresented: $showingMergePicker) {
+            IngredientMergePicker(source: ingredient) { _ in
+                // Source is now deleted; pop back to library list
+                dismiss()
+            }
         }
     }
 
