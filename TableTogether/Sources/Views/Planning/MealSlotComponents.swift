@@ -393,7 +393,17 @@ struct UserAvatarView: View {
 
 // MARK: - RecipePickerSheet
 
-/// Sheet for picking a recipe to assign to a slot
+/// Sheet for picking a recipe to assign to a slot. A single inline
+/// text field at the top of the list filters the recipe list as the
+/// user types. If nothing matches, a "Use '<text>' as custom meal"
+/// fallback row appears above the (now-empty) recipe list so there's
+/// always a useful next action.
+///
+/// Previously used two separate inputs (a custom-meal TextField plus a
+/// .searchable modifier in the navigation area), which was confusing —
+/// typing in the top field didn't filter, and the nav-area search field
+/// was easy to miss on Mac Catalyst. A single obvious inline TextField
+/// is what muscle memory expects.
 struct RecipePickerSheet: View {
     @ObservedObject var slot: MealSlot
     @Environment(\.managedObjectContext) private var viewContext
@@ -401,44 +411,92 @@ struct RecipePickerSheet: View {
 
     @FetchRequest(sortDescriptors: [SortDescriptor(\.title)]) private var recipes: FetchedResults<Recipe>
     @State private var searchText: String = ""
-    @State private var customMealName: String = ""
+    @FocusState private var searchFocused: Bool
+
+    private var trimmedQuery: String {
+        searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
 
     private var filteredRecipes: [Recipe] {
-        if searchText.isEmpty {
+        if trimmedQuery.isEmpty {
             return Array(recipes)
         }
-        return recipes.filter { $0.title.localizedCaseInsensitiveContains(searchText) }
+        return recipes.filter { $0.title.localizedCaseInsensitiveContains(trimmedQuery) }
+    }
+
+    /// Show the "use as custom meal" fallback only when the user has typed
+    /// something that doesn't match any recipe title — so there's always
+    /// one useful thing to do with their input.
+    private var showCustomMealFallback: Bool {
+        !trimmedQuery.isEmpty && filteredRecipes.isEmpty
     }
 
     var body: some View {
         NavigationStack {
             List {
                 Section {
-                    TextField("Or enter custom meal name", text: $customMealName)
-                        .onSubmit {
-                            if !customMealName.isEmpty {
-                                slot.customMealName = customMealName
-                                slot.modifiedAt = Date()
-                                viewContext.saveWithLogging(context: "custom meal name")
-                                dismiss()
+                    HStack(spacing: 8) {
+                        Image(systemName: "magnifyingglass")
+                            .foregroundStyle(Theme.Colors.textSecondary)
+                        TextField("Search recipes or type a custom meal name", text: $searchText)
+                            #if os(iOS)
+                            .textInputAutocapitalization(.sentences)
+                            .autocorrectionDisabled(false)
+                            #endif
+                            .focused($searchFocused)
+                            .submitLabel(.search)
+                        if !searchText.isEmpty {
+                            Button {
+                                searchText = ""
+                            } label: {
+                                Image(systemName: "xmark.circle.fill")
+                                    .foregroundStyle(Theme.Colors.textSecondary)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                }
+
+                if showCustomMealFallback {
+                    Section {
+                        Button {
+                            slot.customMealName = trimmedQuery
+                            slot.modifiedAt = Date()
+                            viewContext.saveWithLogging(context: "custom meal name")
+                            dismiss()
+                        } label: {
+                            HStack {
+                                Image(systemName: "pencil.circle.fill")
+                                    .foregroundStyle(Theme.Colors.primary)
+                                Text("Use \"\(trimmedQuery)\" as custom meal")
+                                    .foregroundStyle(.primary)
+                                Spacer()
                             }
                         }
+                    } footer: {
+                        Text("No matching recipes — save as a one-off meal name.")
+                    }
                 }
 
                 Section("Recipes") {
-                    ForEach(filteredRecipes) { recipe in
-                        Button {
-                            slot.addToRecipes(recipe)
-                            slot.modifiedAt = Date()
-                            viewContext.saveWithLogging(context: "recipe selection")
-                            dismiss()
-                        } label: {
-                            RecipeRowView(recipe: recipe)
+                    if filteredRecipes.isEmpty && trimmedQuery.isEmpty {
+                        Text("No recipes yet — add some from the Recipes tab.")
+                            .foregroundStyle(Theme.Colors.textSecondary)
+                            .font(.subheadline)
+                    } else {
+                        ForEach(filteredRecipes) { recipe in
+                            Button {
+                                slot.addToRecipes(recipe)
+                                slot.modifiedAt = Date()
+                                viewContext.saveWithLogging(context: "recipe selection")
+                                dismiss()
+                            } label: {
+                                RecipeRowView(recipe: recipe)
+                            }
                         }
                     }
                 }
             }
-            .searchable(text: $searchText, prompt: "Search recipes")
             .navigationTitle("Add Meal")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
@@ -449,6 +507,11 @@ struct RecipePickerSheet: View {
                         dismiss()
                     }
                 }
+            }
+            .onAppear {
+                // Auto-focus so the user can start typing immediately
+                // without needing to click into the search field first.
+                searchFocused = true
             }
         }
     }
