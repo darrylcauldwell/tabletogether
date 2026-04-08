@@ -220,62 +220,7 @@ struct SettingsView: View {
                     }
                 }
 
-                // MARK: - Data Section
-                Section("Data") {
-                    SyncStatusRow()
-
-                    DemoDataToggleRow(
-                        demoDataManager: demoDataManager,
-                        showingConfirmation: $showingRemoveDemoDataConfirmation
-                    )
-
-                    // Paprika Import
-                    PaprikaImportRow(
-                        importer: paprikaImporter,
-                        showingFilePicker: $showingPaprikaFilePicker
-                    )
-
-                    // JSON Recipe Import (curated library)
-                    JSONRecipeImportRow(
-                        importer: jsonRecipeImporter,
-                        showingFilePicker: $showingJSONFilePicker
-                    )
-
-                    // JSON Food Item Import (curated nutrition seed)
-                    JSONFoodItemImportRow(
-                        importer: foodItemImporter,
-                        showingFilePicker: $showingFoodItemFilePicker
-                    )
-
-                    Button("Export Recipes") {
-                        do {
-                            let data = try recipeExporter.exportRecipes(Array(allRecipes))
-                            exportDocument = RecipeExportDocument(data: data)
-                            showingExportFilePicker = true
-                        } catch {
-                            AppLogger.app.error("Export failed: \(error.localizedDescription)")
-                        }
-                    }
-                    .disabled(allRecipes.isEmpty)
-
-                    // Reorganise Ingredient Library — backfills RecipeIngredient.ingredient
-                    // master FKs for rows that pre-date the resolver integration (#59).
-                    // Idempotent: subsequent runs only touch rows that still have nil FK.
-                    Button {
-                        showingBackfillConfirmation = true
-                    } label: {
-                        if ingredientBackfillService.isRunning {
-                            HStack {
-                                Text("Reorganising Ingredient Library…")
-                                Spacer()
-                                ProgressView()
-                            }
-                        } else {
-                            Text("Reorganise Ingredient Library")
-                        }
-                    }
-                    .disabled(ingredientBackfillService.isRunning || allRecipes.isEmpty)
-                }
+                dataSection
 
                 // MARK: - Libraries
                 Section("Libraries") {
@@ -408,77 +353,18 @@ struct SettingsView: View {
                     }
                 }
             ))
-            .fileImporter(
-                isPresented: $showingPaprikaFilePicker,
-                allowedContentTypes: [.paprikaRecipes, .data],
-                allowsMultipleSelection: false
-            ) { result in
-                switch result {
-                case .success(let urls):
-                    if let url = urls.first {
-                        Task {
-                            await paprikaImporter.importRecipes(
-                                from: url,
-                                context: viewContext,
-                                household: households.first
-                            )
-                        }
-                    }
-                case .failure(let error):
-                    paprikaImporter.errorMessage = error.localizedDescription
-                }
-            }
-            .fileImporter(
-                isPresented: $showingJSONFilePicker,
-                allowedContentTypes: [.json],
-                allowsMultipleSelection: false
-            ) { result in
-                switch result {
-                case .success(let urls):
-                    if let url = urls.first {
-                        Task {
-                            await jsonRecipeImporter.importRecipes(
-                                from: url,
-                                context: viewContext,
-                                household: households.first
-                            )
-                        }
-                    }
-                case .failure(let error):
-                    jsonRecipeImporter.errorMessage = error.localizedDescription
-                }
-            }
-            .fileImporter(
-                isPresented: $showingFoodItemFilePicker,
-                allowedContentTypes: [.json],
-                allowsMultipleSelection: false
-            ) { result in
-                switch result {
-                case .success(let urls):
-                    if let url = urls.first {
-                        Task {
-                            await foodItemImporter.importFoodItems(
-                                from: url,
-                                context: viewContext,
-                                household: households.first
-                            )
-                        }
-                    }
-                case .failure(let error):
-                    foodItemImporter.errorMessage = error.localizedDescription
-                }
-            }
-            .fileExporter(
-                isPresented: $showingExportFilePicker,
-                document: exportDocument,
-                contentType: .json,
-                defaultFilename: "TableTogether-Recipes.json"
-            ) { result in
-                if case .failure(let error) = result {
-                    AppLogger.app.error("Export save failed: \(error.localizedDescription)")
-                }
-                exportDocument = nil
-            }
+            .modifier(FileImportersModifier(
+                showingPaprikaFilePicker: $showingPaprikaFilePicker,
+                showingJSONFilePicker: $showingJSONFilePicker,
+                showingFoodItemFilePicker: $showingFoodItemFilePicker,
+                showingExportFilePicker: $showingExportFilePicker,
+                exportDocument: $exportDocument,
+                paprikaImporter: paprikaImporter,
+                jsonRecipeImporter: jsonRecipeImporter,
+                foodItemImporter: foodItemImporter,
+                viewContext: viewContext,
+                household: households.first
+            ))
             .onAppear {
                 demoDataManager.configure(
                     modelContext: viewContext,
@@ -520,6 +406,73 @@ struct SettingsView: View {
         .contentShape(Rectangle())
     }
 
+    // MARK: - Data Section
+    //
+    // Extracted from `body` (rather than inlined) to keep the SwiftUI
+    // type-checker within budget — adding the JSON import row + the
+    // backfill button + the Libraries section pushed `body` over its
+    // complexity limit and triggered the "compiler unable to type-check
+    // in reasonable time" warning even though the build succeeded.
+
+    @ViewBuilder
+    private var dataSection: some View {
+        Section("Data") {
+            SyncStatusRow()
+
+            DemoDataToggleRow(
+                demoDataManager: demoDataManager,
+                showingConfirmation: $showingRemoveDemoDataConfirmation
+            )
+
+            // Paprika Import
+            PaprikaImportRow(
+                importer: paprikaImporter,
+                showingFilePicker: $showingPaprikaFilePicker
+            )
+
+            // JSON Recipe Import (curated library)
+            JSONRecipeImportRow(
+                importer: jsonRecipeImporter,
+                showingFilePicker: $showingJSONFilePicker
+            )
+
+            // JSON Food Item Import (curated nutrition seed)
+            JSONFoodItemImportRow(
+                importer: foodItemImporter,
+                showingFilePicker: $showingFoodItemFilePicker
+            )
+
+            Button("Export Recipes") {
+                do {
+                    let data = try recipeExporter.exportRecipes(Array(allRecipes))
+                    exportDocument = RecipeExportDocument(data: data)
+                    showingExportFilePicker = true
+                } catch {
+                    AppLogger.app.error("Export failed: \(error.localizedDescription)")
+                }
+            }
+            .disabled(allRecipes.isEmpty)
+
+            // Reorganise Ingredient Library — backfills RecipeIngredient.ingredient
+            // master FKs for rows that pre-date the resolver integration (#59).
+            // Idempotent: subsequent runs only touch rows that still have nil FK.
+            Button {
+                showingBackfillConfirmation = true
+            } label: {
+                if ingredientBackfillService.isRunning {
+                    HStack {
+                        Text("Reorganising Ingredient Library…")
+                        Spacer()
+                        ProgressView()
+                    }
+                } else {
+                    Text("Reorganise Ingredient Library")
+                }
+            }
+            .disabled(ingredientBackfillService.isRunning || allRecipes.isEmpty)
+        }
+    }
+
     // Sharing actions are handled directly by SharingPresenter.shared
     // from the button actions in the Household section above.
 
@@ -545,6 +498,115 @@ struct SettingsView: View {
         }
     }
     #endif
+}
+
+// MARK: - File Importers Modifier
+//
+// Extracted to keep SettingsView.body within the SwiftUI type-checker's
+// complexity budget. Bundles the four file picker flows that the Data
+// section needs: Paprika import, JSON recipe import, JSON food item import,
+// and recipe export. Each fileImporter/fileExporter has a closure-heavy
+// callback and stacking four of them inline pushed the body over the
+// type-checker's limit.
+
+private struct FileImportersModifier: ViewModifier {
+    @Binding var showingPaprikaFilePicker: Bool
+    @Binding var showingJSONFilePicker: Bool
+    @Binding var showingFoodItemFilePicker: Bool
+    @Binding var showingExportFilePicker: Bool
+    @Binding var exportDocument: RecipeExportDocument?
+    let paprikaImporter: PaprikaImporter
+    let jsonRecipeImporter: JSONRecipeImporter
+    let foodItemImporter: FoodItemImporter
+    let viewContext: NSManagedObjectContext
+    let household: Household?
+
+    func body(content: Content) -> some View {
+        content
+            .fileImporter(
+                isPresented: $showingPaprikaFilePicker,
+                allowedContentTypes: [.paprikaRecipes, .data],
+                allowsMultipleSelection: false
+            ) { result in
+                handlePaprikaResult(result)
+            }
+            .fileImporter(
+                isPresented: $showingJSONFilePicker,
+                allowedContentTypes: [.json],
+                allowsMultipleSelection: false
+            ) { result in
+                handleJSONResult(result)
+            }
+            .fileImporter(
+                isPresented: $showingFoodItemFilePicker,
+                allowedContentTypes: [.json],
+                allowsMultipleSelection: false
+            ) { result in
+                handleFoodItemResult(result)
+            }
+            .fileExporter(
+                isPresented: $showingExportFilePicker,
+                document: exportDocument,
+                contentType: .json,
+                defaultFilename: "TableTogether-Recipes.json"
+            ) { result in
+                if case .failure(let error) = result {
+                    AppLogger.app.error("Export save failed: \(error.localizedDescription)")
+                }
+                exportDocument = nil
+            }
+    }
+
+    private func handlePaprikaResult(_ result: Result<[URL], Error>) {
+        switch result {
+        case .success(let urls):
+            if let url = urls.first {
+                Task {
+                    await paprikaImporter.importRecipes(
+                        from: url,
+                        context: viewContext,
+                        household: household
+                    )
+                }
+            }
+        case .failure(let error):
+            paprikaImporter.errorMessage = error.localizedDescription
+        }
+    }
+
+    private func handleJSONResult(_ result: Result<[URL], Error>) {
+        switch result {
+        case .success(let urls):
+            if let url = urls.first {
+                Task {
+                    await jsonRecipeImporter.importRecipes(
+                        from: url,
+                        context: viewContext,
+                        household: household
+                    )
+                }
+            }
+        case .failure(let error):
+            jsonRecipeImporter.errorMessage = error.localizedDescription
+        }
+    }
+
+    private func handleFoodItemResult(_ result: Result<[URL], Error>) {
+        switch result {
+        case .success(let urls):
+            if let url = urls.first {
+                Task {
+                    await foodItemImporter.importFoodItems(
+                        from: url,
+                        context: viewContext,
+                        household: household
+                    )
+                }
+            }
+        case .failure(let error):
+            foodItemImporter.errorMessage = error.localizedDescription
+        }
+    }
 }
 
 // MARK: - Backfill Alerts Modifier
