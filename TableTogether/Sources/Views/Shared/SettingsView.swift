@@ -34,6 +34,8 @@ struct SettingsView: View {
     @State private var demoDataManager = DemoDataManager()
     @State private var paprikaImporter = PaprikaImporter()
     @State private var jsonRecipeImporter = JSONRecipeImporter()
+    @State private var foodItemImporter = FoodItemImporter()
+    @State private var showingFoodItemFilePicker = false
     @State private var ingredientBackfillService = IngredientBackfillService()
     @State private var showingBackfillConfirmation = false
     @State private var showingBackfillResult = false
@@ -239,6 +241,12 @@ struct SettingsView: View {
                         showingFilePicker: $showingJSONFilePicker
                     )
 
+                    // JSON Food Item Import (curated nutrition seed)
+                    JSONFoodItemImportRow(
+                        importer: foodItemImporter,
+                        showingFilePicker: $showingFoodItemFilePicker
+                    )
+
                     Button("Export Recipes") {
                         do {
                             let data = try recipeExporter.exportRecipes(Array(allRecipes))
@@ -438,6 +446,26 @@ struct SettingsView: View {
                     }
                 case .failure(let error):
                     jsonRecipeImporter.errorMessage = error.localizedDescription
+                }
+            }
+            .fileImporter(
+                isPresented: $showingFoodItemFilePicker,
+                allowedContentTypes: [.json],
+                allowsMultipleSelection: false
+            ) { result in
+                switch result {
+                case .success(let urls):
+                    if let url = urls.first {
+                        Task {
+                            await foodItemImporter.importFoodItems(
+                                from: url,
+                                context: viewContext,
+                                household: households.first
+                            )
+                        }
+                    }
+                case .failure(let error):
+                    foodItemImporter.errorMessage = error.localizedDescription
                 }
             }
             .fileExporter(
