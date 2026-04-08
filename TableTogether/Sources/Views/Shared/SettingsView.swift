@@ -276,6 +276,11 @@ struct SettingsView: View {
                     } label: {
                         Label("Ingredient Library", systemImage: "leaf")
                     }
+                    NavigationLink {
+                        FoodItemLibraryView()
+                    } label: {
+                        Label("Food Item Library", systemImage: "fork.knife.circle")
+                    }
                 }
 
                 // MARK: - Diagnostics
