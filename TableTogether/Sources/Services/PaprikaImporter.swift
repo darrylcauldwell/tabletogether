@@ -15,6 +15,12 @@ extension UTType {
 
 /// Represents a single recipe as stored in Paprika's export format.
 /// All fields are optional strings since Paprika uses loose JSON.
+///
+/// Note: `source` is the human-readable cookbook / publication name (e.g.
+/// "Madhur Jaffrey's Curry Nation", "BBC Good Food"); `source_url` is the
+/// URL the recipe was clipped from. Paprika maintains both independently
+/// and TableTogether stores them in separate Recipe fields (`cookbook` and
+/// `sourceURL` respectively).
 struct PaprikaRecipeData: Decodable {
     let uid: String?
     let name: String?
@@ -166,7 +172,9 @@ final class PaprikaImporter {
     // MARK: - Recipe Builder
 
     /// Converts a Paprika JSON record into a TableTogether Recipe.
-    private func buildRecipe(from paprika: PaprikaRecipeData, context: NSManagedObjectContext) -> Recipe {
+    /// Exposed internally so tests can drive the field-mapping logic without
+    /// constructing a full .paprikarecipes archive on disk.
+    func buildRecipe(from paprika: PaprikaRecipeData, context: NSManagedObjectContext) -> Recipe {
         let title = paprika.name ?? "Untitled"
 
         // Build summary from notes and description
@@ -193,12 +201,23 @@ final class PaprikaImporter {
         // Tags from categories
         let tags = paprika.categories?.map { $0.lowercased() } ?? []
 
-        // Source URL
+        // Source URL — the original web URL the recipe was clipped from
         let sourceURL: URL?
         if let urlString = paprika.source_url, !urlString.isEmpty {
             sourceURL = URL(string: urlString)
         } else {
             sourceURL = nil
+        }
+
+        // Cookbook attribution — Paprika's free-text "source" field is the
+        // human-readable publication name (e.g. "Madhur Jaffrey's Curry Nation",
+        // "BBC Good Food"). Maps directly to Recipe.cookbook (#40). Stored
+        // independently of sourceURL — both can coexist.
+        let cookbook: String?
+        if let source = paprika.source?.trimmingCharacters(in: .whitespacesAndNewlines), !source.isEmpty {
+            cookbook = source
+        } else {
+            cookbook = nil
         }
 
         // Photo data (base64 encoded)
@@ -217,6 +236,7 @@ final class PaprikaImporter {
             title: title,
             summary: summary,
             sourceURL: sourceURL,
+            cookbook: cookbook,
             servings: servings,
             prepTimeMinutes: prepTime,
             cookTimeMinutes: cookTime,
