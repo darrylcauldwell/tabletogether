@@ -125,6 +125,14 @@ struct RecipeLibraryView: View {
                         }
                         #endif
 
+                        // Browse by cookbook
+                        NavigationLink {
+                            CookbookBrowseView()
+                        } label: {
+                            Image(systemName: "books.vertical")
+                                .foregroundColor(.appPrimary)
+                        }
+
                         // Sort menu
                         Menu {
                             ForEach(SortOption.allCases) { option in
@@ -158,6 +166,14 @@ struct RecipeLibraryView: View {
                 #else
                 ToolbarItem(placement: .automatic) {
                     HStack(spacing: 16) {
+                        // Browse by cookbook
+                        NavigationLink {
+                            CookbookBrowseView()
+                        } label: {
+                            Image(systemName: "books.vertical")
+                                .foregroundColor(.appPrimary)
+                        }
+
                         // Sort menu
                         Menu {
                             ForEach(SortOption.allCases) { option in
