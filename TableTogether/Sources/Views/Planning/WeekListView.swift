@@ -22,6 +22,11 @@ struct WeekListView: View {
     let onSlotTapped: (MealSlot) -> Void
     let onRecipeDropped: (String, MealSlot) -> Void
 
+    // Sheet state lives at the WeekListView level — outside the LazyVStack —
+    // so that row recycling and confirmationDialog dismiss-timing on iOS
+    // can't cause the picker to oscillate open/close. See issue #62.
+    @State private var slotToPresent: MealSlot?
+
     var body: some View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 0) {
@@ -30,6 +35,7 @@ struct WeekListView: View {
                         day: day,
                         weekStartDate: weekStartDate,
                         slots: slotsForDay(day),
+                        slotToPresent: $slotToPresent,
                         onSlotTapped: onSlotTapped,
                         onRecipeDropped: onRecipeDropped
                     )
@@ -39,6 +45,9 @@ struct WeekListView: View {
                     }
                 }
             }
+        }
+        .sheet(item: $slotToPresent) { slot in
+            RecipePickerSheet(slot: slot)
         }
     }
 
@@ -60,11 +69,11 @@ struct DayRowView: View {
     let day: DayOfWeek
     let weekStartDate: Date
     let slots: [MealSlot]
+    @Binding var slotToPresent: MealSlot?
     let onSlotTapped: (MealSlot) -> Void
     let onRecipeDropped: (String, MealSlot) -> Void
 
     @State private var showingAddMealMenu = false
-    @State private var slotToPresent: MealSlot?
 
     private var dateForDay: Date {
         Calendar.current.date(byAdding: .day, value: day.rawValue - 1, to: weekStartDate) ?? weekStartDate
@@ -110,9 +119,6 @@ struct DayRowView: View {
         }
         .padding(.vertical, 16)
         .background(isToday ? Theme.Colors.primary.opacity(0.04) : Color.clear)
-        .sheet(item: $slotToPresent) { slot in
-            RecipePickerSheet(slot: slot)
-        }
     }
 
     // MARK: - Subviews
