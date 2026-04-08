@@ -73,11 +73,34 @@ public class WeekPlan: NSManagedObject {
 
     // MARK: - Methods
 
+    /// Calendar used for `normalizeToMonday` and the deterministic-ID path.
+    /// Pinned to **ISO 8601 + UTC** rather than `Calendar.current` so the
+    /// computed Monday is identical across every device regardless of:
+    ///   - Region/locale (firstWeekday, minimumDaysInFirstWeek)
+    ///   - Device timezone (BST vs GMT vs PST etc.)
+    ///
+    /// Previously used `Calendar.current`, which meant two devices with
+    /// different regional settings (or even the same region but on opposite
+    /// sides of a DST boundary) computed different Dates for the same week,
+    /// producing different deterministic UUIDs and duplicate WeekPlan records
+    /// in CloudKit. See the 2026-04-08 diagnosis for details.
+    private static let normalizingCalendar: Calendar = {
+        var calendar = Calendar(identifier: .iso8601)
+        calendar.timeZone = TimeZone(secondsFromGMT: 0) ?? .gmt
+        return calendar
+    }()
+
     static func normalizeToMonday(_ date: Date) -> Date {
-        let calendar = Calendar.current
-        var components = calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: date)
-        components.weekday = 2
-        return calendar.date(from: components) ?? date
+        let calendar = normalizingCalendar
+        let components = calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: date)
+        var mondayComponents = DateComponents()
+        mondayComponents.yearForWeekOfYear = components.yearForWeekOfYear
+        mondayComponents.weekOfYear = components.weekOfYear
+        mondayComponents.weekday = 2 // ISO weekday 2 = Monday
+        mondayComponents.hour = 0
+        mondayComponents.minute = 0
+        mondayComponents.second = 0
+        return calendar.date(from: mondayComponents) ?? date
     }
 
     func slots(for day: DayOfWeek) -> [MealSlot] {

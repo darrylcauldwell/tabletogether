@@ -80,6 +80,12 @@ struct TableTogetherApp: App {
     private func initializeDataIfNeeded() async {
         let context = persistenceController.viewContext
 
+        // One-shot WeekPlan/MealSlot dedupe migration — cleans up duplicate
+        // records created by the pre-fix locale-dependent deterministic-ID
+        // bug. Idempotent + guarded by a UserDefaults flag; no-op after first
+        // successful run per install.
+        WeekPlanDedupeService().runIfNeeded(context: context)
+
         // Ensure a Household exists first — all new records will be linked to it
         let household = ensureHousehold(context: context)
 
