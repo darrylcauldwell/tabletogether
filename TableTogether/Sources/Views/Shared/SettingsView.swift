@@ -269,6 +269,15 @@ struct SettingsView: View {
                     .disabled(ingredientBackfillService.isRunning || allRecipes.isEmpty)
                 }
 
+                // MARK: - Libraries
+                Section("Libraries") {
+                    NavigationLink {
+                        IngredientLibraryView()
+                    } label: {
+                        Label("Ingredient Library", systemImage: "leaf")
+                    }
+                }
+
                 // MARK: - Diagnostics
                 Section {
                     NavigationLink {
