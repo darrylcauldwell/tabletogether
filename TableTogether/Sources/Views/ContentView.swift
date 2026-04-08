@@ -223,6 +223,10 @@ struct SidebarView: View {
                     Section("Library") {
                         Label("Recipes", systemImage: "book")
                             .tag(SidebarSection.recipes)
+                        Label("Ingredients", systemImage: "leaf")
+                            .tag(SidebarSection.ingredients)
+                        Label("Food Items", systemImage: "fork.knife.circle")
+                            .tag(SidebarSection.foodItems)
                     }
 
                     Section("Shopping") {
@@ -287,6 +291,10 @@ struct ContentColumnView: View {
             WeekPlannerView()
         case .recipes:
             RecipeLibraryView()
+        case .ingredients:
+            IngredientLibraryView()
+        case .foodItems:
+            FoodItemLibraryView()
         case .pantryCheck:
             PantryCheckView()
         case .grocery:
@@ -318,6 +326,8 @@ enum Tab: Hashable {
 enum SidebarSection: Hashable {
     case plan
     case recipes
+    case ingredients
+    case foodItems
     case pantryCheck
     case grocery
     case log
