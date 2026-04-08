@@ -75,6 +75,7 @@
         <attribute name="name" attributeType="String" defaultValueString=""/>
         <attribute name="normalizedName" attributeType="String" defaultValueString=""/>
         <attribute name="proteinPer100g" optional="YES" attributeType="Double" usesScalarValueType="NO"/>
+        <attribute name="userAliases" optional="YES" attributeType="Transformable" valueTransformerName="NSSecureUnarchiveFromDataTransformer"/>
         <relationship name="groceryItems" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="GroceryItem" inverseName="ingredient" inverseEntity="GroceryItem"/>
         <relationship name="household" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Household" inverseName="ingredients" inverseEntity="Household"/>
         <relationship name="recipeIngredients" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="RecipeIngredient" inverseName="ingredient" inverseEntity="RecipeIngredient"/>

@@ -17,6 +17,13 @@ public class Ingredient: NSManagedObject {
     @NSManaged public var createdAt: Date
     @NSManaged public var modifiedAt: Date
 
+    /// Alternate names that should resolve to this ingredient when matched.
+    /// Stored normalised (lowercase + trimmed). Used by RecipeIngredientResolver
+    /// so the user can teach the resolver via the Ingredient Library UI:
+    /// e.g. add "scallions" and "green onions" as aliases on a "spring onion"
+    /// canonical record so future imports auto-link.
+    @NSManaged public var userAliases: [String]?
+
     // MARK: - Relationships
 
     @NSManaged public var recipeIngredients: NSSet?
@@ -52,12 +59,52 @@ public class Ingredient: NSManagedObject {
         caloriesPer100g != nil && proteinPer100g != nil && carbsPer100g != nil && fatPer100g != nil
     }
 
+    /// Read-only view of `userAliases` that returns an empty list rather than nil.
+    /// All stored aliases are already normalised (lowercase + trimmed) so this is
+    /// a direct passthrough — callers who need to compare against an arbitrary
+    /// input string should normalise their input first.
+    var userAliasesList: [String] {
+        get { userAliases ?? [] }
+        set { userAliases = newValue }
+    }
+
     // MARK: - Methods
 
     func updateName(_ newName: String) {
         self.name = newName
         self.normalizedName = newName.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
         self.modifiedAt = Date()
+    }
+
+    /// Adds a normalised alias if it isn't already present. No-op for empty
+    /// strings, the canonical name itself, or duplicates already in the list.
+    func addAlias(_ alias: String) {
+        let normalized = alias.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !normalized.isEmpty, normalized != normalizedName else { return }
+        var aliases = userAliasesList
+        guard !aliases.contains(normalized) else { return }
+        aliases.append(normalized)
+        userAliases = aliases
+        modifiedAt = Date()
+    }
+
+    /// Removes an alias if present. Matches case-insensitively after trimming.
+    func removeAlias(_ alias: String) {
+        let normalized = alias.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
+        var aliases = userAliasesList
+        let before = aliases.count
+        aliases.removeAll { $0 == normalized }
+        guard aliases.count != before else { return }
+        userAliases = aliases
+        modifiedAt = Date()
+    }
+
+    /// Returns true if the given normalised string matches the canonical name
+    /// or any alias. Caller must pre-normalise the query (lowercase + trim);
+    /// stored aliases are already normalised.
+    func matches(normalized query: String) -> Bool {
+        if normalizedName == query { return true }
+        return userAliasesList.contains(query)
     }
 
     // MARK: - Convenience Initializer
