@@ -30,8 +30,7 @@ struct TVDemoDataSeeder {
         // Create a week plan
         let weekPlan = WeekPlan(
             context: context,
-            weekStartDate: WeekPlan.normalizeToMonday(Date()),
-            status: .active
+            weekStartDate: WeekPlan.normalizeToMonday(Date())
         )
         weekPlan.household = household
 
