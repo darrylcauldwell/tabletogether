@@ -652,10 +652,19 @@ struct DemoDataToggleRow: View {
 }
 
 // MARK: - Paprika Import Row
+//
+// Self-contained: owns its own file picker state and attaches the
+// fileImporter directly to the row. Avoids stacking multiple fileImporter
+// modifiers on SettingsView.body, which ran into SwiftUI's presentation-
+// modifier stacking limits on Mac Catalyst (10+ modifiers on one view made
+// tapping the import button do nothing). Fix for #59 follow-up regression.
 
 struct PaprikaImportRow: View {
     var importer: PaprikaImporter
-    @Binding var showingFilePicker: Bool
+    let context: NSManagedObjectContext
+    let household: Household?
+
+    @State private var showingFilePicker = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
@@ -698,14 +707,40 @@ struct PaprikaImportRow: View {
             }
         }
         .disabled(importer.isImporting)
+        .fileImporter(
+            isPresented: $showingFilePicker,
+            allowedContentTypes: [.paprikaRecipes, .data],
+            allowsMultipleSelection: false
+        ) { result in
+            switch result {
+            case .success(let urls):
+                if let url = urls.first {
+                    Task {
+                        await importer.importRecipes(
+                            from: url,
+                            context: context,
+                            household: household
+                        )
+                    }
+                }
+            case .failure(let error):
+                importer.errorMessage = error.localizedDescription
+            }
+        }
     }
 }
 
 // MARK: - JSON Recipe Import Row
+//
+// Self-contained — see the note on PaprikaImportRow for why each row
+// owns its own fileImporter instead of delegating to the parent view.
 
 struct JSONRecipeImportRow: View {
     var importer: JSONRecipeImporter
-    @Binding var showingFilePicker: Bool
+    let context: NSManagedObjectContext
+    let household: Household?
+
+    @State private var showingFilePicker = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
@@ -748,14 +783,39 @@ struct JSONRecipeImportRow: View {
             }
         }
         .disabled(importer.isImporting)
+        .fileImporter(
+            isPresented: $showingFilePicker,
+            allowedContentTypes: [.json],
+            allowsMultipleSelection: false
+        ) { result in
+            switch result {
+            case .success(let urls):
+                if let url = urls.first {
+                    Task {
+                        await importer.importRecipes(
+                            from: url,
+                            context: context,
+                            household: household
+                        )
+                    }
+                }
+            case .failure(let error):
+                importer.errorMessage = error.localizedDescription
+            }
+        }
     }
 }
 
 // MARK: - JSON Food Item Import Row
+//
+// Self-contained — see the note on PaprikaImportRow.
 
 struct JSONFoodItemImportRow: View {
     var importer: FoodItemImporter
-    @Binding var showingFilePicker: Bool
+    let context: NSManagedObjectContext
+    let household: Household?
+
+    @State private var showingFilePicker = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
@@ -798,6 +858,26 @@ struct JSONFoodItemImportRow: View {
             }
         }
         .disabled(importer.isImporting)
+        .fileImporter(
+            isPresented: $showingFilePicker,
+            allowedContentTypes: [.json],
+            allowsMultipleSelection: false
+        ) { result in
+            switch result {
+            case .success(let urls):
+                if let url = urls.first {
+                    Task {
+                        await importer.importFoodItems(
+                            from: url,
+                            context: context,
+                            household: household
+                        )
+                    }
+                }
+            case .failure(let error):
+                importer.errorMessage = error.localizedDescription
+            }
+        }
     }
 }
 

@@ -35,14 +35,11 @@ struct SettingsView: View {
     @State private var paprikaImporter = PaprikaImporter()
     @State private var jsonRecipeImporter = JSONRecipeImporter()
     @State private var foodItemImporter = FoodItemImporter()
-    @State private var showingFoodItemFilePicker = false
     @State private var ingredientBackfillService = IngredientBackfillService()
     @State private var showingBackfillConfirmation = false
     @State private var showingBackfillResult = false
     @State private var healthService = HealthKitService.shared
 
-    @State private var showingPaprikaFilePicker = false
-    @State private var showingJSONFilePicker = false
     @State private var recipeExporter = RecipeExporter()
     @State private var showingExportFilePicker = false
     @State private var exportDocument: RecipeExportDocument?
@@ -353,24 +350,6 @@ struct SettingsView: View {
                     }
                 }
             ))
-            .fileImporter(
-                isPresented: $showingPaprikaFilePicker,
-                allowedContentTypes: [.paprikaRecipes, .data],
-                allowsMultipleSelection: false,
-                onCompletion: handlePaprikaImportResult
-            )
-            .fileImporter(
-                isPresented: $showingJSONFilePicker,
-                allowedContentTypes: [.json],
-                allowsMultipleSelection: false,
-                onCompletion: handleJSONImportResult
-            )
-            .fileImporter(
-                isPresented: $showingFoodItemFilePicker,
-                allowedContentTypes: [.json],
-                allowsMultipleSelection: false,
-                onCompletion: handleFoodItemImportResult
-            )
             .fileExporter(
                 isPresented: $showingExportFilePicker,
                 document: exportDocument,
@@ -423,66 +402,6 @@ struct SettingsView: View {
         .contentShape(Rectangle())
     }
 
-    // MARK: - File Import Handlers
-    //
-    // Extracted from the body modifier chain (rather than living inside a
-    // ViewModifier) because SwiftUI's presentation-modifier stacking is flaky
-    // when multiple fileImporter modifiers are wrapped in a single
-    // ViewModifier — in practice on Mac Catalyst, tapping the import buttons
-    // did nothing. Inlining the fileImporters directly on the body with
-    // closures that dispatch to these methods is the proven pattern.
-
-    private func handlePaprikaImportResult(_ result: Result<[URL], Error>) {
-        switch result {
-        case .success(let urls):
-            if let url = urls.first {
-                Task {
-                    await paprikaImporter.importRecipes(
-                        from: url,
-                        context: viewContext,
-                        household: households.first
-                    )
-                }
-            }
-        case .failure(let error):
-            paprikaImporter.errorMessage = error.localizedDescription
-        }
-    }
-
-    private func handleJSONImportResult(_ result: Result<[URL], Error>) {
-        switch result {
-        case .success(let urls):
-            if let url = urls.first {
-                Task {
-                    await jsonRecipeImporter.importRecipes(
-                        from: url,
-                        context: viewContext,
-                        household: households.first
-                    )
-                }
-            }
-        case .failure(let error):
-            jsonRecipeImporter.errorMessage = error.localizedDescription
-        }
-    }
-
-    private func handleFoodItemImportResult(_ result: Result<[URL], Error>) {
-        switch result {
-        case .success(let urls):
-            if let url = urls.first {
-                Task {
-                    await foodItemImporter.importFoodItems(
-                        from: url,
-                        context: viewContext,
-                        household: households.first
-                    )
-                }
-            }
-        case .failure(let error):
-            foodItemImporter.errorMessage = error.localizedDescription
-        }
-    }
-
     // MARK: - Data Section
     //
     // Extracted from `body` (rather than inlined) to keep the SwiftUI
@@ -504,19 +423,22 @@ struct SettingsView: View {
             // Paprika Import
             PaprikaImportRow(
                 importer: paprikaImporter,
-                showingFilePicker: $showingPaprikaFilePicker
+                context: viewContext,
+                household: households.first
             )
 
             // JSON Recipe Import (curated library)
             JSONRecipeImportRow(
                 importer: jsonRecipeImporter,
-                showingFilePicker: $showingJSONFilePicker
+                context: viewContext,
+                household: households.first
             )
 
             // JSON Food Item Import (curated nutrition seed)
             JSONFoodItemImportRow(
                 importer: foodItemImporter,
-                showingFilePicker: $showingFoodItemFilePicker
+                context: viewContext,
+                household: households.first
             )
 
             Button("Export Recipes") {
