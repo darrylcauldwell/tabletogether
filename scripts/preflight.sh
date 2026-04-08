@@ -138,10 +138,13 @@ fi
 
 stage "Unit Tests"
 
-# Find a booted iOS simulator, or fall back to a generic one
-SIM_ID=$(xcrun simctl list devices booted | grep -E "iOS|iPhone" | head -1 | grep -oE '\([A-F0-9-]{36}\)' | tr -d '()')
+# Find a booted iPhone simulator, or fall back to any available iPhone.
+# Each pipeline ends with `|| true` so `set -euo pipefail` doesn't abort the
+# script when grep finds nothing (no booted sim is a valid state we want to
+# handle via the fallback, not a fatal error).
+SIM_ID=$(xcrun simctl list devices booted | grep "iPhone" | grep -oE '\([A-F0-9-]{36}\)' | tr -d '()' | head -1 || true)
 if [ -z "$SIM_ID" ]; then
-  SIM_ID=$(xcrun simctl list devices available | grep "iPhone" | head -1 | grep -oE '\([A-F0-9-]{36}\)' | tr -d '()')
+  SIM_ID=$(xcrun simctl list devices available | grep "iPhone" | grep -oE '\([A-F0-9-]{36}\)' | tr -d '()' | head -1 || true)
 fi
 
 if [ -n "$SIM_ID" ]; then
