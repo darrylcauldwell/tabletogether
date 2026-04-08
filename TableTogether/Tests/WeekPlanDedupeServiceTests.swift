@@ -11,29 +11,33 @@ struct WeekPlanDedupeServiceTests {
         PersistenceController(inMemory: true).container.viewContext
     }
 
+    /// Build "Monday local-midnight" as a Date. Uses the device's current
+    /// timezone to match what `WeekPlan.normalizeToMonday` now produces.
     private func monday(year: Int, month: Int, day: Int) -> Date {
         var calendar = Calendar(identifier: .iso8601)
-        calendar.timeZone = TimeZone(secondsFromGMT: 0)!
+        calendar.timeZone = .current
         var components = DateComponents()
         components.year = year
         components.month = month
         components.day = day
         components.hour = 0
+        components.minute = 0
+        components.second = 0
         return calendar.date(from: components)!
     }
 
     // MARK: - normalizeToMonday
 
-    @Test("normalizeToMonday is independent of input timezone")
-    func normalizeIsTimezoneIndependent() {
-        // Wednesday 2026-04-08 noon in various timezones should normalize to
-        // the same Monday date
-        let utcComponents = DateComponents(year: 2026, month: 4, day: 8, hour: 12)
-        var utcCal = Calendar(identifier: .iso8601)
-        utcCal.timeZone = TimeZone(secondsFromGMT: 0)!
-        let midDay = utcCal.date(from: utcComponents)!
+    @Test("normalizeToMonday returns the Monday of the week containing the input")
+    func normalizeReturnsMondayOfWeek() {
+        // Wednesday April 8 2026 noon local time
+        var cal = Calendar(identifier: .iso8601)
+        cal.timeZone = .current
+        let wednesday = cal.date(from: DateComponents(
+            year: 2026, month: 4, day: 8, hour: 12, minute: 0, second: 0
+        ))!
 
-        let normalized = WeekPlan.normalizeToMonday(midDay)
+        let normalized = WeekPlan.normalizeToMonday(wednesday)
         let expectedMonday = monday(year: 2026, month: 4, day: 6)
         #expect(normalized == expectedMonday)
     }
@@ -41,7 +45,7 @@ struct WeekPlanDedupeServiceTests {
     @Test("normalizeToMonday returns the same Monday for different days within a week")
     func normalizeIsStableAcrossWeek() {
         var cal = Calendar(identifier: .iso8601)
-        cal.timeZone = TimeZone(secondsFromGMT: 0)!
+        cal.timeZone = .current
         let expectedMonday = monday(year: 2026, month: 4, day: 6)
 
         for dayOffset in 0...6 {

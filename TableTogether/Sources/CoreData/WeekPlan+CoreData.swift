@@ -74,24 +74,38 @@ public class WeekPlan: NSManagedObject {
     // MARK: - Methods
 
     /// Calendar used for `normalizeToMonday` and the deterministic-ID path.
-    /// Pinned to **ISO 8601 + UTC** rather than `Calendar.current` so the
-    /// computed Monday is identical across every device regardless of:
-    ///   - Region/locale (firstWeekday, minimumDaysInFirstWeek)
-    ///   - Device timezone (BST vs GMT vs PST etc.)
     ///
-    /// Previously used `Calendar.current`, which meant two devices with
-    /// different regional settings (or even the same region but on opposite
-    /// sides of a DST boundary) computed different Dates for the same week,
-    /// producing different deterministic UUIDs and duplicate WeekPlan records
-    /// in CloudKit. See the 2026-04-08 diagnosis for details.
-    private static let normalizingCalendar: Calendar = {
+    /// **Pinned to ISO 8601 (firstWeekday=Monday, minimumDaysInFirstWeek=4)
+    /// with the device's CURRENT timezone** — not UTC.
+    ///
+    /// Why ISO 8601: guarantees fixed week semantics regardless of device
+    /// locale. `Calendar.current` varies by region (US has firstWeekday=1,
+    /// UK has firstWeekday=2, etc.), which caused the original divergence
+    /// bug and multiple duplicate WeekPlan records in CloudKit.
+    ///
+    /// Why current timezone and NOT UTC: the user thinks about weeks in
+    /// *local* time. "This week" for a user in BST means Mon Apr 6 00:00 BST
+    /// through Sun Apr 12 23:59 BST. Stored as a Date, that Monday is
+    /// `2026-04-05T23:00:00Z` — which in pure UTC is still Sunday evening of
+    /// the *previous* ISO week. If we did the week computation in UTC, we'd
+    /// place that Date into week 14 (Mar 30 - Apr 5) instead of week 15
+    /// (Apr 6 - Apr 12) — shifting the whole plan one week earlier. That
+    /// was the bug in build 9.
+    ///
+    /// Using the current timezone keeps the week-of-year calculation
+    /// aligned with how the user sees their calendar. Two devices in the
+    /// same physical location (same timezone) produce identical results.
+    /// Devices in different timezones can still diverge for dates near
+    /// Sun/Mon midnight, but household devices are virtually always
+    /// co-located so this is an acceptable edge case.
+    private static func makeNormalizingCalendar() -> Calendar {
         var calendar = Calendar(identifier: .iso8601)
-        calendar.timeZone = TimeZone(secondsFromGMT: 0) ?? .gmt
+        calendar.timeZone = .current
         return calendar
-    }()
+    }
 
     static func normalizeToMonday(_ date: Date) -> Date {
-        let calendar = normalizingCalendar
+        let calendar = makeNormalizingCalendar()
         let components = calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: date)
         var mondayComponents = DateComponents()
         mondayComponents.yearForWeekOfYear = components.yearForWeekOfYear

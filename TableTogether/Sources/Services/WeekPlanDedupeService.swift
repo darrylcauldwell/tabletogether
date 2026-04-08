@@ -48,7 +48,17 @@ import CoreData
 final class WeekPlanDedupeService {
 
     /// UserDefaults key used to gate the one-shot run.
-    static let migrationFlagKey = "WeekPlanDedupeService.hasRun.v1"
+    ///
+    /// **Version history:**
+    /// - `v1` shipped in build 9 with a broken `normalizeToMonday` that used
+    ///   UTC timezone for ISO-week calculation. Users in non-UTC timezones
+    ///   ended up with plans shifted one ISO-week earlier than intended.
+    /// - `v2` ships with the corrected `normalizeToMonday` (ISO 8601 calendar
+    ///   in the device's current timezone) and re-runs the dedup/re-normalize
+    ///   pass so every existing plan's `weekStartDate` is refreshed via the
+    ///   correct algorithm. The v1 flag is ignored — v2 runs on every device
+    ///   that reaches this build, once.
+    static let migrationFlagKey = "WeekPlanDedupeService.hasRun.v2"
 
     struct Result {
         let planGroupsFound: Int
