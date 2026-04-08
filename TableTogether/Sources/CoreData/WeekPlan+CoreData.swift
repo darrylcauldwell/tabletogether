@@ -8,7 +8,6 @@ public class WeekPlan: NSManagedObject {
     @NSManaged public var id: UUID
     @NSManaged public var weekStartDate: Date
     @NSManaged public var householdNote: String?
-    @NSManaged public var statusRaw: String
     @NSManaged public var createdAt: Date
     @NSManaged public var modifiedAt: Date
 
@@ -17,13 +16,6 @@ public class WeekPlan: NSManagedObject {
     @NSManaged public var slots: NSSet?
     @NSManaged public var groceryItems: NSSet?
     @NSManaged public var household: Household?
-
-    // MARK: - Enum Wrapper
-
-    var status: WeekPlanStatus {
-        get { WeekPlanStatus(rawValue: statusRaw) ?? .draft }
-        set { statusRaw = newValue.rawValue }
-    }
 
     // MARK: - Typed Accessors
 
@@ -110,16 +102,6 @@ public class WeekPlan: NSManagedObject {
                 addToSlots(slot)
             }
         }
-        modifiedAt = Date()
-    }
-
-    func activate() {
-        status = .active
-        modifiedAt = Date()
-    }
-
-    func complete() {
-        status = .completed
         modifiedAt = Date()
     }
 
@@ -289,15 +271,13 @@ public class WeekPlan: NSManagedObject {
         context: NSManagedObjectContext,
         id: UUID? = nil,
         weekStartDate: Date,
-        householdNote: String? = nil,
-        status: WeekPlanStatus = .draft
+        householdNote: String? = nil
     ) {
         let entity = NSEntityDescription.entity(forEntityName: "WeekPlan", in: context)!
         self.init(entity: entity, insertInto: context)
         self.id = id ?? Self.deterministicID(for: weekStartDate)
         self.weekStartDate = Self.normalizeToMonday(weekStartDate)
         self.householdNote = householdNote
-        self.statusRaw = status.rawValue
         self.createdAt = Date()
         self.modifiedAt = Date()
     }

@@ -321,33 +321,6 @@ enum MealType: String, Codable, CaseIterable, Hashable, Sendable {
     static let defaultPlannedMeals: [MealType] = MealType.allCases
 }
 
-// MARK: - WeekPlanStatus
-
-/// Status of a week's meal plan.
-enum WeekPlanStatus: String, Codable, CaseIterable, Hashable {
-    case draft
-    case active
-    case completed
-
-    /// Human-readable display name for the status.
-    var displayName: String {
-        switch self {
-        case .draft: return "Draft"
-        case .active: return "Active"
-        case .completed: return "Completed"
-        }
-    }
-
-    /// Brief description of what this status means.
-    var description: String {
-        switch self {
-        case .draft: return "Being planned"
-        case .active: return "Current week"
-        case .completed: return "Past week"
-        }
-    }
-}
-
 // MARK: - CookingStyle
 
 /// Preferred cooking approach for recipe generation.

@@ -139,7 +139,6 @@
         <attribute name="householdNote" optional="YES" attributeType="String"/>
         <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="modifiedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
-        <attribute name="statusRaw" attributeType="String" defaultValueString="draft"/>
         <attribute name="weekStartDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <relationship name="groceryItems" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="GroceryItem" inverseName="weekPlan" inverseEntity="GroceryItem"/>
         <relationship name="household" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Household" inverseName="weekPlans" inverseEntity="Household"/>

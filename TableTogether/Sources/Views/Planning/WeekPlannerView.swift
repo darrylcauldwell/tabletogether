@@ -30,7 +30,6 @@ struct WeekPlannerView: View {
         VStack(spacing: 0) {
             WeekHeaderView(
                 weekStartDate: $currentWeekStart,
-                status: currentWeekPlan?.status ?? .draft,
                 onPreviousWeek: navigateToPreviousWeek,
                 onNextWeek: navigateToNextWeek
             )
@@ -124,8 +123,7 @@ struct WeekPlannerView: View {
         let newPlan = WeekPlan(
             context: viewContext,
             weekStartDate: currentWeekStart,
-            householdNote: nil,
-            status: .draft
+            householdNote: nil
         )
 
         // Use the shared helper which generates deterministic slot IDs
@@ -187,7 +185,6 @@ struct WeekPlannerView: View {
 /// Header with week navigation controls
 struct WeekHeaderView: View {
     @Binding var weekStartDate: Date
-    let status: WeekPlanStatus
     let onPreviousWeek: () -> Void
     let onNextWeek: () -> Void
 
@@ -231,12 +228,8 @@ struct WeekHeaderView: View {
 
             Spacer()
 
-            VStack(spacing: 2) {
-                Text(weekLabel)
-                    .font(.headline)
-
-                WeekStatusBadge(status: status)
-            }
+            Text(weekLabel)
+                .font(.headline)
 
             Spacer()
 
@@ -250,39 +243,6 @@ struct WeekHeaderView: View {
         }
         .padding(.vertical, 12)
         .padding(.horizontal)
-    }
-}
-
-// MARK: - WeekStatusBadge
-
-struct WeekStatusBadge: View {
-    let status: WeekPlanStatus
-
-    private var statusColor: Color {
-        switch status {
-        case .draft: return .orange
-        case .active: return Theme.Colors.primary
-        case .completed: return .gray
-        }
-    }
-
-    private var statusLabel: String {
-        switch status {
-        case .draft: return "Draft"
-        case .active: return "Active"
-        case .completed: return "Completed"
-        }
-    }
-
-    var body: some View {
-        Text(statusLabel)
-            .font(.caption2)
-            .fontWeight(.medium)
-            .foregroundColor(statusColor)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 2)
-            .background(statusColor.opacity(0.15))
-            .clipShape(Capsule())
     }
 }
 

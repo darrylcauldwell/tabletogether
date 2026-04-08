@@ -186,8 +186,7 @@ final class DemoDataManager {
         let weekPlan = WeekPlan(
             context: context,
             id: DemoDataCatalog.weekPlanID,
-            weekStartDate: monday,
-            status: .active
+            weekStartDate: monday
         )
         weekPlan.household = household
 

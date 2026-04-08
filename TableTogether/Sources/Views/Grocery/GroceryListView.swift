@@ -14,10 +14,20 @@ struct GroceryListView: View {
 
     // MARK: - Aggregation
 
-    /// The most recent active week plan (for adding new items)
+    /// The week plan to use as the default target for new manual grocery items.
+    /// Picks the week containing today if one exists, otherwise the most
+    /// recent week plan. (Previously filtered by `status == .active`, but the
+    /// status concept was removed — nothing ever transitioned plans to
+    /// `.active` so the filter always fell through to this same sort-by-date
+    /// fallback anyway.)
     private var primaryWeekPlan: WeekPlan? {
-        weekPlans.first { $0.status == .active }
-            ?? weekPlans.sorted { $0.weekStartDate > $1.weekStartDate }.first
+        let calendar = Calendar.current
+        if let currentWeek = weekPlans.first(where: {
+            calendar.isDate(Date(), equalTo: $0.weekStartDate, toGranularity: .weekOfYear)
+        }) {
+            return currentWeek
+        }
+        return weekPlans.sorted { $0.weekStartDate > $1.weekStartDate }.first
     }
 
     /// Grouping key for an item — ingredient ID for recipe items, customName for manual items
