@@ -221,14 +221,13 @@ public class MealSlot: NSManagedObject {
 
     // MARK: - Convenience Initializer
 
-    /// Deterministic ID for a meal slot within a week, derived from week start date,
-    /// day of week, and meal type. Ensures all devices generate the same UUID for the
-    /// same slot.
+    /// Deterministic ID for a meal slot within a week, derived from the
+    /// canonical ISO week key plus the day and meal type. Matches the
+    /// WeekPlan deterministic-ID approach — string-based, no Date or
+    /// timezone arithmetic in the hash input.
     static func deterministicID(weekStartDate: Date, dayOfWeek: DayOfWeek, mealType: MealType) -> UUID {
-        let normalized = WeekPlan.normalizeToMonday(weekStartDate)
-        let formatter = ISO8601DateFormatter()
-        formatter.formatOptions = [.withFullDate]
-        return UUID.deterministic(from: "mealslot:\(formatter.string(from: normalized)):\(dayOfWeek.rawValue):\(mealType.rawValue)")
+        let weekKey = WeekPlan.isoWeekKey(for: weekStartDate)
+        return UUID.deterministic(from: "mealslot:\(weekKey):\(dayOfWeek.rawValue):\(mealType.rawValue)")
     }
 
     @discardableResult

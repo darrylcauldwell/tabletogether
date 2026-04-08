@@ -294,13 +294,27 @@ public class WeekPlan: NSManagedObject {
 
     // MARK: - Convenience Initializer
 
-    /// Deterministic ID for a week plan, derived from its normalized start date.
-    /// Ensures all devices generate the same UUID for the same week.
+    /// Canonical ISO 8601 week key (e.g. "2026-W15") for a given Date.
+    /// Independent of device timezone + calendar arithmetic quirks — two
+    /// devices in the same local week produce the same string.
+    ///
+    /// This is the string that gets hashed into the deterministic UUID. It
+    /// replaces the previous Date-based approach which was fragile across
+    /// DST boundaries and device locale settings.
+    static func isoWeekKey(for date: Date) -> String {
+        let calendar = makeNormalizingCalendar()
+        let components = calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: date)
+        let year = components.yearForWeekOfYear ?? 0
+        let week = components.weekOfYear ?? 0
+        return String(format: "%04d-W%02d", year, week)
+    }
+
+    /// Deterministic ID for a week plan, derived from the canonical ISO week
+    /// key (e.g. "weekplan:2026-W15") rather than a Date. Guarantees two
+    /// devices generate the same UUID for the same week — no Date or
+    /// timezone arithmetic in the ID path.
     static func deterministicID(for weekStartDate: Date) -> UUID {
-        let normalized = Self.normalizeToMonday(weekStartDate)
-        let formatter = ISO8601DateFormatter()
-        formatter.formatOptions = [.withFullDate]
-        return UUID.deterministic(from: "weekplan:\(formatter.string(from: normalized))")
+        return UUID.deterministic(from: "weekplan:\(isoWeekKey(for: weekStartDate))")
     }
 
     @discardableResult

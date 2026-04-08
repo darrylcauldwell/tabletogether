@@ -53,28 +53,37 @@ final class WeekPlanDedupeService {
     /// - `v1` shipped in build 9 with a broken `normalizeToMonday` that used
     ///   UTC timezone for ISO-week calculation. Users in non-UTC timezones
     ///   ended up with plans shifted one ISO-week earlier than intended.
-    /// - `v2` ships with the corrected `normalizeToMonday` (ISO 8601 calendar
-    ///   in the device's current timezone) and re-runs the dedup/re-normalize
-    ///   pass so every existing plan's `weekStartDate` is refreshed via the
-    ///   correct algorithm. The v1 flag is ignored — v2 runs on every device
-    ///   that reaches this build, once.
-    static let migrationFlagKey = "WeekPlanDedupeService.hasRun.v2"
+    /// - `v2` shipped in build 10 with the corrected `normalizeToMonday`
+    ///   (ISO 8601 calendar in the device's current timezone) and re-ran
+    ///   the dedup/re-normalize pass. Fixed the week shift but deterministic
+    ///   IDs were still computed from Date values, which could still diverge
+    ///   across devices at subsecond precision or on calendar edge cases.
+    /// - `v3` shipped in build 11 with string-based deterministic IDs
+    ///   ("2026-W15" instead of a Date). The ID path no longer involves
+    ///   Date or timezone arithmetic, so two devices in the same local week
+    ///   guarantee identical UUIDs. v3 migration is **destructive**: it
+    ///   deletes all WeekPlan and MealSlot records. Recipes, Ingredients,
+    ///   FoodItems, etc. are untouched. The next launch of the Meals view
+    ///   creates a fresh current-week plan via ensureWeekPlanExists() using
+    ///   the new string-based ID. User re-adds any meals that were on the
+    ///   old plans; they flagged this as acceptable scope.
+    static let migrationFlagKey = "WeekPlanDedupeService.hasRun.v3"
 
     struct Result {
-        let planGroupsFound: Int
-        let planDuplicatesRemoved: Int
-        let slotDuplicatesRemoved: Int
-        let recipeRelationshipsMerged: Int
+        let weekPlansDeleted: Int
+        let mealSlotsDeleted: Int
+        let mealSlotComponentsDeleted: Int
+        let groceryItemsOrphaned: Int
 
         var summary: String {
-            "WeekPlan dedupe: \(planGroupsFound) groups inspected, " +
-            "\(planDuplicatesRemoved) duplicate plans removed, " +
-            "\(slotDuplicatesRemoved) duplicate slots removed, " +
-            "\(recipeRelationshipsMerged) recipe relationships reassigned"
+            "WeekPlan reset: deleted \(weekPlansDeleted) week plans, " +
+            "\(mealSlotsDeleted) meal slots, " +
+            "\(mealSlotComponentsDeleted) meal slot components; " +
+            "orphaned \(groceryItemsOrphaned) grocery items (preserved, unlinked)"
         }
     }
 
-    /// Runs the dedup migration if it hasn't run yet on this install.
+    /// Runs the reset migration if it hasn't run yet on this install.
     /// Safe to call multiple times — the flag makes it a no-op after the
     /// first successful run.
     @discardableResult
@@ -88,141 +97,62 @@ final class WeekPlanDedupeService {
         return result
     }
 
-    /// Runs unconditionally. Exposed for tests and for a future manual
-    /// "Re-run dedupe" action in Settings (if useful).
+    /// Runs unconditionally. Exposed for tests.
+    ///
+    /// **Destructive:** deletes every WeekPlan, MealSlot, and
+    /// MealSlotComponent in the context. Recipes, Ingredients, and FoodItems
+    /// are preserved. Grocery items that reference a deleted week plan are
+    /// unlinked (weekPlan = nil) but kept in the database — the user's
+    /// manual grocery list survives.
+    ///
+    /// The next time `ensureWeekPlanExists()` runs (e.g. when the user opens
+    /// Meals → This Week), a fresh WeekPlan is created using the new
+    /// string-based deterministic ID, which will match across devices.
     @discardableResult
     func run(context: NSManagedObjectContext) -> Result {
-        var planGroupsFound = 0
-        var planDuplicatesRemoved = 0
-        var slotDuplicatesRemoved = 0
-        var recipeRelationshipsMerged = 0
+        var weekPlansDeleted = 0
+        var mealSlotsDeleted = 0
+        var mealSlotComponentsDeleted = 0
+        var groceryItemsOrphaned = 0
 
-        // Phase 1: group WeekPlans by normalized week start date
+        // Phase 1: unlink grocery items from any week plan
+        let groceryFetch = NSFetchRequest<GroceryItem>(entityName: "GroceryItem")
+        groceryFetch.predicate = NSPredicate(format: "weekPlan != nil")
+        if let groceryItems = try? context.fetch(groceryFetch) {
+            for item in groceryItems {
+                item.weekPlan = nil
+                groceryItemsOrphaned += 1
+            }
+        }
+
+        // Phase 2: delete all MealSlotComponents (children of MealSlot)
+        let componentFetch = NSFetchRequest<MealSlotComponent>(entityName: "MealSlotComponent")
+        if let components = try? context.fetch(componentFetch) {
+            for component in components {
+                context.delete(component)
+                mealSlotComponentsDeleted += 1
+            }
+        }
+
+        // Phase 3: delete all MealSlots
+        let slotFetch = NSFetchRequest<MealSlot>(entityName: "MealSlot")
+        if let slots = try? context.fetch(slotFetch) {
+            for slot in slots {
+                context.delete(slot)
+                mealSlotsDeleted += 1
+            }
+        }
+
+        // Phase 4: delete all WeekPlans
         let planFetch = NSFetchRequest<WeekPlan>(entityName: "WeekPlan")
-        let allPlans: [WeekPlan]
-        do {
-            allPlans = try context.fetch(planFetch)
-        } catch {
-            AppLogger.swiftData.error("WeekPlanDedupeService: fetch WeekPlan failed: \(error.localizedDescription)")
-            return Result(planGroupsFound: 0, planDuplicatesRemoved: 0, slotDuplicatesRemoved: 0, recipeRelationshipsMerged: 0)
-        }
-
-        var plansByNormalizedWeek: [Date: [WeekPlan]] = [:]
-        for plan in allPlans {
-            let normalized = WeekPlan.normalizeToMonday(plan.weekStartDate)
-            plansByNormalizedWeek[normalized, default: []].append(plan)
-        }
-
-        // Phase 2: merge duplicates within each group
-        for (normalizedDate, plans) in plansByNormalizedWeek {
-            planGroupsFound += 1
-            guard plans.count > 1 else {
-                // No duplication for this week, but normalize the canonical
-                // plan's weekStartDate to the fixed-calendar value so future
-                // deterministic IDs match.
-                if let only = plans.first, only.weekStartDate != normalizedDate {
-                    only.weekStartDate = normalizedDate
-                    only.modifiedAt = Date()
-                }
-                continue
-            }
-
-            // Canonical: oldest createdAt. Stable tiebreaker by objectID URI.
-            let canonical = plans.sorted { a, b in
-                if a.createdAt != b.createdAt {
-                    return a.createdAt < b.createdAt
-                }
-                return a.objectID.uriRepresentation().absoluteString
-                    < b.objectID.uriRepresentation().absoluteString
-            }.first!
-
-            // Normalize the canonical's weekStartDate so future deterministic
-            // IDs match its actual Monday.
-            if canonical.weekStartDate != normalizedDate {
-                canonical.weekStartDate = normalizedDate
-            }
-
-            for duplicate in plans where duplicate !== canonical {
-                // Move all slots from the duplicate to the canonical. They'll
-                // be deduped against existing canonical slots in Phase 3.
-                for slot in duplicate.slotsArray {
-                    slot.weekPlan = canonical
-                    canonical.addToSlots(slot)
-                }
-                // Move any grocery items referencing the duplicate's weekPlan.
-                for groceryItem in duplicate.groceryItemsArray {
-                    groceryItem.weekPlan = canonical
-                    canonical.addToGroceryItems(groceryItem)
-                }
-                context.delete(duplicate)
-                planDuplicatesRemoved += 1
-            }
-
-            canonical.modifiedAt = Date()
-        }
-
-        // Phase 3: within each canonical WeekPlan, dedupe slots by (day, mealType)
-        let planFetch2 = NSFetchRequest<WeekPlan>(entityName: "WeekPlan")
-        let canonicalPlans: [WeekPlan]
-        do {
-            canonicalPlans = try context.fetch(planFetch2)
-        } catch {
-            AppLogger.swiftData.error("WeekPlanDedupeService: re-fetch WeekPlan failed: \(error.localizedDescription)")
-            canonicalPlans = []
-        }
-
-        for plan in canonicalPlans {
-            var slotsByKey: [String: [MealSlot]] = [:]
-            for slot in plan.slotsArray {
-                let key = "\(slot.dayOfWeek.rawValue)|\(slot.mealType.rawValue)"
-                slotsByKey[key, default: []].append(slot)
-            }
-
-            for (_, slots) in slotsByKey where slots.count > 1 {
-                // Canonical slot: the one with the most attached recipes.
-                // Tiebreaker: oldest createdAt, then stable objectID URI.
-                let canonicalSlot = slots.sorted { a, b in
-                    let aCount = a.recipesArray.count
-                    let bCount = b.recipesArray.count
-                    if aCount != bCount { return aCount > bCount }
-                    if a.createdAt != b.createdAt { return a.createdAt < b.createdAt }
-                    return a.objectID.uriRepresentation().absoluteString
-                        < b.objectID.uriRepresentation().absoluteString
-                }.first!
-
-                for duplicate in slots where duplicate !== canonicalSlot {
-                    // Merge recipe relationships — union of both sets.
-                    for recipe in duplicate.recipesArray
-                        where !canonicalSlot.recipesArray.contains(recipe) {
-                        canonicalSlot.addToRecipes(recipe)
-                        recipeRelationshipsMerged += 1
-                    }
-
-                    // Merge customMealName if canonical's is empty
-                    if (canonicalSlot.customMealName?.isEmpty ?? true),
-                       let dupName = duplicate.customMealName, !dupName.isEmpty {
-                        canonicalSlot.customMealName = dupName
-                    }
-
-                    // Merge archetype if canonical has none
-                    if canonicalSlot.archetype == nil, let dupArch = duplicate.archetype {
-                        canonicalSlot.archetype = dupArch
-                    }
-
-                    // Prefer non-skipped state
-                    if duplicate.isSkipped == false && canonicalSlot.isSkipped {
-                        canonicalSlot.isSkipped = false
-                    }
-
-                    context.delete(duplicate)
-                    slotDuplicatesRemoved += 1
-                }
-
-                canonicalSlot.modifiedAt = Date()
+        if let plans = try? context.fetch(planFetch) {
+            for plan in plans {
+                context.delete(plan)
+                weekPlansDeleted += 1
             }
         }
 
-        // Save context
+        // Save
         if context.hasChanges {
             do {
                 try context.save()
@@ -232,10 +162,10 @@ final class WeekPlanDedupeService {
         }
 
         let result = Result(
-            planGroupsFound: planGroupsFound,
-            planDuplicatesRemoved: planDuplicatesRemoved,
-            slotDuplicatesRemoved: slotDuplicatesRemoved,
-            recipeRelationshipsMerged: recipeRelationshipsMerged
+            weekPlansDeleted: weekPlansDeleted,
+            mealSlotsDeleted: mealSlotsDeleted,
+            mealSlotComponentsDeleted: mealSlotComponentsDeleted,
+            groceryItemsOrphaned: groceryItemsOrphaned
         )
         AppLogger.swiftData.info("\(result.summary)")
         return result
