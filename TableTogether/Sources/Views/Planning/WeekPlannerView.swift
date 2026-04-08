@@ -7,7 +7,6 @@ import CoreData
 /// Adapts layout for iPad (full week view) vs iPhone (scrollable day-by-day).
 struct WeekPlannerView: View {
     @Environment(\.managedObjectContext) private var viewContext
-    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
     @FetchRequest(sortDescriptors: [SortDescriptor(\.weekStartDate, order: .reverse)]) private var weekPlans: FetchedResults<WeekPlan>
     @FetchRequest(sortDescriptors: [SortDescriptor(\.title)]) private var recipes: FetchedResults<Recipe>
@@ -17,7 +16,6 @@ struct WeekPlannerView: View {
 
     @State private var currentWeekStart: Date = WeekPlannerView.mondayOfCurrentWeek()
     @State private var isSuggestionTrayExpanded: Bool = false
-    @State private var selectedDayIndex: Int = 0
     @State private var showingRecentChanges: Bool = false
 
     private var currentUser: User? {
@@ -41,24 +39,16 @@ struct WeekPlannerView: View {
 
             Divider()
 
-            if horizontalSizeClass == .regular {
-                // iPad: Full week grid view
-                WeekGridView(
-                    weekPlan: currentWeekPlan,
-                    weekStartDate: currentWeekStart,
-                    onSlotTapped: handleSlotTapped,
-                    onRecipeDropped: handleRecipeDropped
-                )
-            } else {
-                // iPhone: Day-by-day scrollable view
-                DayByDayView(
-                    weekPlan: currentWeekPlan,
-                    weekStartDate: currentWeekStart,
-                    selectedDayIndex: $selectedDayIndex,
-                    onSlotTapped: handleSlotTapped,
-                    onRecipeDropped: handleRecipeDropped
-                )
-            }
+            // List-based week view — one row group per day, only populated
+            // meal slots shown, quiet per-day "Add meal" affordance. Replaces
+            // the previous iPad grid + iPhone day-tab views with a single
+            // layout that works at all widths.
+            WeekListView(
+                weekPlan: currentWeekPlan,
+                weekStartDate: currentWeekStart,
+                onSlotTapped: handleSlotTapped,
+                onRecipeDropped: handleRecipeDropped
+            )
 
             Divider()
 
