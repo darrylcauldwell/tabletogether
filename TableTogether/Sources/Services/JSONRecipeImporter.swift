@@ -106,6 +106,11 @@ final class JSONRecipeImporter {
         }
         var existingTitles = Set(existingRecipes.map { $0.title.lowercased() })
 
+        // One resolver instance for the whole import — prewarms the Ingredient
+        // master cache once and reuses it across all recipes/ingredients in
+        // this batch. See RecipeIngredientResolver for the dedup rules.
+        let resolver = RecipeIngredientResolver(context: context, household: household)
+
         var imported = 0
         var skipped = 0
         var errors: [String] = []
@@ -125,7 +130,7 @@ final class JSONRecipeImporter {
                 continue
             }
 
-            codable.toRecipe(context: context, household: household)
+            codable.toRecipe(context: context, household: household, resolver: resolver)
             existingTitles.insert(key)
             imported += 1
         }

@@ -111,6 +111,10 @@ final class PaprikaImporter {
             }
             let existingTitles = Set(existingRecipes.map { $0.title.lowercased() })
 
+            // One resolver instance for the whole import — see JSONRecipeImporter
+            // for the rationale (prewarm Ingredient master cache once, reuse).
+            let resolver = RecipeIngredientResolver(context: context, household: household)
+
             var imported = 0
             var skipped = 0
             var errors: [String] = []
@@ -150,6 +154,11 @@ final class PaprikaImporter {
                             order: order,
                             customName: parsed.name
                         )
+                        // Link to the Ingredient master via the resolver — creates
+                        // a new master if no existing match (#59 Phase 4).
+                        if let master = resolver.resolve(parsed.name) {
+                            recipeIngredient.ingredient = master
+                        }
                         recipe.addIngredient(recipeIngredient)
                     }
                 }

@@ -36,8 +36,23 @@ struct CodableRecipe: Codable {
     }
 
     /// Create a CoreData Recipe from this portable representation.
+    ///
+    /// When `resolver` is non-nil, each created `RecipeIngredient` is linked to
+    /// an `Ingredient` master record via the resolver. When nil (e.g. legacy
+    /// callers, simple tests), `RecipeIngredient.ingredient` stays nil and only
+    /// `customName` is populated — matching the previous behaviour.
+    ///
+    /// `@MainActor` is required because `RecipeIngredientResolver` is main-actor
+    /// isolated (it walks `NSManagedObjectContext` which is single-threaded per
+    /// context). Both existing call sites (`JSONRecipeImporter`, the curated
+    /// JSON import path) are already on the main actor.
+    @MainActor
     @discardableResult
-    func toRecipe(context: NSManagedObjectContext, household: Household?) -> Recipe {
+    func toRecipe(
+        context: NSManagedObjectContext,
+        household: Household?,
+        resolver: RecipeIngredientResolver? = nil
+    ) -> Recipe {
         let recipe = Recipe(
             context: context,
             title: title,
@@ -57,7 +72,12 @@ struct CodableRecipe: Codable {
         recipe.household = household
 
         for (index, codableIngredient) in ingredients.enumerated() {
-            codableIngredient.toRecipeIngredient(context: context, recipe: recipe, order: index)
+            codableIngredient.toRecipeIngredient(
+                context: context,
+                recipe: recipe,
+                order: index,
+                resolver: resolver
+            )
         }
 
         return recipe
@@ -80,8 +100,14 @@ struct CodableIngredient: Codable {
         self.isOptional = recipeIngredient.isOptional
     }
 
+    @MainActor
     @discardableResult
-    func toRecipeIngredient(context: NSManagedObjectContext, recipe: Recipe, order: Int) -> RecipeIngredient {
+    func toRecipeIngredient(
+        context: NSManagedObjectContext,
+        recipe: Recipe,
+        order: Int,
+        resolver: RecipeIngredientResolver? = nil
+    ) -> RecipeIngredient {
         let ri = RecipeIngredient(
             context: context,
             quantity: quantity,
@@ -92,6 +118,9 @@ struct CodableIngredient: Codable {
             customName: name
         )
         ri.recipe = recipe
+        if let resolver, let master = resolver.resolve(name) {
+            ri.ingredient = master
+        }
         return ri
     }
 }

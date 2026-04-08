@@ -59,6 +59,100 @@ struct JSONRecipeImporterTests {
         #expect(recipes[0].ingredients.count == 2)
     }
 
+    // MARK: - Resolver integration (Phase 4 of #59)
+
+    /// Helper to count Ingredient master records in a context.
+    private func ingredientCount(in context: NSManagedObjectContext) -> Int {
+        let request = NSFetchRequest<Ingredient>(entityName: "Ingredient")
+        return (try? context.count(for: request)) ?? 0
+    }
+
+    @Test("Importing a recipe creates linked Ingredient master records")
+    func importCreatesIngredientMasters() throws {
+        let context = makeContext()
+        let household = Household(context: context, name: "Test")
+        let importer = JSONRecipeImporter()
+        let recipes = try importer.decode(data: sampleRecipeJSON())
+        let result = importer.importDecoded(recipes, context: context, household: household)
+
+        #expect(result.imported == 1)
+        // Two distinct ingredients in the sample (spaghetti, lemon)
+        #expect(ingredientCount(in: context) == 2)
+
+        // All RecipeIngredient rows should have the FK populated
+        let allRI = try context.fetch(NSFetchRequest<RecipeIngredient>(entityName: "RecipeIngredient"))
+        #expect(allRI.count == 2)
+        for ri in allRI {
+            #expect(ri.ingredient != nil)
+        }
+    }
+
+    @Test("Duplicate ingredient strings within one import collapse to one master")
+    func duplicateIngredientsCollapse() throws {
+        let context = makeContext()
+        let household = Household(context: context, name: "Test")
+        let importer = JSONRecipeImporter()
+
+        // Two recipes that share an ingredient name
+        let json = """
+        [
+          {
+            "title": "Recipe One",
+            "summary": null, "sourceURL": null, "servings": 2,
+            "prepTimeMinutes": 5, "cookTimeMinutes": 5,
+            "instructions": [], "tags": [], "suggestedArchetypes": [],
+            "ingredients": [
+              {"name": "tomato", "quantity": 2, "unit": "piece", "preparationNote": null, "isOptional": false}
+            ],
+            "isFavorite": false, "imageDataBase64": null
+          },
+          {
+            "title": "Recipe Two",
+            "summary": null, "sourceURL": null, "servings": 2,
+            "prepTimeMinutes": 5, "cookTimeMinutes": 5,
+            "instructions": [], "tags": [], "suggestedArchetypes": [],
+            "ingredients": [
+              {"name": "Tomato", "quantity": 1, "unit": "piece", "preparationNote": null, "isOptional": false},
+              {"name": "TOMATO", "quantity": 3, "unit": "piece", "preparationNote": null, "isOptional": false}
+            ],
+            "isFavorite": false, "imageDataBase64": null
+          }
+        ]
+        """
+        let recipes = try importer.decode(data: Data(json.utf8))
+        let result = importer.importDecoded(recipes, context: context, household: household)
+
+        #expect(result.imported == 2)
+        // All three "tomato" / "Tomato" / "TOMATO" should collapse to ONE master
+        #expect(ingredientCount(in: context) == 1)
+    }
+
+    @Test("Re-importing a recipe with the same ingredients reuses existing masters")
+    func reimportReusesMasters() throws {
+        let context = makeContext()
+        let household = Household(context: context, name: "Test")
+        let importer = JSONRecipeImporter()
+
+        // First import creates the masters
+        let recipes1 = try importer.decode(data: sampleRecipeJSON(title: "First"))
+        _ = importer.importDecoded(recipes1, context: context, household: household)
+        #expect(ingredientCount(in: context) == 2)
+
+        // Second import (different recipe title, same ingredients) should reuse
+        let recipes2 = try importer.decode(data: sampleRecipeJSON(title: "Second"))
+        _ = importer.importDecoded(recipes2, context: context, household: household)
+        #expect(ingredientCount(in: context) == 2)
+
+        // Both recipes should have RecipeIngredient rows linked to the SAME masters
+        let allRecipes = try context.fetch(NSFetchRequest<Recipe>(entityName: "Recipe"))
+        #expect(allRecipes.count == 2)
+        for recipe in allRecipes {
+            for ri in recipe.recipeIngredientsArray {
+                #expect(ri.ingredient != nil)
+            }
+        }
+    }
+
     @Test("Decodes an array of recipes")
     func decodesArrayOfRecipes() throws {
         let importer = JSONRecipeImporter()

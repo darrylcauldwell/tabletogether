@@ -34,6 +34,9 @@ struct SettingsView: View {
     @State private var demoDataManager = DemoDataManager()
     @State private var paprikaImporter = PaprikaImporter()
     @State private var jsonRecipeImporter = JSONRecipeImporter()
+    @State private var ingredientBackfillService = IngredientBackfillService()
+    @State private var showingBackfillConfirmation = false
+    @State private var showingBackfillResult = false
     @State private var healthService = HealthKitService.shared
 
     @State private var showingPaprikaFilePicker = false
@@ -246,6 +249,24 @@ struct SettingsView: View {
                         }
                     }
                     .disabled(allRecipes.isEmpty)
+
+                    // Reorganise Ingredient Library — backfills RecipeIngredient.ingredient
+                    // master FKs for rows that pre-date the resolver integration (#59).
+                    // Idempotent: subsequent runs only touch rows that still have nil FK.
+                    Button {
+                        showingBackfillConfirmation = true
+                    } label: {
+                        if ingredientBackfillService.isRunning {
+                            HStack {
+                                Text("Reorganising Ingredient Library…")
+                                Spacer()
+                                ProgressView()
+                            }
+                        } else {
+                            Text("Reorganise Ingredient Library")
+                        }
+                    }
+                    .disabled(ingredientBackfillService.isRunning || allRecipes.isEmpty)
                 }
 
                 // MARK: - Diagnostics
@@ -351,6 +372,20 @@ struct SettingsView: View {
             } message: {
                 Text("This will remove all sample recipes, meal plans, and household members. Your real data is not affected.")
             }
+            .modifier(BackfillAlertsModifier(
+                showingConfirmation: $showingBackfillConfirmation,
+                showingResult: $showingBackfillResult,
+                service: ingredientBackfillService,
+                onConfirm: {
+                    let result = ingredientBackfillService.run(
+                        context: viewContext,
+                        household: households.first
+                    )
+                    if result.processed > 0 {
+                        showingBackfillResult = true
+                    }
+                }
+            ))
             .fileImporter(
                 isPresented: $showingPaprikaFilePicker,
                 allowedContentTypes: [.paprikaRecipes, .data],
@@ -468,6 +503,49 @@ struct SettingsView: View {
         }
     }
     #endif
+}
+
+// MARK: - Backfill Alerts Modifier
+//
+// Extracted (like SharingAlertsModifier below) to keep SettingsView.body within
+// the SwiftUI type-checker's complexity budget. Hosts the confirm-and-result
+// dialogs for the "Reorganise Ingredient Library" action (#59 Phase 5).
+
+private struct BackfillAlertsModifier: ViewModifier {
+    @Binding var showingConfirmation: Bool
+    @Binding var showingResult: Bool
+    let service: IngredientBackfillService
+    let onConfirm: () -> Void
+
+    func body(content: Content) -> some View {
+        content
+            .confirmationDialog(
+                "Reorganise Ingredient Library?",
+                isPresented: $showingConfirmation,
+                titleVisibility: .visible
+            ) {
+                Button("Reorganise") {
+                    onConfirm()
+                }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text("Walks every recipe ingredient in your library, deduplicates them by exact name match, and creates Ingredient master records. Safe to re-run — already-linked rows are skipped.")
+            }
+            .alert(
+                "Ingredient Library Reorganised",
+                isPresented: $showingResult,
+                presenting: service.result
+            ) { _ in
+                Button("OK") {}
+            } message: { result in
+                Text(
+                    "Processed \(result.processed) ingredient rows.\n" +
+                    "Newly linked: \(result.linked)\n" +
+                    "Already linked: \(result.alreadyLinked)\n" +
+                    "Created \(result.mastersCreated) new Ingredient master records."
+                )
+            }
+    }
 }
 
 // MARK: - Sharing Alerts Modifier
