@@ -1,14 +1,22 @@
-Welcome to TableTogether.
+What's new in 1.1
 
-Plan meals together. Cook step by step. Log nutrition privately.
+Recipes
+- Browse by cookbook — recipes grouped by source
+- Recipe thumbnails from curated library
+- Cookbook attribution preserved from Paprika imports
 
-- Visual week planner with drag-and-drop
-- Recipe import from URLs and Paprika 3
-- AI recipe generation from your ingredients
-- Full-screen Cooking Mode with timer
-- Pantry check and auto-generated shopping lists
-- "Describe it" meal logging with nutrition estimates
-- Private insights dashboard
-- Apple Health and Calendar sync
-- Household sharing via iCloud
-- Apple TV ambient view
+Ingredients
+- Ingredient and food item libraries with search, edit, and alias management
+- Merge duplicates with one tap — aliases preserved automatically
+- Backfill tool links existing recipes to master ingredients
+
+Planning
+- Add recipes to meal plans directly from recipe detail
+- Multi-component meal slots (recipe + sides)
+- Household member names shown on invitations
+
+Stability
+- Fixed iCloud sync failures on Mac Catalyst
+- Fixed meal sheet flickering on iPhone and iPad
+- Fixed fresh installs wiping shared household data
+- Improved CloudKit diagnostics with per-store event tracking
