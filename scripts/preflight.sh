@@ -151,9 +151,13 @@ if $QUICK; then
 fi
 
 # --- Stage 5: Build Verification ---
+# All builds use `clean build` to avoid incremental-cache false positives.
+# This adds ~30-60s per stage but prevents stale DerivedData from masking
+# real compile errors (see #60 for the tvOS incident that motivated this).
+
 stage "Build Verification (iOS Simulator)"
 
-if xcodebuild build \
+if xcodebuild clean build \
   -project TableTogether.xcodeproj \
   -scheme TableTogether \
   -destination 'generic/platform=iOS Simulator' \
@@ -167,7 +171,7 @@ fi
 
 stage "Build Verification (Mac Catalyst)"
 
-if xcodebuild build \
+if xcodebuild clean build \
   -project TableTogether.xcodeproj \
   -scheme TableTogether \
   -destination 'platform=macOS,variant=Mac Catalyst' \
@@ -181,7 +185,7 @@ fi
 
 stage "Build Verification (tvOS Simulator)"
 
-if xcodebuild build \
+if xcodebuild clean build \
   -project TableTogetherTV/TableTogetherTV.xcodeproj \
   -scheme TableTogetherTV \
   -destination 'generic/platform=tvOS Simulator' \
@@ -205,7 +209,7 @@ if [ -z "$SIM_ID" ]; then
 fi
 
 if [ -n "$SIM_ID" ]; then
-  if xcodebuild test \
+  if xcodebuild clean test \
     -project TableTogether.xcodeproj \
     -scheme TableTogether \
     -destination "id=$SIM_ID" \
