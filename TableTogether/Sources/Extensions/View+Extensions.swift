@@ -59,7 +59,15 @@ struct EmptyStateModifier: ViewModifier {
 
     func body(content: Content) -> some View {
         if isEmpty {
+            #if os(tvOS)
+            ContentUnavailableView {
+                Label(title, systemImage: systemImage)
+            } description: {
+                Text(message)
+            }
+            #else
             EmptyStateView(icon: systemImage, title: title, message: message)
+            #endif
         } else {
             content
         }
