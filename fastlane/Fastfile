@@ -115,7 +115,18 @@ platform :ios do
 
   desc "Push App Store metadata to App Store Connect"
   lane :metadata do
+    asc_key_id = ENV.fetch("ASC_KEY_ID")
+    asc_issuer_id = ENV.fetch("ASC_ISSUER_ID")
+    asc_key_path = ENV.fetch("ASC_KEY_PATH")
+
+    api_key = app_store_connect_api_key(
+      key_id: asc_key_id,
+      issuer_id: asc_issuer_id,
+      key_filepath: asc_key_path
+    )
+
     deliver(
+      api_key: api_key,
       skip_binary_upload: true,
       skip_screenshots: true,
       force: true,
@@ -244,7 +255,18 @@ platform :appletvos do
 
   desc "Push tvOS metadata to App Store Connect"
   lane :metadata do
+    asc_key_id = ENV.fetch("ASC_KEY_ID")
+    asc_issuer_id = ENV.fetch("ASC_ISSUER_ID")
+    asc_key_path = ENV.fetch("ASC_KEY_PATH")
+
+    api_key = app_store_connect_api_key(
+      key_id: asc_key_id,
+      issuer_id: asc_issuer_id,
+      key_filepath: asc_key_path
+    )
+
     deliver(
+      api_key: api_key,
       skip_binary_upload: true,
       skip_screenshots: true,
       force: true,
