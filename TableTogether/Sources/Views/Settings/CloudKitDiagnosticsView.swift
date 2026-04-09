@@ -16,6 +16,8 @@ struct CloudKitDiagnosticsView: View {
     @State private var lastError: String = "None"
     @State private var containerID: String = PersistenceController.cloudKitContainerID
     @State private var isRefreshing = false
+    @State private var privateRecordCount: Int = 0
+    @State private var sharedRecordCount: Int = 0
     @State private var showingResetSharedConfirmation = false
     @State private var showingResetAllConfirmation = false
     @State private var copiedToClipboard = false
@@ -31,7 +33,9 @@ struct CloudKitDiagnosticsView: View {
             // MARK: - Persistent Stores
             Section("Persistent Stores") {
                 row("Private Store", privateStoreStatus)
+                row("Private Records", "\(privateRecordCount)")
                 row("Shared Store", sharedStoreStatus)
+                row("Shared Records", sharedRecordCount == 0 ? "empty (0 records)" : "\(sharedRecordCount)")
                 row("Store Load Error", pc.storeLoadError ?? "None")
             }
 
@@ -64,35 +68,9 @@ struct CloudKitDiagnosticsView: View {
                 }
             }
 
-            // MARK: - Recent Sync Events
-            Section("Recent Sync Events") {
-                if pc.lastSyncEvents.isEmpty {
-                    Text("No events yet")
-                        .foregroundStyle(Theme.Colors.textSecondary)
-                } else {
-                    ForEach(pc.lastSyncEvents.suffix(10).reversed()) { event in
-                        VStack(alignment: .leading, spacing: 4) {
-                            HStack {
-                                Image(systemName: event.succeeded ? "checkmark.circle.fill" : "xmark.circle.fill")
-                                    .foregroundStyle(event.succeeded ? .green : .red)
-                                    .font(.caption)
-                                Text(event.eventType.capitalized)
-                                    .font(.subheadline.bold())
-                                Spacer()
-                                Text(event.timestamp, style: .time)
-                                    .font(.caption2)
-                                    .foregroundStyle(Theme.Colors.textSecondary)
-                            }
-                            if let error = event.error {
-                                Text(error)
-                                    .font(.caption)
-                                    .foregroundStyle(.red)
-                                    .lineLimit(3)
-                            }
-                        }
-                    }
-                }
-            }
+            // MARK: - Recent Sync Events (per store)
+            syncEventsSection(title: "Private Store Events", storeName: "private")
+            syncEventsSection(title: "Shared Store Events", storeName: "shared")
 
             // MARK: - Actions
             Section("Actions") {
@@ -167,6 +145,38 @@ struct CloudKitDiagnosticsView: View {
 
     // MARK: - Helpers
 
+    private func syncEventsSection(title: String, storeName: String) -> some View {
+        let events = pc.lastSyncEvents.filter { pc.friendlyStoreName(for: $0.storeIdentifier) == storeName }
+        return Section(title) {
+            if events.isEmpty {
+                Text("No events")
+                    .foregroundStyle(Theme.Colors.textSecondary)
+            } else {
+                ForEach(events.suffix(10).reversed()) { event in
+                    VStack(alignment: .leading, spacing: 4) {
+                        HStack {
+                            Image(systemName: event.succeeded ? "checkmark.circle.fill" : "xmark.circle.fill")
+                                .foregroundStyle(event.succeeded ? .green : .red)
+                                .font(.caption)
+                            Text(event.eventType.capitalized)
+                                .font(.subheadline.bold())
+                            Spacer()
+                            Text(event.timestamp, style: .time)
+                                .font(.caption2)
+                                .foregroundStyle(Theme.Colors.textSecondary)
+                        }
+                        if let error = event.error {
+                            Text(error)
+                                .font(.caption)
+                                .foregroundStyle(.red)
+                                .lineLimit(3)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     private func row(_ label: String, _ value: String) -> some View {
         HStack {
             Text(label)
@@ -204,13 +214,24 @@ struct CloudKitDiagnosticsView: View {
             lines.append("  \(name): \(count)")
         }
         lines.append("")
-        lines.append("Recent Sync Events:")
-        for event in pc.lastSyncEvents.suffix(10) {
-            let status = event.succeeded ? "OK" : "FAIL"
-            lines.append("  [\(status)] \(event.eventType) — \(event.timestamp)")
-            if let error = event.error {
-                lines.append("    Error: \(error)")
+        lines.append("Private Records: \(privateRecordCount)")
+        lines.append("Shared Records: \(sharedRecordCount)")
+        lines.append("")
+        for storeName in ["private", "shared"] {
+            lines.append("Recent Sync Events (\(storeName)):")
+            let storeEvents = pc.lastSyncEvents.filter { pc.friendlyStoreName(for: $0.storeIdentifier) == storeName }
+            if storeEvents.isEmpty {
+                lines.append("  No events")
+            } else {
+                for event in storeEvents.suffix(10) {
+                    let status = event.succeeded ? "OK" : "FAIL"
+                    lines.append("  [\(status)] \(event.eventType) — \(event.timestamp)")
+                    if let error = event.error {
+                        lines.append("    Error: \(error)")
+                    }
+                }
             }
+            lines.append("")
         }
 
         #if os(iOS)
@@ -257,7 +278,7 @@ struct CloudKitDiagnosticsView: View {
             sharedStoreStatus = "NOT LOADED"
         }
 
-        // Record counts
+        // Record counts (total and per-store)
         let entities = [
             "Household", "User", "Recipe", "RecipeIngredient",
             "Ingredient", "FoodItem", "MealSlot", "WeekPlan",
@@ -265,12 +286,27 @@ struct CloudKitDiagnosticsView: View {
         ]
 
         var counts: [(String, Int)] = []
+        var privCount = 0
+        var sharCount = 0
         for entity in entities {
             let request = NSFetchRequest<NSManagedObject>(entityName: entity)
             let count = (try? viewContext.count(for: request)) ?? -1
             counts.append((entity, count))
+
+            if let privateStore = pc.privatePersistentStore {
+                let privReq = NSFetchRequest<NSManagedObject>(entityName: entity)
+                privReq.affectedStores = [privateStore]
+                privCount += (try? viewContext.count(for: privReq)) ?? 0
+            }
+            if let sharedStore = pc.sharedPersistentStore {
+                let sharReq = NSFetchRequest<NSManagedObject>(entityName: entity)
+                sharReq.affectedStores = [sharedStore]
+                sharCount += (try? viewContext.count(for: sharReq)) ?? 0
+            }
         }
         recordCounts = counts
+        privateRecordCount = privCount
+        sharedRecordCount = sharCount
 
         // Share info
         await pc.fetchExistingShare()

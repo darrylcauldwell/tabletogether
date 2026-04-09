@@ -149,6 +149,13 @@ final class PersistenceController {
 
     private(set) var lastError: String?
 
+    /// Maps a store identifier (UUID string) to a friendly name ("private" / "shared").
+    func friendlyStoreName(for storeIdentifier: String) -> String {
+        if storeIdentifier == privatePersistentStore?.identifier { return "private" }
+        if storeIdentifier == sharedPersistentStore?.identifier { return "shared" }
+        return "unknown"
+    }
+
     // MARK: - Sync Health
 
     /// Recent mirroring events for diagnostics (ring buffer, last 20).
@@ -896,4 +903,5 @@ struct SyncEventInfo: Identifiable {
     let succeeded: Bool
     let error: String?
     let timestamp: Date
+
 }
