@@ -120,7 +120,7 @@ platform :ios do
       skip_screenshots: true,
       force: true,
       metadata_path: "./fastlane/metadata",
-      app_version: "1.0.0",
+      app_version: "1.1",
       submit_for_review: false,
       automatic_release: false,
       precheck_include_in_app_purchases: false,
@@ -151,6 +151,13 @@ platform :ios do
       overwrite_screenshots: true,
       run_precheck_before_submit: false
     )
+  end
+
+  desc "Build, upload, and push metadata for Mac Catalyst"
+  lane :mac_release do
+    mac_beta
+    # Metadata is shared with the iOS App Store listing — the iOS metadata
+    # lane covers both platforms. No separate metadata upload needed here.
   end
 
   desc "Capture App Store screenshots from simulators"
@@ -236,7 +243,7 @@ platform :appletvos do
       skip_screenshots: true,
       force: true,
       metadata_path: "./fastlane/metadata-tvos",
-      app_version: "1.0.0",
+      app_version: "1.1",
       submit_for_review: false,
       automatic_release: false,
       precheck_include_in_app_purchases: false,
