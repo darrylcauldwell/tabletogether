@@ -199,7 +199,8 @@ platform :ios do
       force: true,
       run_precheck_before_submit: false,
       submission_information: {
-        add_id_info_uses_idfa: false
+        add_id_info_uses_idfa: false,
+        export_compliance_uses_encryption: false
       }
     )
   end
@@ -346,7 +347,8 @@ platform :appletvos do
       app_identifier: "dev.dreamfold.tabletogether.tv",
       platform: "appletvos",
       submission_information: {
-        add_id_info_uses_idfa: false
+        add_id_info_uses_idfa: false,
+        export_compliance_uses_encryption: false
       }
     )
   end
