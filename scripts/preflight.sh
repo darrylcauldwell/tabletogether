@@ -81,6 +81,63 @@ else
   fail "XcodeGen not installed (brew install xcodegen)"
 fi
 
+# --- Stage 4: Core Data Model Change Detection ---
+stage "CloudKit Schema Check"
+
+XCDATAMODELD_PATH="TableTogether/Sources/CoreData/TableTogether.xcdatamodeld"
+MODEL_CHANGES=$(git diff --cached --name-only -- "$XCDATAMODELD_PATH" 2>/dev/null || true)
+if [ -z "$MODEL_CHANGES" ]; then
+  # Also check unstaged/untracked changes (catch before staging)
+  MODEL_CHANGES=$(git diff --name-only -- "$XCDATAMODELD_PATH" 2>/dev/null || true)
+fi
+
+if [ -n "$MODEL_CHANGES" ]; then
+  echo ""
+  echo "  ╔══════════════════════════════════════════════════════════════════╗"
+  echo "  ║  ⚠️  CORE DATA MODEL CHANGED — CloudKit schema deploy needed   ║"
+  echo "  ╠══════════════════════════════════════════════════════════════════╣"
+  echo "  ║                                                                  ║"
+  echo "  ║  Changed files:                                                  ║"
+  for f in $MODEL_CHANGES; do
+    printf "  ║    %-60s ║\n" "$f"
+  done
+  echo "  ║                                                                  ║"
+  echo "  ║  Before shipping to TestFlight you MUST:                         ║"
+  echo "  ║    1. Run a Debug build to push schema to CloudKit Development   ║"
+  echo "  ║    2. Open the CloudKit Dashboard and deploy Dev → Production    ║"
+  echo "  ║                                                                  ║"
+  echo "  ║  Dashboard: https://icloud.developer.apple.com/dashboard/        ║"
+  echo "  ║  Container: iCloud.com.darrylcauldwell.tabletogether             ║"
+  echo "  ║                                                                  ║"
+  echo "  ╚══════════════════════════════════════════════════════════════════╝"
+  echo ""
+
+  # Escalate if new entities or attributes were added
+  NEW_SCHEMA=$(git diff --cached --unified=0 -- "$XCDATAMODELD_PATH" 2>/dev/null | grep "^+" | grep -E '<(entity|attribute) ' || true)
+  if [ -z "$NEW_SCHEMA" ]; then
+    NEW_SCHEMA=$(git diff --unified=0 -- "$XCDATAMODELD_PATH" 2>/dev/null | grep "^+" | grep -E '<(entity|attribute) ' || true)
+  fi
+
+  if [ -n "$NEW_SCHEMA" ]; then
+    echo "  New entities/attributes detected:"
+    echo "$NEW_SCHEMA" | sed 's/^+/    /'
+    echo ""
+    if [ -t 0 ]; then
+      read -rp "  Schema deploy is REQUIRED for these changes. Continue? [y/N] " REPLY
+      if [[ ! "$REPLY" =~ ^[Yy]$ ]]; then
+        echo "  Aborting — deploy schema first."
+        exit 1
+      fi
+    else
+      echo "  [WARN] Non-interactive mode — cannot prompt. Deploy schema before TestFlight!"
+    fi
+  fi
+
+  pass "CloudKit schema warning displayed"
+else
+  pass "No Core Data model changes detected"
+fi
+
 if $QUICK; then
   echo ""
   echo "=== Quick mode — skipping builds and tests ==="
@@ -93,7 +150,7 @@ if $QUICK; then
   exit 0
 fi
 
-# --- Stage 4: Build Verification ---
+# --- Stage 5: Build Verification ---
 stage "Build Verification (iOS Simulator)"
 
 if xcodebuild build \
