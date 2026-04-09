@@ -177,6 +177,41 @@ platform :ios do
     # lane covers both platforms. No separate metadata upload needed here.
   end
 
+  desc "Submit latest iOS TestFlight build for App Store review"
+  lane :promote do
+    asc_key_id = ENV.fetch("ASC_KEY_ID")
+    asc_issuer_id = ENV.fetch("ASC_ISSUER_ID")
+    asc_key_path = ENV.fetch("ASC_KEY_PATH")
+
+    api_key = app_store_connect_api_key(
+      key_id: asc_key_id,
+      issuer_id: asc_issuer_id,
+      key_filepath: asc_key_path
+    )
+
+    deliver(
+      api_key: api_key,
+      skip_binary_upload: true,
+      skip_screenshots: true,
+      skip_metadata: true,
+      submit_for_review: true,
+      automatic_release: false,
+      force: true,
+      run_precheck_before_submit: false,
+      submission_information: {
+        add_id_info_uses_idfa: false
+      }
+    )
+  end
+
+  desc "Submit latest Mac Catalyst TestFlight build for App Store review"
+  lane :mac_promote do
+    # Mac Catalyst shares the iOS App Store listing — promoting iOS
+    # promotes for both platforms. This lane exists for explicit invocation
+    # but delegates to the iOS promote lane.
+    promote
+  end
+
   desc "Capture App Store screenshots from simulators"
   lane :capture_app_screenshots do
     sh("../scripts/capture_screenshots.sh")
@@ -285,5 +320,34 @@ platform :appletvos do
   lane :release do
     beta
     metadata
+  end
+
+  desc "Submit latest tvOS TestFlight build for App Store review"
+  lane :promote do
+    asc_key_id = ENV.fetch("ASC_KEY_ID")
+    asc_issuer_id = ENV.fetch("ASC_ISSUER_ID")
+    asc_key_path = ENV.fetch("ASC_KEY_PATH")
+
+    api_key = app_store_connect_api_key(
+      key_id: asc_key_id,
+      issuer_id: asc_issuer_id,
+      key_filepath: asc_key_path
+    )
+
+    deliver(
+      api_key: api_key,
+      skip_binary_upload: true,
+      skip_screenshots: true,
+      skip_metadata: true,
+      submit_for_review: true,
+      automatic_release: false,
+      force: true,
+      run_precheck_before_submit: false,
+      app_identifier: "dev.dreamfold.tabletogether.tv",
+      platform: "appletvos",
+      submission_information: {
+        add_id_info_uses_idfa: false
+      }
+    )
   end
 end
