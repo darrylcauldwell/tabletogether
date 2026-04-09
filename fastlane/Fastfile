@@ -153,6 +153,12 @@ platform :ios do
     )
   end
 
+  desc "Build, upload, and push metadata for iOS"
+  lane :release do
+    beta
+    metadata
+  end
+
   desc "Build, upload, and push metadata for Mac Catalyst"
   lane :mac_release do
     mac_beta
