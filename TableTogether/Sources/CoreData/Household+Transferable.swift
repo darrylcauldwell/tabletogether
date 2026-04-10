@@ -2,6 +2,7 @@
 import CoreData
 import CloudKit
 import CoreTransferable
+import os
 
 /// Wrapper that makes a Household shareable via SwiftUI's ShareLink.
 ///
@@ -29,18 +30,34 @@ struct HouseholdShareItem: Transferable {
             // Return existing share if one already exists
             if let shareSet = try? container.fetchShares(matching: [objectID]),
                let (_, share) = shareSet.first {
+                AppLogger.sharing.info("""
+                    Returning existing share — \
+                    url: \(share.url?.absoluteString ?? "nil", privacy: .public), \
+                    participants: \(share.participants.count), \
+                    recordName: \(share.recordID.recordName, privacy: .public)
+                    """)
                 return .existing(share, container: ckContainer)
             }
 
             // Create a new share
+            AppLogger.sharing.info("No existing share found — will create new via prepareShare")
             return .prepareShare(container: ckContainer) {
                 let container = PersistenceController._persistentContainer!
                 let obj = await container.viewContext.perform {
                     container.viewContext.object(with: objectID)
                 }
-                let (_, share, _) = try await container.share([obj], to: nil)
+                AppLogger.sharing.info("Calling container.share() to create CKShare...")
+                let (sharedIDs, share, _) = try await container.share([obj], to: nil)
                 share[CKShare.SystemFieldKey.title] = "TableTogether Household" as CKRecordValue
                 share.publicPermission = .none
+                AppLogger.sharing.info("""
+                    Share created — \
+                    url: \(share.url?.absoluteString ?? "nil", privacy: .public), \
+                    sharedObjectCount: \(sharedIDs.count), \
+                    participants: \(share.participants.count), \
+                    recordName: \(share.recordID.recordName, privacy: .public), \
+                    publicPermission: \(String(describing: share.publicPermission))
+                    """)
                 return share
             }
         }
