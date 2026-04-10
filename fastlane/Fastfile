@@ -266,7 +266,7 @@ platform :appletvos do
       export_method: "app-store",
       project: "TableTogetherTV/TableTogetherTV.xcodeproj",
       destination: "generic/platform=tvOS",
-      xcargs: "CURRENT_PROJECT_VERSION=#{new_build} MARKETING_VERSION=1.1 -allowProvisioningUpdates -authenticationKeyPath '#{File.expand_path(asc_key_path)}' -authenticationKeyID #{asc_key_id} -authenticationKeyIssuerID #{asc_issuer_id}",
+      xcargs: "CURRENT_PROJECT_VERSION=#{new_build} MARKETING_VERSION=1.2 -allowProvisioningUpdates -authenticationKeyPath '#{File.expand_path(asc_key_path)}' -authenticationKeyID #{asc_key_id} -authenticationKeyIssuerID #{asc_issuer_id}",
       export_options: {
         signingStyle: "automatic",
         teamID: "N6BK2WX94Z"
@@ -307,7 +307,7 @@ platform :appletvos do
       skip_screenshots: true,
       force: true,
       metadata_path: "./fastlane/metadata-tvos",
-      app_version: "1.1",
+      app_version: "1.2",
       submit_for_review: false,
       automatic_release: false,
       precheck_include_in_app_purchases: false,
