@@ -30,7 +30,7 @@ struct HouseholdShareItem: Transferable {
             // Return existing share if one already exists
             if let shareSet = try? container.fetchShares(matching: [objectID]),
                let (_, share) = shareSet.first {
-                AppLogger.sharing.info("""
+                AppLogger.sharing.fault("""
                     Returning existing share — \
                     url: \(share.url?.absoluteString ?? "nil", privacy: .public), \
                     participants: \(share.participants.count), \
@@ -40,17 +40,17 @@ struct HouseholdShareItem: Transferable {
             }
 
             // Create a new share
-            AppLogger.sharing.info("No existing share found — will create new via prepareShare")
+            AppLogger.sharing.fault("No existing share found — will create new via prepareShare")
             return .prepareShare(container: ckContainer) {
                 let container = PersistenceController._persistentContainer!
                 let obj = await container.viewContext.perform {
                     container.viewContext.object(with: objectID)
                 }
-                AppLogger.sharing.info("Calling container.share() to create CKShare...")
+                AppLogger.sharing.fault("Calling container.share() to create CKShare...")
                 let (sharedIDs, share, _) = try await container.share([obj], to: nil)
                 share[CKShare.SystemFieldKey.title] = "TableTogether Household" as CKRecordValue
                 share.publicPermission = .none
-                AppLogger.sharing.info("""
+                AppLogger.sharing.fault("""
                     Share created — \
                     url: \(share.url?.absoluteString ?? "nil", privacy: .public), \
                     sharedObjectCount: \(sharedIDs.count), \
