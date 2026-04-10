@@ -380,10 +380,9 @@ final class PersistenceController {
             try viewContext.save()
         }
 
-        return try await withCheckedThrowingContinuation { continuation in
+        let share: CKShare = try await withCheckedThrowingContinuation { continuation in
             container.share([household], to: nil) { _, share, _, error in
                 if let error {
-                    self.lastError = error.localizedDescription
                     continuation.resume(throwing: error)
                     return
                 }
@@ -395,14 +394,18 @@ final class PersistenceController {
                     return
                 }
 
-                share[CKShare.SystemFieldKey.title] = "TableTogether Household" as CKRecordValue
-                share.publicPermission = .none
-
-                self.existingShare = share
-                self.lastError = nil
                 continuation.resume(returning: share)
             }
         }
+
+        // Configure and persist the share on MainActor (where viewContext lives)
+        share[CKShare.SystemFieldKey.title] = "TableTogether Household" as CKRecordValue
+        share.publicPermission = .none
+        try viewContext.save()
+
+        self.existingShare = share
+        self.lastError = nil
+        return share
     }
 
     /// Accepts an incoming share invitation.
