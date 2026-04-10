@@ -22,10 +22,6 @@ struct SettingsView: View {
 
     @AppStorage("appearanceMode") private var appearanceMode: Int = AppearanceMode.system.rawValue
 
-    @State private var sharingError: String?
-    @State private var showingSharingError = false
-    @State private var showingInviteNamePrompt = false
-    @State private var inviteRecipientName: String = ""
     @State private var selectedHouseholdMember: PersistenceController.HouseholdMember?
     @State private var showingRemoveDemoDataConfirmation = false
     @State private var showingRemoveContactConfirmation = false
@@ -127,11 +123,13 @@ struct SettingsView: View {
 
                     // Invite button — always available
                     #if os(iOS)
-                    Button {
-                        inviteRecipientName = ""
-                        showingInviteNamePrompt = true
-                    } label: {
-                        Label("Invite Family Member", systemImage: "person.badge.plus")
+                    if let household = households.first {
+                        ShareLink(
+                            item: HouseholdShareItem(household: household),
+                            preview: SharePreview("TableTogether Household")
+                        ) {
+                            Label("Invite Family Member", systemImage: "person.badge.plus")
+                        }
                     }
                     #else
                     Text("Share from iPhone or iPad to invite others")
@@ -293,15 +291,6 @@ struct SettingsView: View {
                     }
                 }
             }
-            #if os(iOS)
-            .modifier(SharingAlertsModifier(
-                showingSharingError: $showingSharingError,
-                sharingError: sharingError,
-                showingInviteNamePrompt: $showingInviteNamePrompt,
-                inviteRecipientName: $inviteRecipientName,
-                onContinue: startInvite
-            ))
-            #endif
             .confirmationDialog(
                 "Remove Contact?",
                 isPresented: $showingRemoveContactConfirmation,
@@ -472,34 +461,11 @@ struct SettingsView: View {
         }
     }
 
-    // Sharing actions are handled directly by SharingPresenter.shared
-    // from the button actions in the Household section above.
-
-    #if os(iOS)
-    private func startInvite() {
-        let label = inviteRecipientName.trimmingCharacters(in: .whitespaces)
-        let recipientLabel = label.isEmpty ? nil : label
-
-        SharingPresenter.shared.onError = { msg in
-            sharingError = msg
-            showingSharingError = true
-        }
-
-        if let share = persistenceController.existingShare {
-            SharingPresenter.shared.presentInviteMore(share: share, recipientLabel: recipientLabel)
-        } else if let household = households.first {
-            SharingPresenter.shared.presentInvite(
-                for: household,
-                recipientLabel: recipientLabel
-            )
-        }
-    }
-    #endif
 }
 
 // MARK: - Backfill Alerts Modifier
 //
-// Extracted (like SharingAlertsModifier below) to keep SettingsView.body within
+// Extracted to keep SettingsView.body within
 // the SwiftUI type-checker's complexity budget. Hosts the confirm-and-result
 // dialogs for the "Reorganise Ingredient Library" action (#59 Phase 5).
 
@@ -536,38 +502,6 @@ private struct BackfillAlertsModifier: ViewModifier {
                     "Already linked: \(result.alreadyLinked)\n" +
                     "Created \(result.mastersCreated) new Ingredient master records."
                 )
-            }
-    }
-}
-
-// MARK: - Sharing Alerts Modifier
-//
-// Extracted to keep SettingsView.body within the SwiftUI type-checker's complexity
-// budget. The body has many alerts/sheets and adding more inline causes timeouts.
-
-private struct SharingAlertsModifier: ViewModifier {
-    @Binding var showingSharingError: Bool
-    let sharingError: String?
-    @Binding var showingInviteNamePrompt: Bool
-    @Binding var inviteRecipientName: String
-    let onContinue: () -> Void
-
-    func body(content: Content) -> some View {
-        content
-            .alert("Sharing Error", isPresented: $showingSharingError) {
-                Button("OK") {}
-            } message: {
-                Text(sharingError ?? "Unknown error")
-            }
-            .alert("Invite Family Member", isPresented: $showingInviteNamePrompt) {
-                #if os(iOS)
-                TextField("Name (optional)", text: $inviteRecipientName)
-                    .textInputAutocapitalization(.words)
-                #endif
-                Button("Cancel", role: .cancel) {}
-                Button("Continue") { onContinue() }
-            } message: {
-                Text("Optionally enter the name of the person you're inviting. This helps you identify pending invites in your household list.")
             }
     }
 }

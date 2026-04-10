@@ -19,6 +19,11 @@ final class PersistenceController {
 
     static let shared = PersistenceController()
 
+    /// Non-isolated reference to the persistent container for Transferable
+    /// conformances that run outside MainActor. Set once during init.
+    @ObservationIgnored
+    nonisolated(unsafe) private(set) static var _persistentContainer: NSPersistentCloudKitContainer!
+
     static let preview: PersistenceController = {
         let controller = PersistenceController(inMemory: true)
         let context = controller.viewContext
@@ -175,7 +180,7 @@ final class PersistenceController {
 
     // MARK: - Constants
 
-    static let cloudKitContainerID = "iCloud.dev.dreamfold.tabletogether"
+    nonisolated static let cloudKitContainerID = "iCloud.dev.dreamfold.tabletogether"
     nonisolated(unsafe) static let appTransactionAuthor = "TableTogether"
     nonisolated(unsafe) static let tokenPrefix = "HistoryToken_"
 
@@ -229,6 +234,7 @@ final class PersistenceController {
     init(inMemory: Bool = false) {
         let model = Self.loadManagedObjectModel()
         container = NSPersistentCloudKitContainer(name: "TableTogether", managedObjectModel: model)
+        Self._persistentContainer = container
 
         if inMemory {
             let description = NSPersistentStoreDescription()
@@ -371,42 +377,6 @@ final class PersistenceController {
     }
 
     // MARK: - Sharing
-
-    /// Creates a CKShare for the given household.
-    /// Saves the context first to ensure the object is persisted.
-    func shareHousehold(_ household: Household) async throws -> CKShare {
-        // Ensure household is saved to the persistent store before sharing
-        if viewContext.hasChanges {
-            try viewContext.save()
-        }
-
-        let share: CKShare = try await withCheckedThrowingContinuation { continuation in
-            container.share([household], to: nil) { _, share, _, error in
-                if let error {
-                    continuation.resume(throwing: error)
-                    return
-                }
-
-                guard let share else {
-                    let err = NSError(domain: "PersistenceController", code: 1,
-                                      userInfo: [NSLocalizedDescriptionKey: "Share creation returned nil"])
-                    continuation.resume(throwing: err)
-                    return
-                }
-
-                continuation.resume(returning: share)
-            }
-        }
-
-        // Configure and persist the share on MainActor (where viewContext lives)
-        share[CKShare.SystemFieldKey.title] = "TableTogether Household" as CKRecordValue
-        share.publicPermission = .none
-        try viewContext.save()
-
-        self.existingShare = share
-        self.lastError = nil
-        return share
-    }
 
     /// Accepts an incoming share invitation.
     func acceptShare(metadata: CKShare.Metadata) async throws {

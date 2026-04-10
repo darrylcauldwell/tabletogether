@@ -55,17 +55,18 @@ struct HouseholdMemberDetailSheet: View {
                     }
                 } else if member.status == .pending {
                     Section {
-                        Text("Apple doesn't reveal an invitee's name, email, or phone until they accept the invitation. The label shown above is the one you typed when sending it.")
+                        Text("Contact details aren't available until the invitee accepts the invitation.")
                             .font(.caption)
                             .foregroundStyle(Theme.Colors.textSecondary)
                     }
                 }
 
-                if member.status == .pending {
+                if member.status == .pending, let share = persistenceController.existingShare {
                     Section {
-                        Button {
-                            resendInvite()
-                        } label: {
+                        ShareLink(
+                            item: share,
+                            preview: SharePreview("TableTogether Household")
+                        ) {
                             Label("Resend Invite", systemImage: "paperplane")
                         }
                         .disabled(isWorking)
@@ -128,20 +129,6 @@ struct HouseholdMemberDetailSheet: View {
                      : "\(member.name) will lose access to your shared household.")
             }
         }
-    }
-
-    private func resendInvite() {
-        guard let share = persistenceController.existingShare else {
-            errorMessage = "No active share — try inviting from the Household section instead."
-            return
-        }
-        SharingPresenter.shared.onError = { msg in
-            errorMessage = msg
-        }
-        SharingPresenter.shared.presentInviteMore(share: share, recipientLabel: nil)
-        // Dismiss the detail sheet so the share sheet has the screen.
-        dismiss()
-        onClose()
     }
 
     private func removeMember() {
