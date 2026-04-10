@@ -198,6 +198,15 @@ final class PersistenceController {
         return queue
     }()
 
+    /// Notification observer tokens for closure-based observers.
+    /// Closure-based observers avoid the @objc thunk that inherits @MainActor
+    /// isolation from the class, which causes runtime traps when CoreData fires
+    /// notifications on background threads (Thread 2 SIGTRAP).
+    @ObservationIgnored
+    private var remoteChangeObserver: Any?
+    @ObservationIgnored
+    private var cloudKitEventObserver: Any?
+
     // MARK: - Initialization
 
     /// Locate the Core Data model in either the SPM resource bundle or the main bundle.
@@ -283,21 +292,26 @@ final class PersistenceController {
         container.viewContext.mergePolicy = NSMergePolicy.mergeByPropertyObjectTrump
         container.viewContext.transactionAuthor = Self.appTransactionAuthor
 
-        // Register for remote changes AFTER stores are loaded
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(processRemoteChanges),
-            name: .NSPersistentStoreRemoteChange,
-            object: container.persistentStoreCoordinator
-        )
+        // Register for remote changes AFTER stores are loaded.
+        // Use closure-based observers so the callback runs on the posting
+        // thread without going through an @objc thunk that would inherit
+        // @MainActor isolation and trap at runtime (SIGTRAP on Thread 2).
+        remoteChangeObserver = NotificationCenter.default.addObserver(
+            forName: .NSPersistentStoreRemoteChange,
+            object: container.persistentStoreCoordinator,
+            queue: nil
+        ) { [weak self] notification in
+            self?.processRemoteChanges(notification)
+        }
 
         // Observe CloudKit mirroring events for sync health monitoring
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(handleCloudKitEvent),
-            name: NSPersistentCloudKitContainer.eventChangedNotification,
-            object: container
-        )
+        cloudKitEventObserver = NotificationCenter.default.addObserver(
+            forName: NSPersistentCloudKitContainer.eventChangedNotification,
+            object: container,
+            queue: nil
+        ) { [weak self] notification in
+            self?.handleCloudKitEvent(notification)
+        }
 
         // Set up CKSystemSharingUIObserver to monitor system sharing UI events
         #if os(iOS)
@@ -529,7 +543,6 @@ final class PersistenceController {
 
     // MARK: - History Processing (Serial Queue, Off Main Thread)
 
-    @objc
     private nonisolated func processRemoteChanges(_ notification: Notification) {
         // Extract store UUID from notification (matches Apple's sample pattern)
         guard let storeUUID = notification.userInfo?[NSStoreUUIDKey] as? String else { return }
@@ -637,7 +650,6 @@ final class PersistenceController {
 
     // MARK: - CloudKit Mirroring Event Observer
 
-    @objc
     private nonisolated func handleCloudKitEvent(_ notification: Notification) {
         guard let event = notification.userInfo?[NSPersistentCloudKitContainer.eventNotificationUserInfoKey]
                 as? NSPersistentCloudKitContainer.Event else { return }
