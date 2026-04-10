@@ -3,12 +3,19 @@ import UIKit
 import CloudKit
 import CoreData
 
-/// Presents CloudKit sharing UI via UIKit.
+/// Presents CloudKit sharing UI via UICloudSharingController.
 ///
-/// Three distinct operations, each using the correct Apple API:
-/// - Invite (new): NSItemProvider.registerCKShare + UIActivityViewController
-/// - Invite (existing): NSItemProvider.registerCKShare + UIActivityViewController
-/// - Manage: UICloudSharingController(share:container:)
+/// UICloudSharingController manages the full share lifecycle — including
+/// uploading the CKShare to CloudKit — before letting the user send an
+/// invitation.  The previous NSItemProvider + UIActivityViewController
+/// approach failed because NSPersistentCloudKitContainer.share() saves
+/// the share locally; CloudKit mirroring is async, so the share wasn't
+/// uploaded by the time iMessage tried to resolve it (infinite spinner).
+///
+/// State management: CKSystemSharingUIObserver (configured in
+/// PersistenceController.init) handles updating existingShare after
+/// save/stop events. The delegate here calls fetchExistingShare() for
+/// immediacy and onError for UI alerts — no direct property writes.
 @MainActor
 final class SharingPresenter: NSObject {
 
@@ -19,13 +26,11 @@ final class SharingPresenter: NSObject {
 
     // MARK: - Invite to Household (New Share)
 
-    /// Creates a new CKShare and presents UIActivityViewController for the user to send invitations.
-    /// Pre-creates the share first, then uses NSItemProvider.registerCKShare(_:container:allowedSharingOptions:)
-    /// to present the activity view controller with the existing share.
-    /// - Parameter recipientLabel: Optional user-provided label (e.g. "Alice") stored locally
-    ///   so the pending invitation row in Settings shows a meaningful name until the
-    ///   participant accepts.
-    func presentInvite(for household: Household, recipientLabel: String? = nil) async {
+    /// Presents UICloudSharingController with a preparation handler that
+    /// creates the CKShare via NSPersistentCloudKitContainer.share().
+    /// The controller waits for the share to be fully uploaded to CloudKit
+    /// before presenting sharing options to the user.
+    func presentInvite(for household: Household, recipientLabel: String? = nil) {
         let pc = PersistenceController.shared
 
         // Save pending changes before sharing
@@ -38,41 +43,34 @@ final class SharingPresenter: NSObject {
             }
         }
 
-        // Pre-create the CKShare on MainActor before presenting
-        let share: CKShare
-        do {
-            share = try await pc.shareHousehold(household)
-        } catch {
-            onError?("Failed to create share: \(error.localizedDescription)")
-            return
+        let controller = UICloudSharingController { _, preparationHandler in
+            pc.container.share([household], to: nil) { _, share, ckContainer, error in
+                if let share {
+                    share[CKShare.SystemFieldKey.title] = "TableTogether Household" as CKRecordValue
+                    share.publicPermission = .none
+
+                    // Store recipient label so the pending row shows a name.
+                    // UserDefaults is thread-safe; safe to call from this queue.
+                    if let recipientLabel, !recipientLabel.isEmpty {
+                        PendingInvitationStore.setLabel(
+                            recipientLabel,
+                            forShareRecordName: share.recordID.recordName
+                        )
+                    }
+                }
+                preparationHandler(share, ckContainer, error)
+            }
         }
 
-        // Store the recipient label locally so the pending invitation row shows it
-        if let recipientLabel, !recipientLabel.isEmpty {
-            PendingInvitationStore.setLabel(
-                recipientLabel,
-                forShareRecordName: share.recordID.recordName
-            )
-        }
-
-        // Now register the existing share and present
-        let itemProvider = NSItemProvider()
-        itemProvider.registerCKShare(
-            share,
-            container: pc.ckContainer,
-            allowedSharingOptions: CKAllowedSharingOptions.standard
-        )
-
-        presentActivityViewController(with: itemProvider)
+        controller.availablePermissions = [.allowReadWrite, .allowPrivate]
+        controller.delegate = self
+        presentController(controller)
     }
 
     // MARK: - Invite More People (Existing Share)
 
-    /// Presents UIActivityViewController for an existing share so the user can invite more people.
-    /// Uses NSItemProvider.registerCKShare(_:container:allowedSharingOptions:)
-    /// - Parameter recipientLabel: Optional label for the new invitee. Note that with an
-    ///   existing share, all pending invites share the same label key (the share recordName),
-    ///   so this overwrites any prior label.
+    /// Presents UICloudSharingController for an existing share so the user
+    /// can invite additional people.
     func presentInviteMore(share: CKShare, recipientLabel: String? = nil) {
         let pc = PersistenceController.shared
 
@@ -83,23 +81,16 @@ final class SharingPresenter: NSObject {
             )
         }
 
-        let itemProvider = NSItemProvider()
-        itemProvider.registerCKShare(
-            share,
-            container: pc.ckContainer,
-            allowedSharingOptions: CKAllowedSharingOptions.standard
-        )
-
-        presentActivityViewController(with: itemProvider)
+        let controller = UICloudSharingController(share: share, container: pc.ckContainer)
+        controller.availablePermissions = [.allowReadWrite, .allowPrivate]
+        controller.delegate = self
+        presentController(controller)
     }
 
     // MARK: - Private Helpers
 
-    private func presentActivityViewController(with itemProvider: NSItemProvider) {
-        let configuration = UIActivityItemsConfiguration(itemProviders: [itemProvider])
-
-        let activityVC = UIActivityViewController(activityItemsConfiguration: configuration)
-        activityVC.modalPresentationStyle = .formSheet
+    private func presentController(_ controller: UICloudSharingController) {
+        controller.modalPresentationStyle = .formSheet
 
         guard let topVC = Self.topViewController() else {
             onError?("Unable to present sharing UI")
@@ -107,13 +98,13 @@ final class SharingPresenter: NSObject {
         }
 
         // iPad requires popover source
-        if let popover = activityVC.popoverPresentationController {
+        if let popover = controller.popoverPresentationController {
             popover.sourceView = topVC.view
             popover.sourceRect = CGRect(x: topVC.view.bounds.midX, y: topVC.view.bounds.midY, width: 0, height: 0)
             popover.permittedArrowDirections = []
         }
 
-        topVC.present(activityVC, animated: true)
+        topVC.present(controller, animated: true)
     }
 
     private static func topViewController() -> UIViewController? {
@@ -128,6 +119,36 @@ final class SharingPresenter: NSObject {
             topVC = presented
         }
         return topVC
+    }
+}
+
+// MARK: - UICloudSharingControllerDelegate
+
+extension SharingPresenter: UICloudSharingControllerDelegate {
+
+    nonisolated func cloudSharingController(
+        _ controller: UICloudSharingController,
+        failedToSaveShareWithError error: any Error
+    ) {
+        Task { @MainActor in
+            onError?("Failed to share: \(error.localizedDescription)")
+        }
+    }
+
+    nonisolated func cloudSharingControllerDidSaveShare(_ controller: UICloudSharingController) {
+        Task { @MainActor in
+            await PersistenceController.shared.fetchExistingShare()
+        }
+    }
+
+    nonisolated func cloudSharingControllerDidStopSharing(_ controller: UICloudSharingController) {
+        Task { @MainActor in
+            await PersistenceController.shared.fetchExistingShare()
+        }
+    }
+
+    nonisolated func itemTitle(for controller: UICloudSharingController) -> String? {
+        "TableTogether Household"
     }
 }
 #endif

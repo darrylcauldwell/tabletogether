@@ -488,12 +488,10 @@ struct SettingsView: View {
         if let share = persistenceController.existingShare {
             SharingPresenter.shared.presentInviteMore(share: share, recipientLabel: recipientLabel)
         } else if let household = households.first {
-            Task {
-                await SharingPresenter.shared.presentInvite(
-                    for: household,
-                    recipientLabel: recipientLabel
-                )
-            }
+            SharingPresenter.shared.presentInvite(
+                for: household,
+                recipientLabel: recipientLabel
+            )
         }
     }
     #endif
