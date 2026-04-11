@@ -23,6 +23,7 @@ struct SettingsView: View {
     @AppStorage("appearanceMode") private var appearanceMode: Int = AppearanceMode.system.rawValue
 
     @State private var selectedHouseholdMember: PersistenceController.HouseholdMember?
+    @State private var showingCloudSharingSheet = false
     @State private var showingRemoveDemoDataConfirmation = false
     @State private var showingRemoveContactConfirmation = false
     @State private var contactToRemove: User?
@@ -124,11 +125,16 @@ struct SettingsView: View {
                     // Invite button — always available
                     #if os(iOS)
                     if let household = households.first {
-                        ShareLink(
-                            item: HouseholdShareItem(household: household),
-                            preview: SharePreview("TableTogether Household")
-                        ) {
+                        Button {
+                            showingCloudSharingSheet = true
+                        } label: {
                             Label("Invite Family Member", systemImage: "person.badge.plus")
+                        }
+                        .sheet(isPresented: $showingCloudSharingSheet) {
+                            CloudSharingView(
+                                household: household,
+                                persistenceController: persistenceController
+                            )
                         }
                     }
                     #else
