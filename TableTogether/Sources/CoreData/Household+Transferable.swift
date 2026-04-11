@@ -27,16 +27,28 @@ struct HouseholdShareItem: Transferable {
                 fatalError("Cannot resolve Household objectID from URI: \(item.objectURI)")
             }
 
-            // Return existing share if one already exists
+            // Return existing share if one already exists AND has been saved to CloudKit.
+            // Shares with nil URL were created locally but never persisted to the server
+            // (e.g. user cancelled the sharing UI). Using them causes "You cannot get the
+            // URL of a share until it's been saved to the server" and an infinite sync loop
+            // as CoreData tries to import from a non-existent share zone. #70
             if let shareSet = try? container.fetchShares(matching: [objectID]),
                let (_, share) = shareSet.first {
-                AppLogger.sharing.fault("""
-                    Returning existing share — \
-                    url: \(share.url?.absoluteString ?? "nil", privacy: .public), \
-                    participants: \(share.participants.count), \
-                    recordName: \(share.recordID.recordName, privacy: .public)
-                    """)
-                return .existing(share, container: ckContainer)
+                if share.url != nil {
+                    AppLogger.sharing.fault("""
+                        Returning existing share — \
+                        url: \(share.url?.absoluteString ?? "nil", privacy: .public), \
+                        participants: \(share.participants.count), \
+                        recordName: \(share.recordID.recordName, privacy: .public)
+                        """)
+                    return .existing(share, container: ckContainer)
+                } else {
+                    AppLogger.sharing.fault("""
+                        Ignoring orphaned share with nil URL — \
+                        recordName: \(share.recordID.recordName, privacy: .public). \
+                        Will create new share via prepareShare.
+                        """)
+                }
             }
 
             // Create a new share
