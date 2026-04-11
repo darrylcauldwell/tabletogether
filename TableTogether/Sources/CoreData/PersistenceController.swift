@@ -405,30 +405,22 @@ final class PersistenceController {
     }
 
     /// Fetches the existing CKShare for the household, if any.
-    /// Also purges orphaned shares (nil URL) that cause infinite "Zone Not Found" sync loops. #70
+    /// Filters out orphaned shares (nil URL) so the app doesn't try to use them. #70
+    ///
+    /// Note: we intentionally do NOT call `purgeObjectsAndRecordsInZone` here.
+    /// `container.share([obj], to: nil)` moves managed objects into the share zone,
+    /// so purging would delete the Household and all linked records (recipes, ingredients,
+    /// meal plans). The orphaned share zone causes a "Zone Not Found" sync loop, but
+    /// that is preferable to data loss. Users can recover via "Reset All Sync Data"
+    /// in CloudKit Diagnostics, which clears local stores and re-downloads from CloudKit.
     func fetchExistingShare() async {
         guard let privateStore = privatePersistentStore else { return }
 
         do {
             let shares = try container.fetchShares(in: privateStore)
 
-            // Purge orphaned shares — created locally but never saved to CloudKit.
-            // These reference share zones that don't exist on the server, causing
-            // CoreData+CloudKit to loop: import → "Zone Not Found" → reset → retry.
-            for share in shares where share.url == nil {
-                let zoneName = share.recordID.zoneID.zoneName
-                AppLogger.sharing.fault("Purging orphaned share with nil URL — zone: \(zoneName, privacy: .public)")
-                let zoneID = share.recordID.zoneID
-                try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-                    container.purgeObjectsAndRecordsInZone(with: zoneID, in: privateStore) { _, error in
-                        if let error {
-                            continuation.resume(throwing: error)
-                        } else {
-                            continuation.resume()
-                        }
-                    }
-                }
-                AppLogger.sharing.info("Purged orphaned share zone: \(zoneName, privacy: .public)")
+            if shares.contains(where: { $0.url == nil }) {
+                AppLogger.sharing.fault("Found orphaned share(s) with nil URL — filtering out. Use 'Reset All Sync Data' to clean up.")
             }
 
             // Use only valid shares (with a CloudKit URL)
@@ -696,12 +688,12 @@ final class PersistenceController {
             } else if needsRecovery,
                       storeID == self.privatePersistentStore?.identifier,
                       !self.privateStoreOrphanCleanupDone {
-                // Private store "Zone Not Found" — usually an orphaned share zone.
-                // Purge orphaned shares (nil URL) to break the sync loop.
-                // Only attempt once per app session to avoid re-entering the loop. #70
+                // Private store "Zone Not Found" — orphaned share zone from a cancelled
+                // share creation. Log once per session. Cannot purge automatically because
+                // purgeObjectsAndRecordsInZone deletes the Household and all shared objects.
+                // User must use "Reset All Sync Data" in CloudKit Diagnostics to recover. #70
                 self.privateStoreOrphanCleanupDone = true
-                AppLogger.sync.fault("Private store zone error detected — purging orphaned shares")
-                await self.fetchExistingShare()
+                AppLogger.sync.fault("Private store zone error detected — orphaned share zone. Use 'Reset All Sync Data' to clean up.")
             } else if succeeded, storeID == self.sharedPersistentStore?.identifier {
                 self.sharedStoreHealthy = true
                 self.recoveryAttemptCount = 0
