@@ -1,5 +1,7 @@
 default_platform(:ios)
 
+MARKETING_VERSION = "1.2"
+
 platform :ios do
   desc "Push a new beta build to TestFlight"
   lane :beta do
@@ -27,7 +29,7 @@ platform :ios do
       export_method: "app-store",
       project: "TableTogether.xcodeproj",
       destination: "generic/platform=iOS",
-      xcargs: "CURRENT_PROJECT_VERSION=#{new_build} MARKETING_VERSION=1.2 -allowProvisioningUpdates -authenticationKeyPath '#{File.expand_path(asc_key_path)}' -authenticationKeyID #{asc_key_id} -authenticationKeyIssuerID #{asc_issuer_id}",
+      xcargs: "CURRENT_PROJECT_VERSION=#{new_build} MARKETING_VERSION=#{MARKETING_VERSION} -allowProvisioningUpdates -authenticationKeyPath '#{File.expand_path(asc_key_path)}' -authenticationKeyID #{asc_key_id} -authenticationKeyIssuerID #{asc_issuer_id}",
       export_options: {
         signingStyle: "automatic",
         teamID: "N6BK2WX94Z"
@@ -72,7 +74,7 @@ platform :ios do
       export_method: "app-store",
       project: "TableTogether.xcodeproj",
       catalyst_platform: "macos",
-      xcargs: "CURRENT_PROJECT_VERSION=#{new_build} MARKETING_VERSION=1.2 -allowProvisioningUpdates -authenticationKeyPath '#{File.expand_path(asc_key_path)}' -authenticationKeyID #{asc_key_id} -authenticationKeyIssuerID #{asc_issuer_id}",
+      xcargs: "CURRENT_PROJECT_VERSION=#{new_build} MARKETING_VERSION=#{MARKETING_VERSION} -allowProvisioningUpdates -authenticationKeyPath '#{File.expand_path(asc_key_path)}' -authenticationKeyID #{asc_key_id} -authenticationKeyIssuerID #{asc_issuer_id}",
       export_options: {
         signingStyle: "automatic",
         teamID: "N6BK2WX94Z"
@@ -97,7 +99,7 @@ platform :ios do
       "--apple-id", "6758763074",
       "--bundle-id", "dev.dreamfold.tabletogether",
       "--bundle-version", new_build.to_s,
-      "--bundle-short-version-string", "1.2",
+      "--bundle-short-version-string", MARKETING_VERSION,
       "--apiKey", asc_key_id,
       "--apiIssuer", asc_issuer_id
     )
@@ -131,7 +133,7 @@ platform :ios do
       skip_screenshots: true,
       force: true,
       metadata_path: "./fastlane/metadata",
-      app_version: "1.2",
+      app_version: MARKETING_VERSION,
       submit_for_review: false,
       automatic_release: false,
       precheck_include_in_app_purchases: false,
@@ -191,9 +193,11 @@ platform :ios do
 
     deliver(
       api_key: api_key,
+      app_version: MARKETING_VERSION,
       skip_binary_upload: true,
       skip_screenshots: true,
       skip_metadata: true,
+      skip_app_version_update: false,
       submit_for_review: true,
       automatic_release: false,
       force: true,
@@ -266,7 +270,7 @@ platform :appletvos do
       export_method: "app-store",
       project: "TableTogetherTV/TableTogetherTV.xcodeproj",
       destination: "generic/platform=tvOS",
-      xcargs: "CURRENT_PROJECT_VERSION=#{new_build} MARKETING_VERSION=1.2 -allowProvisioningUpdates -authenticationKeyPath '#{File.expand_path(asc_key_path)}' -authenticationKeyID #{asc_key_id} -authenticationKeyIssuerID #{asc_issuer_id}",
+      xcargs: "CURRENT_PROJECT_VERSION=#{new_build} MARKETING_VERSION=#{MARKETING_VERSION} -allowProvisioningUpdates -authenticationKeyPath '#{File.expand_path(asc_key_path)}' -authenticationKeyID #{asc_key_id} -authenticationKeyIssuerID #{asc_issuer_id}",
       export_options: {
         signingStyle: "automatic",
         teamID: "N6BK2WX94Z"
@@ -307,7 +311,7 @@ platform :appletvos do
       skip_screenshots: true,
       force: true,
       metadata_path: "./fastlane/metadata-tvos",
-      app_version: "1.2",
+      app_version: MARKETING_VERSION,
       submit_for_review: false,
       automatic_release: false,
       precheck_include_in_app_purchases: false,
@@ -337,9 +341,11 @@ platform :appletvos do
 
     deliver(
       api_key: api_key,
+      app_version: MARKETING_VERSION,
       skip_binary_upload: true,
       skip_screenshots: true,
       skip_metadata: true,
+      skip_app_version_update: false,
       submit_for_review: true,
       automatic_release: false,
       force: true,
