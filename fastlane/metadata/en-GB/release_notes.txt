@@ -1,22 +1,13 @@
-What's new in 1.1
+What's new in 1.2
 
-Recipes
-- Browse by cookbook — recipes grouped by source
-- Recipe thumbnails from curated library
-- Cookbook attribution preserved from Paprika imports
+Sharing
+- Household invites now use Apple's native sharing sheet — fixes the spinner that could appear when inviting via Messages
+- Share status saves before the invite sheet opens, so resending an invite always works
 
-Ingredients
-- Ingredient and food item libraries with search, edit, and alias management
-- Merge duplicates with one tap — aliases preserved automatically
-- Backfill tool links existing recipes to master ingredients
+Sync
+- Fixed a sync loop triggered by leftover share records on a household
+- Fixed an edge case where shared household data could be removed during sync recovery
+- Improved logging in release builds so sync issues are easier to diagnose
 
-Planning
-- Add recipes to meal plans directly from recipe detail
-- Multi-component meal slots (recipe + sides)
-- Household member names shown on invitations
-
-Stability
-- Fixed iCloud sync failures on Mac Catalyst
-- Fixed meal sheet flickering on iPhone and iPad
-- Fixed fresh installs wiping shared household data
-- Improved CloudKit diagnostics with per-store event tracking
+Apple TV
+- Fixed empty state screens
