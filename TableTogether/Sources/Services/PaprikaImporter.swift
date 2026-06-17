@@ -109,7 +109,9 @@ final class PaprikaImporter {
                 AppLogger.swiftData.error("Failed to fetch existing recipes for duplicate check: \(error.localizedDescription)")
                 existingRecipes = []
             }
-            let existingTitles = Set(existingRecipes.map { $0.title.lowercased() })
+            // Mutable so titles imported earlier in this same file are also deduped against
+            // (otherwise two recipes named "Curry" in one export both import). See JSONRecipeImporter.
+            var existingTitles = Set(existingRecipes.map { $0.title.lowercased() })
 
             // One resolver instance for the whole import — see JSONRecipeImporter
             // for the rationale (prewarm Ingredient master cache once, reuse).
@@ -132,6 +134,8 @@ final class PaprikaImporter {
                     skipped += 1
                     continue
                 }
+                // Register now so later recipes in this same file dedupe against it.
+                existingTitles.insert(name.lowercased())
 
                 // Create the Recipe
                 let recipe = buildRecipe(from: paprika, context: context)
