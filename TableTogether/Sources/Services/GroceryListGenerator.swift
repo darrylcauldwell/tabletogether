@@ -28,8 +28,11 @@ final class GroceryListGenerator {
     /// - Parameter weekPlan: The week plan to generate the grocery list from
     /// - Returns: An array of `GroceryItem` objects grouped by category
     func generateGroceryList(from weekPlan: WeekPlan, context: NSManagedObjectContext) -> [GroceryItem] {
-        // Collect all recipe ingredients from planned slots
-        var ingredientAggregation: [UUID: IngredientAggregation] = [:]
+        // Collect all recipe ingredients from planned slots.
+        // Keyed by (ingredient, unit): the same ingredient measured in different units
+        // (e.g. grams in one recipe, tablespoons in another) must stay as separate line
+        // items, since there is no unit-conversion table to combine them honestly.
+        var ingredientAggregation: [AggregationKey: IngredientAggregation] = [:]
 
         for slot in weekPlan.slotsArray {
             // Skip slots without recipes or that are explicitly skipped
@@ -46,17 +49,17 @@ final class GroceryListGenerator {
                     // Skip if ingredient is nil
                     guard let ingredient = recipeIngredient.ingredient else { continue }
 
-                    let ingredientID = ingredient.id
+                    let key = AggregationKey(ingredientID: ingredient.id, unit: recipeIngredient.unit)
                     let adjustedQuantity = recipeIngredient.quantity * servingMultiplier
 
-                    if var existing = ingredientAggregation[ingredientID] {
-                        // Combine with existing entry
+                    if var existing = ingredientAggregation[key] {
+                        // Combine with existing entry (same ingredient AND same unit)
                         existing.totalQuantity += adjustedQuantity
                         existing.sourceSlots.append(slot)
-                        ingredientAggregation[ingredientID] = existing
+                        ingredientAggregation[key] = existing
                     } else {
                         // Create new aggregation entry
-                        ingredientAggregation[ingredientID] = IngredientAggregation(
+                        ingredientAggregation[key] = IngredientAggregation(
                             ingredient: ingredient,
                             totalQuantity: adjustedQuantity,
                             unit: recipeIngredient.unit,
@@ -122,6 +125,13 @@ final class GroceryListGenerator {
 }
 
 // MARK: - Private Types
+
+/// Composite key for grocery aggregation: quantities only combine when both the
+/// ingredient and its unit match, so mismatched units aren't silently summed.
+private struct AggregationKey: Hashable {
+    let ingredientID: UUID
+    let unit: MeasurementUnit
+}
 
 /// Internal type for aggregating ingredient quantities.
 private struct IngredientAggregation {
