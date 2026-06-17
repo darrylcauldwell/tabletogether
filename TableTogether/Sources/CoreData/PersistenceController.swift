@@ -459,9 +459,43 @@ final class PersistenceController {
         }
     }
 
-    /// Purges shared objects and records when sharing stops (called by UICloudSharingController delegate).
-    func purgeObjectsAndRecords(for share: CKShare) async {
-        guard let store = privatePersistentStore else { return }
+    /// Whether the current iCloud user owns this share (i.e. created the household share).
+    ///
+    /// This distinction is critical when sharing stops: the owner's records were *moved* into
+    /// the share zone of their own **private** store, so the owner must never purge. A
+    /// participant only holds a mirror in the **shared** store, which is safe to purge.
+    /// If participation can't be determined we conservatively treat the user as a participant —
+    /// safe because the purge below only ever touches the shared store, never the owner's data.
+    func isCurrentUserOwner(of share: CKShare) -> Bool {
+        share.currentUserParticipant?.role == .owner
+    }
+
+    /// Handles the system "Stop Sharing" / "Remove Me" action (UICloudSharingController delegate).
+    ///
+    /// - Owner: CloudKit tears down the CKShare and demotes the records back into the owner's
+    ///   private store. We must NOT purge — purging the zone would delete the Household and all
+    ///   linked records (recipes, ingredients, meal plans). #70. We only clear local share state.
+    /// - Participant: we remove our local mirror from the shared store (see `purgeSharedMirror`).
+    func handleStoppedSharing(_ share: CKShare) async {
+        if isCurrentUserOwner(of: share) {
+            AppLogger.sharing.info("Owner stopped sharing — preserving household data, clearing local share state")
+            existingShare = nil
+        } else {
+            await purgeSharedMirror(for: share)
+        }
+        await fetchExistingShare()
+    }
+
+    /// Removes the local mirror of a shared household after the current user (a *participant*)
+    /// leaves. This purges only the participant's copy from the **shared** store; it never
+    /// touches the owner's private store, so it cannot delete the real household data (#70).
+    /// Never call this for the share owner.
+    private func purgeSharedMirror(for share: CKShare) async {
+        guard !isCurrentUserOwner(of: share) else {
+            AppLogger.sharing.error("purgeSharedMirror called for the share owner — refusing to avoid data loss")
+            return
+        }
+        guard let store = sharedPersistentStore else { return }
         guard let zoneID = share.recordID.zoneID as CKRecordZone.ID? else { return }
 
         do {
@@ -476,9 +510,9 @@ final class PersistenceController {
             }
             PendingInvitationStore.removeLabel(forShareRecordName: share.recordID.recordName)
             existingShare = nil
-            AppLogger.sharing.info("Purged shared objects and records")
+            AppLogger.sharing.info("Purged local shared mirror after leaving household")
         } catch {
-            AppLogger.sharing.error("Failed to purge: \(error.localizedDescription)")
+            AppLogger.sharing.error("Failed to purge shared mirror: \(error.localizedDescription)")
         }
     }
 

@@ -93,10 +93,14 @@ struct CloudSharingView: UIViewControllerRepresentable {
         func cloudSharingControllerDidStopSharing(_ csc: UICloudSharingController) {
             AppLogger.sharing.info("UICloudSharingController stopped sharing")
             Task { @MainActor in
+                // Owner vs participant matters here: the owner must NOT purge (it would delete
+                // the whole household, #70), only a leaving participant removes its local mirror.
+                // handleStoppedSharing makes that distinction and refreshes share state.
                 if let share = persistenceController.existingShare {
-                    await persistenceController.purgeObjectsAndRecords(for: share)
+                    await persistenceController.handleStoppedSharing(share)
+                } else {
+                    await persistenceController.fetchExistingShare()
                 }
-                await persistenceController.fetchExistingShare()
             }
         }
     }
