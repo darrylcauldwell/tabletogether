@@ -121,9 +121,11 @@ struct MacroSummary: Codable, Hashable, Equatable {
     /// Creates a new MacroSummary divided by the given divisor.
     /// Useful for calculating per-serving values.
     /// - Parameter divisor: The divisor to apply.
-    /// - Returns: A new MacroSummary with divided values, or the same values if divisor is zero.
+    /// - Returns: A new MacroSummary with divided values, or `.empty` if divisor is zero.
+    ///   Returning the undivided total for a zero divisor would silently misreport it as a
+    ///   per-serving value (e.g. a 4x overstatement), so `.empty` surfaces the bad input instead.
     func divided(by divisor: Double) -> MacroSummary {
-        guard divisor != 0 else { return self }
+        guard divisor != 0 else { return .empty }
         return scaled(by: 1.0 / divisor)
     }
 
