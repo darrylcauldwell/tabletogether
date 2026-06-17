@@ -188,6 +188,12 @@ final class PersistenceController {
     nonisolated(unsafe) static let appTransactionAuthor = "TableTogether"
     nonisolated(unsafe) static let tokenPrefix = "HistoryToken_"
 
+    /// Store filenames — single source of truth so the private/shared store can be identified
+    /// from a `nonisolated` history-processing context (which can't touch the @MainActor
+    /// store properties) by matching the store URL.
+    nonisolated static let privateStoreFileName = "private.sqlite"
+    nonisolated static let sharedStoreFileName = "shared.sqlite"
+
     // MARK: - Sharing UI Observer
 
     #if os(iOS)
@@ -251,7 +257,7 @@ final class PersistenceController {
             // Uses the default configuration (no named configuration) to match
             // Apple's CoreDataCloudKitShare sample pattern.
             let privateDescription = NSPersistentStoreDescription(
-                url: storeDirectory.appendingPathComponent("private.sqlite")
+                url: storeDirectory.appendingPathComponent(Self.privateStoreFileName)
             )
             privateDescription.cloudKitContainerOptions = NSPersistentCloudKitContainerOptions(
                 containerIdentifier: Self.cloudKitContainerID
@@ -264,7 +270,7 @@ final class PersistenceController {
             // Owner's own data always lives in the private store; the shared store
             // is populated automatically when the user accepts an invitation.
             let sharedDescription = NSPersistentStoreDescription(
-                url: storeDirectory.appendingPathComponent("shared.sqlite")
+                url: storeDirectory.appendingPathComponent(Self.sharedStoreFileName)
             )
             let sharedOptions = NSPersistentCloudKitContainerOptions(
                 containerIdentifier: Self.cloudKitContainerID
@@ -609,23 +615,31 @@ final class PersistenceController {
             guard let transactions = result?.result as? [NSPersistentHistoryTransaction],
                   !transactions.isEmpty else { return }
 
-            // Merge remote changes into viewContext
-            for transaction in transactions {
-                let notification = transaction.objectIDNotification()
-                Task { @MainActor in
+            // Merge remote changes into viewContext IN ORDER, then persist the token —
+            // all in a single MainActor hop. Dispatching each transaction as its own
+            // detached Task gave no ordering guarantee, and saving the token synchronously
+            // before those merges ran could advance the token past not-yet-merged
+            // transactions (lost on a kill in between). historyQueue is serial, and
+            // mergeChanges is idempotent, so re-processing after a stale-token read is safe.
+            let notifications = transactions.map { $0.objectIDNotification() }
+            let tokenData: Data? = transactions.last?.token.flatMap {
+                try? NSKeyedArchiver.archivedData(withRootObject: $0, requiringSecureCoding: true)
+            }
+            Task { @MainActor in
+                for notification in notifications {
                     self.viewContext.mergeChanges(fromContextDidSave: notification)
+                }
+                if let tokenData {
+                    UserDefaults.standard.set(tokenData, forKey: tokenKey)
                 }
             }
 
-            // Save updated token to UserDefaults
-            if let newToken = transactions.last?.token,
-               let data = try? NSKeyedArchiver.archivedData(withRootObject: newToken, requiringSecureCoding: true) {
-                UserDefaults.standard.set(data, forKey: tokenKey)
-            }
-
-            // Deduplicate in private store only (not shared)
-            if store.configurationName != "Shared" {
-                deduplicateIfNeeded(transactions: transactions, in: context)
+            // Deduplicate in the private store only. Identify it by URL since this is a
+            // nonisolated context. The shared store holds another user's authoritative
+            // records; deduping there could delete legitimately-distinct rows.
+            let isSharedStore = store.url?.lastPathComponent == Self.sharedStoreFileName
+            if !isSharedStore {
+                deduplicateIfNeeded(transactions: transactions, in: context, store: store)
             }
         } catch {
             AppLogger.swiftData.error("Failed to process history for store \(storeUUID): \(error.localizedDescription)")
@@ -634,7 +648,7 @@ final class PersistenceController {
 
     // MARK: - Deduplication
 
-    private nonisolated func deduplicateIfNeeded(transactions: [NSPersistentHistoryTransaction], in context: NSManagedObjectContext) {
+    private nonisolated func deduplicateIfNeeded(transactions: [NSPersistentHistoryTransaction], in context: NSManagedObjectContext, store: NSPersistentStore) {
         let entityNames = ["Household", "Recipe", "Ingredient", "User", "WeekPlan",
                            "MealSlot", "MealArchetype", "GroceryItem", "FoodItem",
                            "RecipeIngredient", "SuggestionMemory"]
@@ -651,6 +665,10 @@ final class PersistenceController {
 
                 let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: entityName)
                 fetchRequest.predicate = NSPredicate(format: "id == %@", insertedUUID as CVarArg)
+                // Scope to the originating store: with two stores a same-id row can exist in
+                // both (e.g. the deterministic Household.defaultID). An unscoped fetch could
+                // delete the row in the other store.
+                fetchRequest.affectedStores = [store]
 
                 guard let duplicates = try? context.fetch(fetchRequest), duplicates.count > 1 else { continue }
 
@@ -825,7 +843,7 @@ final class PersistenceController {
         // Re-add the shared store (uses default configuration)
         let storeDirectory = NSPersistentContainer.defaultDirectoryURL()
         let sharedDescription = NSPersistentStoreDescription(
-            url: storeDirectory.appendingPathComponent("shared.sqlite")
+            url: storeDirectory.appendingPathComponent(Self.sharedStoreFileName)
         )
         let sharedOptions = NSPersistentCloudKitContainerOptions(
             containerIdentifier: Self.cloudKitContainerID
@@ -892,7 +910,7 @@ final class PersistenceController {
 
         // Private store
         let privateDescription = NSPersistentStoreDescription(
-            url: storeDirectory.appendingPathComponent("private.sqlite")
+            url: storeDirectory.appendingPathComponent(Self.privateStoreFileName)
         )
         privateDescription.configuration = "Private"
         privateDescription.cloudKitContainerOptions = NSPersistentCloudKitContainerOptions(
@@ -904,7 +922,7 @@ final class PersistenceController {
 
         // Shared store
         let sharedDescription = NSPersistentStoreDescription(
-            url: storeDirectory.appendingPathComponent("shared.sqlite")
+            url: storeDirectory.appendingPathComponent(Self.sharedStoreFileName)
         )
         sharedDescription.configuration = "Shared"
         let sharedOptions = NSPersistentCloudKitContainerOptions(
