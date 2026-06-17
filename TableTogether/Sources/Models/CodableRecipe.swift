@@ -108,10 +108,19 @@ struct CodableIngredient: Codable {
         order: Int,
         resolver: RecipeIngredientResolver? = nil
     ) -> RecipeIngredient {
+        let resolvedUnit: MeasurementUnit
+        if let parsed = MeasurementUnit(rawValue: unit) {
+            resolvedUnit = parsed
+        } else {
+            // Don't silently coerce an unrecognised unit into grams — that corrupts the
+            // imported quantity (e.g. "1 cup" -> "1 g"). Log it so the bad source is visible.
+            AppLogger.parser.error("Unknown unit '\(unit)' for ingredient '\(name)' — defaulting to .gram")
+            resolvedUnit = .gram
+        }
         let ri = RecipeIngredient(
             context: context,
             quantity: quantity,
-            unit: MeasurementUnit(rawValue: unit) ?? .gram,
+            unit: resolvedUnit,
             preparationNote: preparationNote,
             isOptional: isOptional,
             order: order,
