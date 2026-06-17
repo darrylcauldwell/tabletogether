@@ -32,7 +32,15 @@ private let isDemoDataEnabled: Bool = UserDefaults.standard.bool(forKey: "isDemo
 
 @main
 struct TableTogetherTVApp: App {
-    private let persistenceController = PersistenceController.shared
+    // tvOS is a strictly read-only ambient surface (see header) and must never write into
+    // the CloudKit-backed store. When demo data is needed (screenshots), use an isolated
+    // in-memory controller so seeded data can't sync to the household's real iCloud data.
+    private let persistenceController: PersistenceController = {
+        if isScreenshotMode || isDemoDataEnabled {
+            return PersistenceController(inMemory: true)
+        }
+        return .shared
+    }()
 
     @State private var selectedTab: TVTab = {
         // Set initial tab from screenshot argument if provided
@@ -53,11 +61,10 @@ struct TableTogetherTVApp: App {
             TVContentView(selectedTab: $selectedTab)
                 .environment(\.managedObjectContext, persistenceController.viewContext)
                 .onAppear {
-                    // Seed demo data for screenshots if enabled
-                    if isDemoDataEnabled || isScreenshotMode {
-                        Task { @MainActor in
-                            TVDemoDataSeeder.seedDemoData(into: persistenceController.viewContext)
-                        }
+                    // Seed only the isolated in-memory store used in screenshot/demo mode.
+                    // The real shared store is never written to (tvOS is read-only).
+                    if isScreenshotMode || isDemoDataEnabled {
+                        TVDemoDataSeeder.seedDemoData(into: persistenceController.viewContext)
                     }
                 }
         }
