@@ -193,30 +193,36 @@ struct CookbookTextParser {
         var name = trimmed
         var preparationNote: String?
 
-        let patterns: [(String, MeasurementUnit)] = [
-            (#"^([\d./]+\s*[\d./]*)\s*(?:cups?|c\.?)\s+"#, .cup),
-            (#"^([\d./]+\s*[\d./]*)\s*(?:tablespoons?|tbsp?\.?|T\.?)\s+"#, .tablespoon),
-            (#"^([\d./]+\s*[\d./]*)\s*(?:teaspoons?|tsp?\.?|t\.?)\s+"#, .teaspoon),
-            (#"^([\d./]+\s*[\d./]*)\s*(?:grams?|g\.?)\s+"#, .gram),
-            (#"^([\d./]+\s*[\d./]*)\s*(?:kg|kilograms?)\s+"#, .kilogram),
-            (#"^([\d./]+\s*[\d./]*)\s*(?:ml|milliliters?|millilitres?)\s+"#, .milliliter),
-            (#"^([\d./]+\s*[\d./]*)\s*(?:l|liters?|litres?)\s+"#, .liter),
-            (#"^([\d./]+\s*[\d./]*)\s*(?:oz|ounces?)\s+"#, .gram), // approximate as grams
-            (#"^([\d./]+\s*[\d./]*)\s*(?:lbs?|pounds?)\s+"#, .kilogram), // approximate as kg
-            (#"^([\d./]+\s*[\d./]*)\s*(?:pieces?|pcs?\.?)\s+"#, .piece),
-            (#"^([\d./]+\s*[\d./]*)\s*(?:slices?)\s+"#, .slice),
-            (#"^([\d./]+\s*[\d./]*)\s*(?:cloves?)\s+"#, .clove),
-            (#"^([\d./]+\s*[\d./]*)\s*(?:bunch(?:es)?)\s+"#, .bunch),
-            (#"^([\d./]+\s*[\d./]*)\s*(?:pinch(?:es)?)\s+"#, .pinch),
-            (#"^([\d./]+\s*[\d./]*)\s+"#, .piece) // Fallback: just a number
+        // Each pattern maps to a unit and a quantity multiplier. Imperial weights have no
+        // dedicated MeasurementUnit case, so we convert the *quantity* to the metric unit
+        // (e.g. 4 oz -> 113.4 g) rather than aliasing the token to a wrong-magnitude unit.
+        // Aliasing oz->gram / lb->kg 1:1 silently produced 28x / 2.2x macro errors.
+        let gramsPerOunce = 28.349523
+        let kilogramsPerPound = 0.45359237
+        let patterns: [(String, MeasurementUnit, Double)] = [
+            (#"^([\d./]+\s*[\d./]*)\s*(?:cups?|c\.?)\s+"#, .cup, 1),
+            (#"^([\d./]+\s*[\d./]*)\s*(?:tablespoons?|tbsp?\.?|T\.?)\s+"#, .tablespoon, 1),
+            (#"^([\d./]+\s*[\d./]*)\s*(?:teaspoons?|tsp?\.?|t\.?)\s+"#, .teaspoon, 1),
+            (#"^([\d./]+\s*[\d./]*)\s*(?:grams?|g\.?)\s+"#, .gram, 1),
+            (#"^([\d./]+\s*[\d./]*)\s*(?:kg|kilograms?)\s+"#, .kilogram, 1),
+            (#"^([\d./]+\s*[\d./]*)\s*(?:ml|milliliters?|millilitres?)\s+"#, .milliliter, 1),
+            (#"^([\d./]+\s*[\d./]*)\s*(?:l|liters?|litres?)\s+"#, .liter, 1),
+            (#"^([\d./]+\s*[\d./]*)\s*(?:oz|ounces?)\s+"#, .gram, gramsPerOunce),
+            (#"^([\d./]+\s*[\d./]*)\s*(?:lbs?|pounds?)\s+"#, .kilogram, kilogramsPerPound),
+            (#"^([\d./]+\s*[\d./]*)\s*(?:pieces?|pcs?\.?)\s+"#, .piece, 1),
+            (#"^([\d./]+\s*[\d./]*)\s*(?:slices?)\s+"#, .slice, 1),
+            (#"^([\d./]+\s*[\d./]*)\s*(?:cloves?)\s+"#, .clove, 1),
+            (#"^([\d./]+\s*[\d./]*)\s*(?:bunch(?:es)?)\s+"#, .bunch, 1),
+            (#"^([\d./]+\s*[\d./]*)\s*(?:pinch(?:es)?)\s+"#, .pinch, 1),
+            (#"^([\d./]+\s*[\d./]*)\s+"#, .piece, 1) // Fallback: just a number
         ]
 
-        for (pattern, matchedUnit) in patterns {
+        for (pattern, matchedUnit, quantityMultiplier) in patterns {
             if let regex = try? NSRegularExpression(pattern: pattern, options: .caseInsensitive),
                let match = regex.firstMatch(in: trimmed, options: [], range: NSRange(trimmed.startIndex..., in: trimmed)) {
 
                 if let quantityRange = Range(match.range(at: 1), in: trimmed) {
-                    quantity = parseFraction(String(trimmed[quantityRange]))
+                    quantity = parseFraction(String(trimmed[quantityRange])) * quantityMultiplier
                 }
                 unit = matchedUnit
                 name = String(trimmed[trimmed.index(trimmed.startIndex, offsetBy: match.range.length)...])
