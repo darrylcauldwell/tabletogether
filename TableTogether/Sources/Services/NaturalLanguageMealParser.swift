@@ -163,25 +163,19 @@ final class NaturalLanguageMealParser {
            let match = regex.firstMatch(in: segment, range: NSRange(segment.startIndex..., in: segment)),
            match.numberOfRanges >= 4 {
 
-            let quantityStr = match.range(at: 1).location != NSNotFound
-                ? String(segment[Range(match.range(at: 1), in: segment)!])
-                : nil
-
-            let unitStr = match.range(at: 2).location != NSNotFound
-                ? String(segment[Range(match.range(at: 2), in: segment)!])
-                : nil
-
-            let name = match.range(at: 3).location != NSNotFound
-                ? String(segment[Range(match.range(at: 3), in: segment)!])
-                : segment
+            // Range(_:in:) returns nil for an unmatched (NSNotFound) group, so this safely
+            // handles optional capture groups without force-unwrapping.
+            let quantityStr = Range(match.range(at: 1), in: segment).map { String(segment[$0]) }
+            let unitStr = Range(match.range(at: 2), in: segment).map { String(segment[$0]) }
+            let name = Range(match.range(at: 3), in: segment).map { String(segment[$0]) } ?? segment
 
             let quantity = quantityStr.flatMap { parseQuantity($0) }
             let unit = unitStr.flatMap { parseUnit($0) }
 
             // If unitStr matched but wasn't a recognized unit, it's part of the food name
             let finalName: String
-            if unitStr != nil && unit == nil {
-                finalName = "\(unitStr!) \(name)"
+            if let unitStr, unit == nil {
+                finalName = "\(unitStr) \(name)"
             } else {
                 finalName = name
             }
@@ -208,14 +202,14 @@ final class NaturalLanguageMealParser {
         let numberPattern = #"^(\d+(?:\.\d+)?)\s+(.+)$"#
         if let regex = try? NSRegularExpression(pattern: numberPattern),
            let match = regex.firstMatch(in: segment, range: NSRange(segment.startIndex..., in: segment)),
-           match.numberOfRanges >= 3 {
+           match.numberOfRanges >= 3,
+           let quantityRange = Range(match.range(at: 1), in: segment),
+           let nameRange = Range(match.range(at: 2), in: segment) {
 
-            let quantityStr = String(segment[Range(match.range(at: 1), in: segment)!])
-            let name = String(segment[Range(match.range(at: 2), in: segment)!])
-            let quantity = parseQuantity(quantityStr)
+            let quantity = parseQuantity(String(segment[quantityRange]))
 
             return MealParsedIngredient(
-                name: cleanFoodName(name),
+                name: cleanFoodName(String(segment[nameRange])),
                 quantity: quantity,
                 unit: nil,
                 confidence: .medium,
