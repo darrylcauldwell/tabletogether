@@ -18,6 +18,16 @@ struct SettingsView: View {
     @Environment(\.calendarService) private var calendarService
     private var persistenceController: PersistenceController { PersistenceController.shared }
 
+    /// App version shown in the About section, read from the bundle (CFBundleShortVersionString)
+    /// so it tracks MARKETING_VERSION instead of drifting from a hardcoded literal.
+    private var appVersionString: String {
+        let short = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "—"
+        if let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String {
+            return "\(short) (\(build))"
+        }
+        return short
+    }
+
     @FetchRequest(sortDescriptors: [SortDescriptor(\.displayName)]) private var users: FetchedResults<User>
 
     @AppStorage("appearanceMode") private var appearanceMode: Int = AppearanceMode.system.rawValue
@@ -253,7 +263,7 @@ struct SettingsView: View {
                     HStack {
                         Text("Version")
                         Spacer()
-                        Text("1.0.0")
+                        Text(appVersionString)
                             .foregroundStyle(Theme.Colors.textSecondary)
                     }
 
