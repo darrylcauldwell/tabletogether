@@ -241,9 +241,11 @@ final class SuggestionEngine {
             }
         }
 
-        // Decline penalty (respect user's "not now" choices)
+        // Decline penalty (respect user's "not now" choices).
+        // Use >= to match calculateGeneralScore: declining exactly `declineThreshold`
+        // times is penalised identically regardless of which scoring path runs.
         if let declines = recipeMemory?.suggestionDeclined,
-           declines > ScoringConstants.declineThreshold {
+           declines >= ScoringConstants.declineThreshold {
             score -= Double(declines) * ScoringConstants.declinePenaltyMultiplier
         }
 
