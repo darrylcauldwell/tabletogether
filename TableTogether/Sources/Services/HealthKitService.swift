@@ -215,7 +215,8 @@ final class HealthKitService {
                 latestWeight = quantity.doubleValue(for: .gramUnit(with: .kilo))
             }
         } catch {
-            // Weight might not be available - not an error
+            // Weight may simply not be recorded; log so a genuine query failure is visible.
+            AppLogger.app.debug("fetchLatestWeight failed: \(error.localizedDescription)")
         }
     }
 
@@ -229,7 +230,8 @@ final class HealthKitService {
                 latestHeight = quantity.doubleValue(for: .meterUnit(with: .centi))
             }
         } catch {
-            // Height might not be available - not an error
+            // Height may simply not be recorded; log so a genuine query failure is visible.
+            AppLogger.app.debug("fetchLatestHeight failed: \(error.localizedDescription)")
         }
     }
 
@@ -238,14 +240,16 @@ final class HealthKitService {
         do {
             biologicalSex = try healthStore.biologicalSex().biologicalSex
         } catch {
-            // Biological sex might not be set
+            // Biological sex may simply not be set; log so a genuine failure is visible.
+            AppLogger.app.debug("fetchCharacteristics biologicalSex failed: \(error.localizedDescription)")
         }
 
         do {
             let dobComponents = try healthStore.dateOfBirthComponents()
             dateOfBirth = Calendar.current.date(from: dobComponents)
         } catch {
-            // Date of birth might not be set
+            // Date of birth may simply not be set; log so a genuine failure is visible.
+            AppLogger.app.debug("fetchCharacteristics dateOfBirth failed: \(error.localizedDescription)")
         }
     }
 
