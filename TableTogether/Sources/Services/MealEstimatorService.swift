@@ -307,24 +307,40 @@ final class MealEstimatorService {
         let defaultQuantity: String
         let macros: MacroSummary
 
-        // Convenience accessors for specific foods used in meal patterns
-        static var whiteBread: FoodEntry { MealEstimatorService.foodDatabase.first { $0.name == "White bread" }! }
-        static var butter: FoodEntry { MealEstimatorService.foodDatabase.first { $0.name == "Butter" }! }
-        static var egg: FoodEntry { MealEstimatorService.foodDatabase.first { $0.name == "Egg" }! }
-        static var chickenBreast: FoodEntry { MealEstimatorService.foodDatabase.first { $0.name == "Chicken breast" }! }
-        static var mixedVeg: FoodEntry { MealEstimatorService.foodDatabase.first { $0.name == "Mixed vegetables" }! }
-        static var noodles: FoodEntry { MealEstimatorService.foodDatabase.first { $0.name == "Noodles" }! }
-        static var soySauce: FoodEntry { MealEstimatorService.foodDatabase.first { $0.name == "Soy sauce" }! }
-        static var mixedSalad: FoodEntry { MealEstimatorService.foodDatabase.first { $0.name == "Mixed salad" }! }
-        static var chips: FoodEntry { MealEstimatorService.foodDatabase.first { $0.name == "Chips" }! }
-        static var rice: FoodEntry { MealEstimatorService.foodDatabase.first { $0.name == "Rice (cooked)" }! }
-        static var couscous: FoodEntry { MealEstimatorService.foodDatabase.first { $0.name == "Couscous" }! }
-        static var wrap: FoodEntry { MealEstimatorService.foodDatabase.first { $0.name == "Tortilla wrap" }! }
-        static var burgerBun: FoodEntry { MealEstimatorService.foodDatabase.first { $0.name == "Burger bun" }! }
-        static var beefPatty: FoodEntry { MealEstimatorService.foodDatabase.first { $0.name == "Beef patty" }! }
-        static var bakedBeans: FoodEntry { MealEstimatorService.foodDatabase.first { $0.name == "Baked beans" }! }
-        static var lettuce: FoodEntry { MealEstimatorService.foodDatabase.first { $0.name == "Lettuce" }! }
-        static var tomato: FoodEntry { MealEstimatorService.foodDatabase.first { $0.name == "Tomato" }! }
+        // Convenience accessors for specific foods used in meal patterns.
+        // These resolve through MealEstimatorService.entry(_:), which is an O(1) lookup that
+        // logs/asserts on a missing name instead of force-unwrap crashing (see `entry(_:)`).
+        static var whiteBread: FoodEntry { MealEstimatorService.entry("White bread") }
+        static var butter: FoodEntry { MealEstimatorService.entry("Butter") }
+        static var egg: FoodEntry { MealEstimatorService.entry("Egg") }
+        static var chickenBreast: FoodEntry { MealEstimatorService.entry("Chicken breast") }
+        static var mixedVeg: FoodEntry { MealEstimatorService.entry("Mixed vegetables") }
+        static var noodles: FoodEntry { MealEstimatorService.entry("Noodles") }
+        static var soySauce: FoodEntry { MealEstimatorService.entry("Soy sauce") }
+        static var mixedSalad: FoodEntry { MealEstimatorService.entry("Mixed salad") }
+        static var chips: FoodEntry { MealEstimatorService.entry("Chips") }
+        static var rice: FoodEntry { MealEstimatorService.entry("Rice (cooked)") }
+        static var couscous: FoodEntry { MealEstimatorService.entry("Couscous") }
+        static var wrap: FoodEntry { MealEstimatorService.entry("Tortilla wrap") }
+        static var burgerBun: FoodEntry { MealEstimatorService.entry("Burger bun") }
+        static var beefPatty: FoodEntry { MealEstimatorService.entry("Beef patty") }
+        static var bakedBeans: FoodEntry { MealEstimatorService.entry("Baked beans") }
+        static var lettuce: FoodEntry { MealEstimatorService.entry("Lettuce") }
+        static var tomato: FoodEntry { MealEstimatorService.entry("Tomato") }
+    }
+
+    /// O(1) lookup of `foodDatabase` keyed by name, built once. Replaces the per-accessor
+    /// linear scans. On a name that isn't in the table (an accessor/database drift bug) this
+    /// logs and asserts in debug, and returns a zero-macro placeholder in release rather than
+    /// force-unwrap crashing a shipping build.
+    nonisolated static let foodDatabaseByName: [String: FoodEntry] =
+        Dictionary(foodDatabase.map { ($0.name, $0) }, uniquingKeysWith: { first, _ in first })
+
+    nonisolated static func entry(_ name: String) -> FoodEntry {
+        if let entry = foodDatabaseByName[name] { return entry }
+        AppLogger.nutrition.error("foodDatabase missing entry '\(name)' — accessor/database name drift")
+        assertionFailure("MealEstimatorService.foodDatabase has no entry named '\(name)'")
+        return FoodEntry(name: name, aliases: [], defaultQuantity: "1", macros: .zero)
     }
 
     // Per-serving macros for common foods
