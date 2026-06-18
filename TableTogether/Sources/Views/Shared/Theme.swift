@@ -122,39 +122,20 @@ enum Theme {
 
     // MARK: - Typography
 
+    /// Typography forwards to `AppTypography`, the single source of truth. The header styles
+    /// keep their weighted variants; the rest are the plain dynamic-type tokens.
     enum Typography {
-        /// Large title for main screens
-        static let largeTitle = Font.largeTitle.weight(.semibold)
-
-        /// Title for section headers
-        static let title = Font.title.weight(.semibold)
-
-        /// Title2 for card headers and subsections
-        static let title2 = Font.title2.weight(.medium)
-
-        /// Title3 for smaller headers
-        static let title3 = Font.title3.weight(.medium)
-
-        /// Headline for emphasized body text
-        static let headline = Font.headline
-
-        /// Body text - default reading text
-        static let body = Font.body
-
-        /// Callout for secondary information
-        static let callout = Font.callout
-
-        /// Subheadline for supporting text
-        static let subheadline = Font.subheadline
-
-        /// Footnote for less prominent text
-        static let footnote = Font.footnote
-
-        /// Caption for labels and metadata
-        static let caption = Font.caption
-
-        /// Caption2 for smallest text
-        static let caption2 = Font.caption2
+        static let largeTitle = AppTypography.largeTitleEmphasized
+        static let title = AppTypography.titleEmphasized
+        static let title2 = AppTypography.title2Emphasized
+        static let title3 = AppTypography.title3Emphasized
+        static let headline = AppTypography.headline
+        static let body = AppTypography.body
+        static let callout = AppTypography.callout
+        static let subheadline = AppTypography.subheadline
+        static let footnote = AppTypography.footnote
+        static let caption = AppTypography.caption
+        static let caption2 = AppTypography.caption2
     }
 
     // MARK: - Spacing
