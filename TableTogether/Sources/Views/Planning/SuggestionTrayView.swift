@@ -80,19 +80,19 @@ struct TrayHeaderView: View {
         } label: {
             HStack {
                 Text("Suggestions")
-                    .font(.subheadline)
+                    .font(AppTypography.subheadline)
                     .fontWeight(.semibold)
                     .foregroundColor(.primary)
 
                 Spacer()
 
                 Image(systemName: isExpanded ? "chevron.down" : "chevron.up")
-                    .font(.caption)
+                    .font(AppTypography.caption)
                     .fontWeight(.semibold)
                     .foregroundColor(.secondary)
 
                 Text(isExpanded ? "Hide" : "Show")
-                    .font(.caption)
+                    .font(AppTypography.caption)
                     .foregroundColor(.secondary)
             }
             .padding(.horizontal)
@@ -141,12 +141,12 @@ struct TabButton: View {
         Button(action: action) {
             HStack(spacing: 4) {
                 Text(title)
-                    .font(.caption)
+                    .font(AppTypography.caption)
                     .fontWeight(isSelected ? .semibold : .regular)
 
                 if showBadge {
                     Image(systemName: "sparkles")
-                        .font(.caption2)
+                        .font(AppTypography.caption2)
                         .foregroundColor(.orange)
                 }
             }
@@ -168,11 +168,11 @@ struct EmptySuggestionsView: View {
     var body: some View {
         VStack(spacing: 8) {
             Image(systemName: "lightbulb")
-                .font(.title2)
+                .font(AppTypography.title2)
                 .foregroundColor(.secondary)
 
             Text(message)
-                .font(.caption)
+                .font(AppTypography.caption)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
         }

@@ -92,7 +92,7 @@ struct AddGroceryItemView: View {
                             Spacer()
 
                             Text(ingredient.category.displayName)
-                                .font(.caption)
+                                .font(AppTypography.caption)
                                 .foregroundStyle(.secondary)
                         }
                     }
@@ -119,7 +119,7 @@ struct AddGroceryItemView: View {
                     }
                 } label: {
                     Image(systemName: "minus.circle.fill")
-                        .font(.title2)
+                        .font(AppTypography.title2)
                         .foregroundStyle(.secondary)
                 }
                 .buttonStyle(.plain)
@@ -141,7 +141,7 @@ struct AddGroceryItemView: View {
                     quantity += 0.5
                 } label: {
                     Image(systemName: "plus.circle.fill")
-                        .font(.title2)
+                        .font(AppTypography.title2)
                         .foregroundStyle(.secondary)
                 }
                 .buttonStyle(.plain)
@@ -232,9 +232,9 @@ struct CategoryChip: View {
         Button(action: action) {
             HStack(spacing: 4) {
                 Image(systemName: category.iconName)
-                    .font(.caption)
+                    .font(AppTypography.caption)
                 Text(category.displayName)
-                    .font(.caption)
+                    .font(AppTypography.caption)
             }
             .padding(.horizontal, 10)
             .padding(.vertical, 6)

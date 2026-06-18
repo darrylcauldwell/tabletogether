@@ -81,7 +81,7 @@ struct RecipeGeneratorView: View {
     private var headerSection: some View {
         VStack(spacing: Theme.Spacing.sm) {
             Image(systemName: "wand.and.stars")
-                .font(.system(size: 40))
+                .font(AppTypography.fixed(40))
                 .foregroundStyle(Theme.Colors.primary)
 
             Text("What would you like to cook?")
@@ -126,7 +126,7 @@ struct RecipeGeneratorView: View {
                         addIngredient()
                     } label: {
                         Image(systemName: "plus.circle.fill")
-                            .font(.title2)
+                            .font(AppTypography.title2)
                             .foregroundStyle(Theme.Colors.primary)
                     }
                     .disabled(newIngredientText.isEmpty)
@@ -142,7 +142,7 @@ struct RecipeGeneratorView: View {
                                         prompt.ingredients.append(ingredient.name.lowercased())
                                     } label: {
                                         Text(ingredient.name)
-                                            .font(.caption)
+                                            .font(AppTypography.caption)
                                             .padding(.horizontal, 10)
                                             .padding(.vertical, 6)
                                             .background(Color.systemGray6)
@@ -309,7 +309,7 @@ struct RecipeGeneratorView: View {
             // Prompt summary
             if prompt.isValid {
                 Text(prompt.summary)
-                    .font(.caption)
+                    .font(AppTypography.caption)
                     .foregroundStyle(Theme.Colors.textSecondary)
                     .multilineTextAlignment(.center)
             }
@@ -317,7 +317,7 @@ struct RecipeGeneratorView: View {
             // Error message
             if let error = generatorService.errorMessage {
                 Text(error)
-                    .font(.caption)
+                    .font(AppTypography.caption)
                     .foregroundStyle(.red)
             }
         }

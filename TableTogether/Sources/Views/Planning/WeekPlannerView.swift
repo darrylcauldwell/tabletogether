@@ -220,7 +220,7 @@ struct WeekHeaderView: View {
         HStack {
             Button(action: onPreviousWeek) {
                 Image(systemName: "chevron.left")
-                    .font(.title3)
+                    .font(AppTypography.title3)
                     .foregroundColor(.accentColor)
             }
             .buttonStyle(.plain)
@@ -229,13 +229,13 @@ struct WeekHeaderView: View {
             Spacer()
 
             Text(weekLabel)
-                .font(.headline)
+                .font(AppTypography.headline)
 
             Spacer()
 
             Button(action: onNextWeek) {
                 Image(systemName: "chevron.right")
-                    .font(.title3)
+                    .font(AppTypography.title3)
                     .foregroundColor(.accentColor)
             }
             .buttonStyle(.plain)
@@ -400,11 +400,11 @@ struct DayTabButton: View {
         Button(action: action) {
             VStack(spacing: 4) {
                 Text(day.shortName)
-                    .font(.caption)
+                    .font(AppTypography.caption)
                     .fontWeight(isSelected ? .semibold : .regular)
 
                 Text(dayNumber)
-                    .font(.body)
+                    .font(AppTypography.body)
                     .fontWeight(isSelected ? .semibold : .regular)
 
                 if hasContent {

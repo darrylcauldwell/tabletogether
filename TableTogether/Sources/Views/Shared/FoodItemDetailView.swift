@@ -137,10 +137,10 @@ struct FoodItemDetailView: View {
                     if !foodItem.usdaDescription.isEmpty {
                         VStack(alignment: .leading, spacing: 4) {
                             Text("Description")
-                                .font(.caption)
+                                .font(AppTypography.caption)
                                 .foregroundStyle(Theme.Colors.textSecondary)
                             Text(foodItem.usdaDescription)
-                                .font(.callout)
+                                .font(AppTypography.callout)
                         }
                     }
                 }
@@ -150,7 +150,7 @@ struct FoodItemDetailView: View {
                 Section("Used in \(mealSlotComponents.count) meal slot\(mealSlotComponents.count == 1 ? "" : "s")") {
                     ForEach(mealSlotComponents, id: \.objectID) { component in
                         Text(mealSlotLabel(component))
-                            .font(.callout)
+                            .font(AppTypography.callout)
                     }
                 }
             }

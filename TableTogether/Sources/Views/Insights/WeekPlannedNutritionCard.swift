@@ -53,16 +53,16 @@ struct WeekPlannedNutritionCard: View {
             VStack(alignment: .leading, spacing: 12) {
                 HStack {
                     Image(systemName: "calendar.badge.clock")
-                        .font(.headline)
+                        .font(AppTypography.headline)
                         .foregroundStyle(Theme.Colors.primary)
                     Text("This week, planned")
-                        .font(.headline)
+                        .font(AppTypography.headline)
                         .foregroundStyle(Theme.Colors.textPrimary)
                     Spacer()
                 }
 
                 Text("Your planned week averages this per day, before you log anything.")
-                    .font(.caption)
+                    .font(AppTypography.caption)
                     .foregroundStyle(Theme.Colors.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)
 

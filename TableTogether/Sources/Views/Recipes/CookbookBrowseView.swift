@@ -98,7 +98,7 @@ struct CookbookBrowseView: View {
 
         return HStack(spacing: 14) {
             Image(systemName: isUncategorised ? "tray" : "book.closed.fill")
-                .font(.title3)
+                .font(AppTypography.title3)
                 .foregroundStyle(Theme.Colors.primary)
                 .frame(width: 32, height: 32)
                 .background(Theme.Colors.primary.opacity(0.12))
@@ -106,13 +106,13 @@ struct CookbookBrowseView: View {
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(displayName)
-                    .font(.body)
+                    .font(AppTypography.body)
                     .fontWeight(isUncategorised ? .regular : .semibold)
                     .foregroundStyle(.primary)
                     .lineLimit(2)
 
                 Text("\(count) \(count == 1 ? "recipe" : "recipes")")
-                    .font(.caption)
+                    .font(AppTypography.caption)
                     .foregroundStyle(Theme.Colors.textSecondary)
             }
 

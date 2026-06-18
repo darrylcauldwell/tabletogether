@@ -57,7 +57,7 @@ struct OnboardingView: View {
             Spacer()
 
             Image(systemName: "fork.knife.circle.fill")
-                .font(.system(size: 100))
+                .font(AppTypography.fixed(100))
                 .foregroundStyle(.linearGradient(
                     colors: [.green, .blue],
                     startPoint: .topLeading,
@@ -66,12 +66,12 @@ struct OnboardingView: View {
 
             VStack(spacing: 12) {
                 Text("Welcome to TableTogether")
-                    .font(.largeTitle)
+                    .font(AppTypography.largeTitle)
                     .fontWeight(.bold)
                     .multilineTextAlignment(.center)
 
                 Text("Plan meals together, shop smarter, and enjoy cooking with your household.")
-                    .font(.body)
+                    .font(AppTypography.body)
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 32)
@@ -85,7 +85,7 @@ struct OnboardingView: View {
                 }
             } label: {
                 Text("Get Started")
-                    .font(.headline)
+                    .font(AppTypography.headline)
                     .frame(maxWidth: .infinity)
                     .padding()
                     .background(Color.accentColor)
@@ -104,18 +104,18 @@ struct OnboardingView: View {
             Spacer()
 
             Text("What's your name?")
-                .font(.title)
+                .font(AppTypography.title)
                 .fontWeight(.bold)
 
             Text("So others in your household know who you are.")
-                .font(.body)
+                .font(AppTypography.body)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 32)
 
             // Name Field
             TextField("Your name", text: $userName)
-                .font(.title3)
+                .font(AppTypography.title3)
                 .multilineTextAlignment(.center)
                 .padding()
                 .background(Theme.Colors.cardBackground)
@@ -130,7 +130,7 @@ struct OnboardingView: View {
                 }
             } label: {
                 Text("Continue")
-                    .font(.headline)
+                    .font(AppTypography.headline)
                     .frame(maxWidth: .infinity)
                     .padding()
                     .background(userName.isEmpty ? Color.gray : Color.accentColor)
@@ -150,7 +150,7 @@ struct OnboardingView: View {
             Spacer()
 
             Text("What You Can Do")
-                .font(.title)
+                .font(AppTypography.title)
                 .fontWeight(.bold)
 
             VStack(alignment: .leading, spacing: 24) {
@@ -192,7 +192,7 @@ struct OnboardingView: View {
                 }
             } label: {
                 Text("Almost There")
-                    .font(.headline)
+                    .font(AppTypography.headline)
                     .frame(maxWidth: .infinity)
                     .padding()
                     .background(Color.accentColor)
@@ -211,16 +211,16 @@ struct OnboardingView: View {
             Spacer()
 
             Image(systemName: "checkmark.circle.fill")
-                .font(.system(size: 80))
+                .font(AppTypography.fixed(80))
                 .foregroundColor(.green)
 
             VStack(spacing: 12) {
                 Text("You're All Set!")
-                    .font(.title)
+                    .font(AppTypography.title)
                     .fontWeight(.bold)
 
                 Text("Start by adding your first recipe or planning this week's meals.")
-                    .font(.body)
+                    .font(AppTypography.body)
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 32)
@@ -232,7 +232,7 @@ struct OnboardingView: View {
                 completeOnboarding()
             } label: {
                 Text("Start Planning")
-                    .font(.headline)
+                    .font(AppTypography.headline)
                     .frame(maxWidth: .infinity)
                     .padding()
                     .background(Color.accentColor)
@@ -284,7 +284,7 @@ struct FeatureRow: View {
     var body: some View {
         HStack(spacing: 16) {
             Image(systemName: icon)
-                .font(.title2)
+                .font(AppTypography.title2)
                 .foregroundColor(iconColor)
                 .frame(width: 44, height: 44)
                 .background(iconColor.opacity(0.15))
@@ -292,10 +292,10 @@ struct FeatureRow: View {
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(title)
-                    .font(.headline)
+                    .font(AppTypography.headline)
 
                 Text(description)
-                    .font(.subheadline)
+                    .font(AppTypography.subheadline)
                     .foregroundColor(.secondary)
             }
         }

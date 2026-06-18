@@ -43,12 +43,12 @@ struct IngredientChip: View {
     var body: some View {
         HStack(spacing: 4) {
             Text(name.capitalized)
-                .font(.subheadline)
+                .font(AppTypography.subheadline)
                 .foregroundStyle(Theme.Colors.textPrimary)
 
             Button(action: onRemove) {
                 Image(systemName: "xmark.circle.fill")
-                    .font(.caption)
+                    .font(AppTypography.caption)
                     .foregroundStyle(Theme.Colors.textSecondary)
             }
         }
@@ -72,16 +72,16 @@ struct StyleSelectionCard: View {
         Button(action: action) {
             VStack(spacing: Theme.Spacing.sm) {
                 Image(systemName: icon)
-                    .font(.title2)
+                    .font(AppTypography.title2)
                     .foregroundStyle(isSelected ? Theme.Colors.primary : Theme.Colors.textSecondary)
 
                 Text(title)
-                    .font(.subheadline)
+                    .font(AppTypography.subheadline)
                     .fontWeight(.medium)
                     .foregroundStyle(Theme.Colors.textPrimary)
 
                 Text(description)
-                    .font(.caption2)
+                    .font(AppTypography.caption2)
                     .foregroundStyle(Theme.Colors.textSecondary)
                     .multilineTextAlignment(.center)
                     .lineLimit(2)
@@ -110,14 +110,14 @@ struct TimeSelectionChip: View {
         Button(action: action) {
             VStack(spacing: 4) {
                 Image(systemName: time.iconName)
-                    .font(.title3)
+                    .font(AppTypography.title3)
 
                 Text(time.displayName)
-                    .font(.caption)
+                    .font(AppTypography.caption)
                     .fontWeight(.medium)
 
                 Text(time.description)
-                    .font(.caption2)
+                    .font(AppTypography.caption2)
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, Theme.Spacing.md)
@@ -144,9 +144,9 @@ struct CuisineSelectionChip: View {
         Button(action: action) {
             HStack(spacing: 4) {
                 Image(systemName: cuisine.iconName)
-                    .font(.caption)
+                    .font(AppTypography.caption)
                 Text(cuisine.displayName)
-                    .font(.caption)
+                    .font(AppTypography.caption)
                     .fontWeight(.medium)
             }
             .padding(.horizontal, 10)
@@ -175,9 +175,9 @@ struct DietaryChip: View {
         Button(action: action) {
             HStack(spacing: 4) {
                 Image(systemName: preference.iconName)
-                    .font(.caption)
+                    .font(AppTypography.caption)
                 Text(preference.displayName)
-                    .font(.caption)
+                    .font(AppTypography.caption)
             }
             .padding(.horizontal, 10)
             .padding(.vertical, 6)
@@ -291,7 +291,7 @@ struct GeneratedRecipePreview: View {
                             Image(systemName: recipe.cookingStyle.iconName)
                             Text(recipe.cookingStyle.displayName)
                         }
-                        .font(.caption)
+                        .font(AppTypography.caption)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 4)
                         .background(Theme.Colors.secondary.opacity(0.2))
@@ -346,7 +346,7 @@ struct GeneratedRecipePreview: View {
 
                                 if ingredient.isOptional {
                                     Text("optional")
-                                        .font(.caption)
+                                        .font(AppTypography.caption)
                                         .foregroundStyle(Theme.Colors.textSecondary)
                                 }
                             }
@@ -365,7 +365,7 @@ struct GeneratedRecipePreview: View {
                         ForEach(Array(recipe.instructions.enumerated()), id: \.offset) { index, instruction in
                             HStack(alignment: .top, spacing: Theme.Spacing.sm) {
                                 Text("\(index + 1)")
-                                    .font(.headline)
+                                    .font(AppTypography.headline)
                                     .foregroundStyle(Theme.Colors.primary)
                                     .frame(width: 24)
 
@@ -381,7 +381,7 @@ struct GeneratedRecipePreview: View {
                     FlowLayout(spacing: 6) {
                         ForEach(recipe.tags, id: \.self) { tag in
                             Text("#\(tag)")
-                                .font(.caption)
+                                .font(AppTypography.caption)
                                 .foregroundStyle(Theme.Colors.textSecondary)
                         }
                     }
@@ -423,10 +423,10 @@ struct QuickInfoItem: View {
     var body: some View {
         HStack(spacing: 4) {
             Image(systemName: icon)
-                .font(.caption)
+                .font(AppTypography.caption)
                 .foregroundStyle(Theme.Colors.textSecondary)
             Text(value)
-                .font(.subheadline)
+                .font(AppTypography.subheadline)
                 .foregroundStyle(Theme.Colors.textPrimary)
         }
     }
@@ -452,7 +452,7 @@ struct CollapsibleSection<Content: View>: View {
                         .foregroundStyle(Theme.Colors.textPrimary)
                     Spacer()
                     Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
-                        .font(.caption)
+                        .font(AppTypography.caption)
                         .foregroundStyle(Theme.Colors.textSecondary)
                 }
             }

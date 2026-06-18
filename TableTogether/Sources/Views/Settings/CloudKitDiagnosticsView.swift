@@ -157,17 +157,17 @@ struct CloudKitDiagnosticsView: View {
                         HStack {
                             Image(systemName: event.succeeded ? "checkmark.circle.fill" : "xmark.circle.fill")
                                 .foregroundStyle(event.succeeded ? .green : .red)
-                                .font(.caption)
+                                .font(AppTypography.caption)
                             Text(event.eventType.capitalized)
-                                .font(.subheadline.bold())
+                                .font(AppTypography.subheadline.bold())
                             Spacer()
                             Text(event.timestamp, style: .time)
-                                .font(.caption2)
+                                .font(AppTypography.caption2)
                                 .foregroundStyle(Theme.Colors.textSecondary)
                         }
                         if let error = event.error {
                             Text(error)
-                                .font(.caption)
+                                .font(AppTypography.caption)
                                 .foregroundStyle(.red)
                                 .lineLimit(3)
                         }
@@ -180,10 +180,10 @@ struct CloudKitDiagnosticsView: View {
     private func row(_ label: String, _ value: String) -> some View {
         HStack {
             Text(label)
-                .font(.subheadline)
+                .font(AppTypography.subheadline)
             Spacer()
             Text(value)
-                .font(.caption)
+                .font(AppTypography.caption)
                 .foregroundStyle(Theme.Colors.textSecondary)
                 .multilineTextAlignment(.trailing)
         }

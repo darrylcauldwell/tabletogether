@@ -151,7 +151,7 @@ struct RecipeEditorView: View {
                 HStack(spacing: 12) {
                     Button { if servings > 1 { servings -= 1 } } label: {
                         Image(systemName: "minus.circle.fill")
-                            .font(.title3)
+                            .font(AppTypography.title3)
                     }
                     .buttonStyle(.plain)
                     Text("\(servings)")
@@ -159,7 +159,7 @@ struct RecipeEditorView: View {
                         .frame(minWidth: 30)
                     Button { if servings < 50 { servings += 1 } } label: {
                         Image(systemName: "plus.circle.fill")
-                            .font(.title3)
+                            .font(AppTypography.title3)
                     }
                     .buttonStyle(.plain)
                 }
@@ -195,10 +195,10 @@ struct RecipeEditorView: View {
                     PhotosPicker(selection: $selectedPhotoItem, matching: .images) {
                         VStack(spacing: 8) {
                             Image(systemName: "photo.badge.plus")
-                                .font(.largeTitle)
+                                .font(AppTypography.largeTitle)
                                 .foregroundColor(.appPrimary)
                             Text("Add Photo")
-                                .font(.subheadline)
+                                .font(AppTypography.subheadline)
                                 .foregroundColor(.appPrimary)
                         }
                         .frame(maxWidth: .infinity)
@@ -378,7 +378,7 @@ struct RecipeEditorView: View {
                 Spacer()
                 #if os(iOS)
                 EditButton()
-                    .font(.caption)
+                    .font(AppTypography.caption)
                 #endif
             }
         }
@@ -391,7 +391,7 @@ struct RecipeEditorView: View {
             ForEach(Array(instructions.enumerated()), id: \.offset) { index, instruction in
                 HStack(alignment: .top, spacing: 12) {
                     Text("\(index + 1).")
-                        .font(.body)
+                        .font(AppTypography.body)
                         .fontWeight(.medium)
                         .foregroundColor(.appPrimary)
                         .frame(width: 24, alignment: .leading)
@@ -428,7 +428,7 @@ struct RecipeEditorView: View {
                 Spacer()
                 #if os(iOS)
                 EditButton()
-                    .font(.caption)
+                    .font(AppTypography.caption)
                 #endif
             }
         }

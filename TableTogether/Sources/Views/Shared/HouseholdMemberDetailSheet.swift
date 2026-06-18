@@ -24,14 +24,14 @@ struct HouseholdMemberDetailSheet: View {
                 Section {
                     HStack(spacing: 16) {
                         Image(systemName: member.status.iconName)
-                            .font(.system(size: 44))
+                            .font(AppTypography.fixed(44))
                             .foregroundStyle(member.status == .accepted ? Theme.Colors.primary : .orange)
                         VStack(alignment: .leading, spacing: 4) {
                             Text(member.name)
-                                .font(.title3)
+                                .font(AppTypography.title3)
                                 .fontWeight(.semibold)
                             Text(member.status.label)
-                                .font(.subheadline)
+                                .font(AppTypography.subheadline)
                                 .foregroundStyle(Theme.Colors.textSecondary)
                         }
                     }
@@ -56,7 +56,7 @@ struct HouseholdMemberDetailSheet: View {
                 } else if member.status == .pending {
                     Section {
                         Text("Contact details aren't available until the invitee accepts the invitation.")
-                            .font(.caption)
+                            .font(AppTypography.caption)
                             .foregroundStyle(Theme.Colors.textSecondary)
                     }
                 }
@@ -93,7 +93,7 @@ struct HouseholdMemberDetailSheet: View {
                     Section {
                         Label(errorMessage, systemImage: "exclamationmark.triangle")
                             .foregroundStyle(.red)
-                            .font(.caption)
+                            .font(AppTypography.caption)
                     }
                 }
             }

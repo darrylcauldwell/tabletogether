@@ -102,24 +102,13 @@ struct MacroLegendItem: View {
                 .frame(width: 6, height: 6)
 
             Text("\(label): \(percent)%")
-                .font(.caption2)
+                .font(AppTypography.caption2)
                 .foregroundStyle(Color.slateGray)
         }
     }
 }
 
-// MARK: - Macro Colors Extension
-
-extension Color {
-    /// Soft sage-tinted green for protein
-    static let macroProtein = Color(red: 0.55, green: 0.75, blue: 0.65)
-
-    /// Soft warm tone for carbs
-    static let macroCarbs = Color(red: 0.85, green: 0.75, blue: 0.55)
-
-    /// Soft cool tone for fat
-    static let macroFat = Color(red: 0.65, green: 0.75, blue: 0.85)
-}
+// Note: macroProtein/macroCarbs/macroFat now live in Views/Shared/ColorPalette.swift.
 
 // MARK: - Standalone Ring View (for reuse)
 
@@ -160,12 +149,12 @@ struct DetailedMacroRing: View {
             if distribution.hasData {
                 VStack(spacing: 0) {
                     Text("Macros")
-                        .font(.caption2)
+                        .font(AppTypography.caption2)
                         .foregroundStyle(Color.slateGray)
                 }
             } else {
                 Text("--")
-                    .font(.caption)
+                    .font(AppTypography.caption)
                     .foregroundStyle(Color.slateGray)
             }
         }
@@ -184,7 +173,7 @@ struct MacroRingCard: View {
         VStack(spacing: 16) {
             if !title.isEmpty {
                 Text(title)
-                    .font(.subheadline)
+                    .font(AppTypography.subheadline)
                     .foregroundStyle(Color.charcoal)
             }
 
@@ -245,13 +234,13 @@ struct FullMacroLegendItem: View {
                 .frame(width: 12, height: 12)
 
             Text(name)
-                .font(.subheadline)
+                .font(AppTypography.subheadline)
                 .foregroundStyle(Color.charcoal)
 
             Spacer()
 
             Text("\(percent)%")
-                .font(.subheadline)
+                .font(AppTypography.subheadline)
                 .fontWeight(.medium)
                 .foregroundStyle(Color.charcoal)
         }

@@ -63,7 +63,7 @@ struct SmartLogSection: View {
     private var descriptionInput: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text("What did you eat?")
-                .font(.subheadline)
+                .font(AppTypography.subheadline)
                 .foregroundStyle(Color.slateGray)
 
             TextField("e.g., grilled chicken with rice and broccoli", text: $mealDescription, axis: .vertical)
@@ -91,11 +91,11 @@ struct SmartLogSection: View {
                         .controlSize(.small)
                 } else {
                     Image(systemName: "wand.and.stars")
-                        .font(.system(size: 14))
+                        .font(AppTypography.fixed(14))
                 }
 
                 Text(resolvedIngredients.isEmpty ? "Estimate nutrition" : "Re-estimate")
-                    .font(.subheadline)
+                    .font(AppTypography.subheadline)
                     .fontWeight(.medium)
             }
             .frame(maxWidth: .infinity)
@@ -116,11 +116,11 @@ struct SmartLogSection: View {
     private var quickEstimateLabel: some View {
         HStack(spacing: 6) {
             Image(systemName: "sparkles")
-                .font(.caption)
+                .font(AppTypography.caption)
                 .foregroundStyle(Color.sageGreen)
 
             Text("Quick Estimate")
-                .font(.caption)
+                .font(AppTypography.caption)
                 .foregroundStyle(Color.slateGray)
 
             Spacer()
@@ -132,7 +132,7 @@ struct SmartLogSection: View {
     private var ingredientChips: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Ingredients")
-                .font(.subheadline)
+                .font(AppTypography.subheadline)
                 .foregroundStyle(Color.slateGray)
 
             FlowLayout(spacing: 8) {
@@ -180,12 +180,12 @@ struct SmartLogSection: View {
     private func macroItem(label: String, value: String) -> some View {
         VStack(spacing: 2) {
             Text(value)
-                .font(.subheadline)
+                .font(AppTypography.subheadline)
                 .fontWeight(.medium)
                 .foregroundStyle(Color.charcoal)
 
             Text(label)
-                .font(.caption2)
+                .font(AppTypography.caption2)
                 .foregroundStyle(Color.slateGray)
         }
     }
@@ -201,11 +201,11 @@ struct SmartLogSection: View {
             } label: {
                 HStack(spacing: 6) {
                     Image(systemName: showAssumptions ? "chevron.down" : "chevron.right")
-                        .font(.caption2)
+                        .font(AppTypography.caption2)
                         .foregroundStyle(Color.slateGray)
 
                     Text("How did we estimate?")
-                        .font(.caption)
+                        .font(AppTypography.caption)
                         .foregroundStyle(Color.slateGray)
 
                     Spacer()
@@ -224,12 +224,12 @@ struct SmartLogSection: View {
 
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(ingredient.displayName)
-                                    .font(.caption)
+                                    .font(AppTypography.caption)
                                     .fontWeight(.medium)
                                     .foregroundStyle(Color.charcoal)
 
                                 Text(ingredient.assumptionDescription)
-                                    .font(.caption2)
+                                    .font(AppTypography.caption2)
                                     .foregroundStyle(Color.slateGray)
                             }
                         }
@@ -340,18 +340,18 @@ struct SmartIngredientChip: View {
             Button(action: onTap) {
                 HStack(spacing: 6) {
                     Text(ingredient.displayName)
-                        .font(.subheadline)
+                        .font(AppTypography.subheadline)
                         .lineLimit(1)
 
                     if let cal = ingredient.macros.calories {
                         Text("\(Int(cal.rounded())) cal")
-                            .font(.caption)
+                            .font(AppTypography.caption)
                             .foregroundStyle(isSelected ? Color.offWhite.opacity(0.8) : Color.slateGray)
                     }
 
                     if !ingredient.alternates.isEmpty {
                         Image(systemName: "chevron.down")
-                            .font(.system(size: 8))
+                            .font(AppTypography.fixed(8))
                             .foregroundStyle(isSelected ? Color.offWhite.opacity(0.8) : Color.slateGray)
                     }
                 }
@@ -369,7 +369,7 @@ struct SmartIngredientChip: View {
             if isSelected && !ingredient.alternates.isEmpty {
                 VStack(alignment: .leading, spacing: 0) {
                     Text("Refine this estimate")
-                        .font(.caption2)
+                        .font(AppTypography.caption2)
                         .foregroundStyle(Color.slateGray)
                         .padding(.horizontal, 12)
                         .padding(.top, 8)
@@ -381,14 +381,14 @@ struct SmartIngredientChip: View {
                         } label: {
                             HStack(spacing: 8) {
                                 Text(alt.foodItem.displayName)
-                                    .font(.caption)
+                                    .font(AppTypography.caption)
                                     .foregroundStyle(Color.charcoal)
                                     .lineLimit(1)
 
                                 Spacer()
 
                                 Text("\(Int(alt.foodItem.caloriesPer100g.rounded())) cal/100g")
-                                    .font(.caption2)
+                                    .font(AppTypography.caption2)
                                     .foregroundStyle(Color.slateGray)
                             }
                             .padding(.horizontal, 12)

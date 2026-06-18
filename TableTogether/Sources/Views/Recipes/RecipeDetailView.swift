@@ -135,13 +135,13 @@ struct RecipeDetailView: View {
             // Title overlay
             VStack(alignment: .leading, spacing: 4) {
                 Text(recipe.title)
-                    .font(.title2)
+                    .font(AppTypography.title2)
                     .fontWeight(.bold)
                     .foregroundColor(.white)
 
                 if let cookbook = recipe.cookbook, !cookbook.isEmpty {
                     Text("From \(cookbook)")
-                        .font(.subheadline)
+                        .font(AppTypography.subheadline)
                         .italic()
                         .foregroundColor(.white.opacity(0.85))
                 }
@@ -152,9 +152,9 @@ struct RecipeDetailView: View {
                     } label: {
                         HStack(spacing: 4) {
                             Image(systemName: "link")
-                                .font(.caption)
+                                .font(AppTypography.caption)
                             Text(sourceURL.host ?? "Source")
-                                .font(.caption)
+                                .font(AppTypography.caption)
                         }
                         .foregroundColor(.white.opacity(0.8))
                     }
@@ -168,7 +168,7 @@ struct RecipeDetailView: View {
         ZStack {
             Color.appPrimary.opacity(0.15)
             Image(systemName: "fork.knife")
-                .font(.system(size: 64))
+                .font(AppTypography.fixed(64))
                 .foregroundColor(.appPrimary.opacity(0.4))
         }
         .frame(height: 280)
@@ -202,9 +202,9 @@ struct RecipeDetailView: View {
     private func chipView(icon: String, text: String) -> some View {
         HStack(spacing: 4) {
             Image(systemName: icon)
-                .font(.caption)
+                .font(AppTypography.caption)
             Text(text)
-                .font(.caption)
+                .font(AppTypography.caption)
         }
         .chipStyle(color: .appTextSecondary)
     }
@@ -223,12 +223,12 @@ struct RecipeDetailView: View {
                     Image(systemName: "chart.pie")
                         .foregroundColor(.appPrimary)
                     Text("Nutrition (per serving)")
-                        .font(.subheadline)
+                        .font(AppTypography.subheadline)
                         .fontWeight(.medium)
                         .foregroundColor(.appTextPrimary)
                     Spacer()
                     Image(systemName: isMacroExpanded ? "chevron.up" : "chevron.down")
-                        .font(.caption)
+                        .font(AppTypography.caption)
                         .foregroundColor(.appTextSecondary)
                 }
                 .padding()
@@ -259,15 +259,15 @@ struct RecipeDetailView: View {
     private func macroItem(label: String, value: String, unit: String) -> some View {
         VStack(spacing: 4) {
             Text(label)
-                .font(.caption)
+                .font(AppTypography.caption)
                 .foregroundColor(.appTextSecondary)
             HStack(spacing: 2) {
                 Text(value)
-                    .font(.title3)
+                    .font(AppTypography.title3)
                     .fontWeight(.semibold)
                     .foregroundColor(.appTextPrimary)
                 Text(unit)
-                    .font(.caption)
+                    .font(AppTypography.caption)
                     .foregroundColor(.appTextSecondary)
             }
         }
@@ -282,13 +282,13 @@ struct RecipeDetailView: View {
                 Image(systemName: "list.bullet")
                     .foregroundColor(.appPrimary)
                 Text("Ingredients")
-                    .font(.headline)
+                    .font(AppTypography.headline)
                     .foregroundColor(.appTextPrimary)
 
                 Spacer()
 
                 Text("for \(adjustedServings) servings")
-                    .font(.caption)
+                    .font(AppTypography.caption)
                     .foregroundColor(.appTextSecondary)
             }
 
@@ -303,7 +303,7 @@ struct RecipeDetailView: View {
 
                 if recipe.recipeIngredientsArray.isEmpty {
                     Text("No ingredients added yet.")
-                        .font(.body)
+                        .font(AppTypography.body)
                         .foregroundColor(.appTextSecondary)
                         .italic()
                 }
@@ -321,14 +321,14 @@ struct RecipeDetailView: View {
                 Image(systemName: "text.justify.leading")
                     .foregroundColor(.appPrimary)
                 Text("Instructions")
-                    .font(.headline)
+                    .font(AppTypography.headline)
                     .foregroundColor(.appTextPrimary)
             }
 
             VStack(alignment: .leading, spacing: 16) {
                 if recipe.instructionsList.isEmpty {
                     Text("No instructions added yet.")
-                        .font(.body)
+                        .font(AppTypography.body)
                         .foregroundColor(.appTextSecondary)
                         .italic()
                 } else {
@@ -384,7 +384,7 @@ struct IngredientRow: View {
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
             Text(ingredient.formattedScaledQuantity(for: servings, baseServings: baseServings))
-                .font(.body)
+                .font(AppTypography.body)
                 .fontWeight(.medium)
                 .foregroundColor(.appPrimary)
                 .frame(width: 80, alignment: .leading)
@@ -392,19 +392,19 @@ struct IngredientRow: View {
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 4) {
                     Text(ingredient.displayName)
-                        .font(.body)
+                        .font(AppTypography.body)
                         .foregroundColor(.appTextPrimary)
 
                     if ingredient.isOptional {
                         Text("(optional)")
-                            .font(.caption)
+                            .font(AppTypography.caption)
                             .foregroundColor(.appTextSecondary)
                     }
                 }
 
                 if let note = ingredient.preparationNote, !note.isEmpty {
                     Text(note)
-                        .font(.caption)
+                        .font(AppTypography.caption)
                         .foregroundColor(.appTextSecondary)
                 }
             }
@@ -442,7 +442,7 @@ struct InstructionStepView: View {
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
             Text("\(stepNumber)")
-                .font(.headline)
+                .font(AppTypography.headline)
                 .fontWeight(.bold)
                 .foregroundColor(.white)
                 .frame(width: 28, height: 28)
@@ -450,7 +450,7 @@ struct InstructionStepView: View {
                 .clipShape(Circle())
 
             Text(text)
-                .font(.body)
+                .font(AppTypography.body)
                 .foregroundColor(.appTextPrimary)
                 .fixedSize(horizontal: false, vertical: true)
         }
@@ -489,10 +489,10 @@ struct AddToPlanSheet: View {
             Form {
                 Section {
                     Text(recipe.title)
-                        .font(.headline)
+                        .font(AppTypography.headline)
                     if let cookbook = recipe.cookbook, !cookbook.isEmpty {
                         Text("From \(cookbook)")
-                            .font(.caption)
+                            .font(AppTypography.caption)
                             .italic()
                             .foregroundStyle(Theme.Colors.textSecondary)
                     }
@@ -501,7 +501,7 @@ struct AddToPlanSheet: View {
                 Section("Week") {
                     if weekPlans.isEmpty {
                         Text("No active week plans yet. Create one in the planner first.")
-                            .font(.callout)
+                            .font(AppTypography.callout)
                             .foregroundStyle(Theme.Colors.textSecondary)
                     } else {
                         Picker("Week", selection: $selectedWeekPlan) {
@@ -536,7 +536,7 @@ struct AddToPlanSheet: View {
                 if let errorMessage {
                     Section {
                         Label(errorMessage, systemImage: "exclamationmark.triangle")
-                            .font(.caption)
+                            .font(AppTypography.caption)
                             .foregroundStyle(.red)
                     }
                 }

@@ -76,11 +76,11 @@ struct ScannedPagesCarousel: View {
         return AnyView(VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Text("Scanned Pages")
-                    .font(.headline)
+                    .font(AppTypography.headline)
                     .foregroundColor(.appTextPrimary)
                 Spacer()
                 Text("\(pages.count) page\(pages.count == 1 ? "" : "s")")
-                    .font(.caption)
+                    .font(AppTypography.caption)
                     .foregroundColor(.appTextSecondary)
             }
 
@@ -96,7 +96,7 @@ struct ScannedPagesCarousel: View {
 
             if pages.count > 1 {
                 Text("Tap a page to view full size. The selected page becomes the recipe photo.")
-                    .font(.caption)
+                    .font(AppTypography.caption)
                     .foregroundColor(.appTextSecondary)
             }
         }
@@ -125,7 +125,7 @@ struct ScannedPagesCarousel: View {
                 .overlay(alignment: .topTrailing) {
                     if isSelected {
                         Image(systemName: "photo.fill")
-                            .font(.caption)
+                            .font(AppTypography.caption)
                             .padding(6)
                             .background(Color.appPrimary)
                             .foregroundColor(.white)
@@ -135,7 +135,7 @@ struct ScannedPagesCarousel: View {
                 }
                 .overlay(alignment: .bottom) {
                     Text("Page \(index + 1)")
-                        .font(.caption2)
+                        .font(AppTypography.caption2)
                         .fontWeight(.medium)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 3)
@@ -209,20 +209,20 @@ struct RawOCRTextSection: View {
             } label: {
                 HStack {
                     Image(systemName: "doc.text")
-                        .font(.caption)
+                        .font(AppTypography.caption)
                     Text("Raw OCR Text")
-                        .font(.headline)
+                        .font(AppTypography.headline)
                         .foregroundColor(.appTextPrimary)
                     Spacer()
                     Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
-                        .font(.caption)
+                        .font(AppTypography.caption)
                         .foregroundColor(.appTextSecondary)
                 }
             }
 
             if isExpanded {
                 Text(rawText)
-                    .font(.caption)
+                    .font(AppTypography.caption)
                     .foregroundColor(.appTextSecondary)
                     .padding()
                     .frame(maxWidth: .infinity, alignment: .leading)

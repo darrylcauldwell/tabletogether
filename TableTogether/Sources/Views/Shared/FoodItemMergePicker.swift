@@ -46,7 +46,7 @@ struct FoodItemMergePicker: View {
             List {
                 Section {
                     Text("Choose the canonical food item. **\(source.displayName)** will be deleted and added as an alias on whichever item you pick.")
-                        .font(.subheadline)
+                        .font(AppTypography.subheadline)
                         .foregroundStyle(Theme.Colors.textSecondary)
                 }
 
@@ -67,16 +67,16 @@ struct FoodItemMergePicker: View {
                                     HStack(spacing: 6) {
                                         if let brand = candidate.brandOwner, !brand.isEmpty {
                                             Text(brand)
-                                                .font(.caption)
+                                                .font(AppTypography.caption)
                                                 .foregroundStyle(Theme.Colors.textSecondary)
                                         } else {
                                             Text(candidate.dataType)
-                                                .font(.caption)
+                                                .font(AppTypography.caption)
                                                 .foregroundStyle(Theme.Colors.textSecondary)
                                         }
                                         if !candidate.userAliasesList.isEmpty {
                                             Text("• \(candidate.userAliasesList.count) alias\(candidate.userAliasesList.count == 1 ? "" : "es")")
-                                                .font(.caption)
+                                                .font(AppTypography.caption)
                                                 .foregroundStyle(Theme.Colors.textSecondary)
                                         }
                                     }

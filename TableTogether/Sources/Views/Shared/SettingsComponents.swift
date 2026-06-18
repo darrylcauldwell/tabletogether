@@ -21,9 +21,9 @@ struct MacroGoalsEditor: View {
             Section {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("These goals are personal and optional.")
-                        .font(.subheadline)
+                        .font(AppTypography.subheadline)
                     Text("Your macro insights will reference these if set, but there's no pressure to meet them.")
-                        .font(.caption)
+                        .font(AppTypography.caption)
                         .foregroundStyle(Theme.Colors.textSecondary)
                 }
             }
@@ -246,7 +246,7 @@ struct HealthKitSettingsRow: View {
 
             if let error = healthService.errorMessage {
                 Text(error)
-                    .font(.caption)
+                    .font(AppTypography.caption)
                     .foregroundStyle(.red)
             }
         }
@@ -285,7 +285,7 @@ struct HealthKitSettingsRow: View {
         // If gaps in HealthKit data, offer manual fields for missing values
         if hasHealthKitGaps {
             Text("Some data not found in Health. You can enter it manually below.")
-                .font(.caption)
+                .font(AppTypography.caption)
                 .foregroundStyle(Theme.Colors.textSecondary)
 
             manualFieldsForMissingData
@@ -315,7 +315,7 @@ struct HealthKitSettingsRow: View {
         }
 
         Text("Or enter manually:")
-            .font(.subheadline)
+            .font(AppTypography.subheadline)
             .foregroundStyle(Theme.Colors.textSecondary)
 
         allManualFields
@@ -544,7 +544,7 @@ struct SyncStatusRow: View {
                 .foregroundStyle(.green)
 
             Text(persistenceController.isSharing ? "Sharing with \(persistenceController.participantCount) people" : "Active")
-                .font(.subheadline)
+                .font(AppTypography.subheadline)
                 .foregroundStyle(Theme.Colors.textSecondary)
         }
     }
@@ -563,7 +563,7 @@ struct DefaultArchetypesView: View {
                     VStack(alignment: .leading) {
                         Text(archetype.displayName)
                         Text(archetype.description)
-                            .font(.caption)
+                            .font(AppTypography.caption)
                             .foregroundStyle(Theme.Colors.textSecondary)
                     }
                 }
@@ -587,7 +587,7 @@ struct IngredientDatabaseView: View {
                     Spacer()
                     if let cal = ingredient.caloriesPer100g {
                         Text("\(Int(cal)) cal/100g")
-                            .font(.caption)
+                            .font(AppTypography.caption)
                             .foregroundStyle(Theme.Colors.textSecondary)
                     }
                 }
@@ -638,12 +638,12 @@ struct DemoDataToggleRow: View {
             }
 
             Text("Show sample data for testing")
-                .font(.caption)
+                .font(AppTypography.caption)
                 .foregroundStyle(Theme.Colors.textSecondary)
 
             if let error = demoDataManager.errorMessage {
                 Text(error)
-                    .font(.caption)
+                    .font(AppTypography.caption)
                     .foregroundStyle(.red)
             }
         }
@@ -673,22 +673,22 @@ struct PaprikaImportRow: View {
                     ProgressView()
                         .scaleEffect(0.8)
                     Text(importer.progress)
-                        .font(.subheadline)
+                        .font(AppTypography.subheadline)
                         .foregroundStyle(Theme.Colors.textSecondary)
                 }
             } else if let result = importer.result {
                 VStack(alignment: .leading, spacing: 4) {
                     Label("Import complete", systemImage: "checkmark.circle.fill")
                         .foregroundStyle(.green)
-                        .font(.subheadline)
+                        .font(AppTypography.subheadline)
 
                     Text("\(result.imported) imported, \(result.skipped) skipped")
-                        .font(.caption)
+                        .font(AppTypography.caption)
                         .foregroundStyle(Theme.Colors.textSecondary)
 
                     if !result.errors.isEmpty {
                         Text(result.errors.joined(separator: ". "))
-                            .font(.caption)
+                            .font(AppTypography.caption)
                             .foregroundStyle(.orange)
                     }
                 }
@@ -702,7 +702,7 @@ struct PaprikaImportRow: View {
 
             if let error = importer.errorMessage {
                 Text(error)
-                    .font(.caption)
+                    .font(AppTypography.caption)
                     .foregroundStyle(.red)
             }
         }
@@ -749,22 +749,22 @@ struct JSONRecipeImportRow: View {
                     ProgressView()
                         .scaleEffect(0.8)
                     Text(importer.progress)
-                        .font(.subheadline)
+                        .font(AppTypography.subheadline)
                         .foregroundStyle(Theme.Colors.textSecondary)
                 }
             } else if let result = importer.result {
                 VStack(alignment: .leading, spacing: 4) {
                     Label("Import complete", systemImage: "checkmark.circle.fill")
                         .foregroundStyle(.green)
-                        .font(.subheadline)
+                        .font(AppTypography.subheadline)
 
                     Text("\(result.imported) imported, \(result.skipped) skipped")
-                        .font(.caption)
+                        .font(AppTypography.caption)
                         .foregroundStyle(Theme.Colors.textSecondary)
 
                     if !result.errors.isEmpty {
                         Text(result.errors.joined(separator: ". "))
-                            .font(.caption)
+                            .font(AppTypography.caption)
                             .foregroundStyle(.orange)
                     }
                 }
@@ -778,7 +778,7 @@ struct JSONRecipeImportRow: View {
 
             if let error = importer.errorMessage {
                 Text(error)
-                    .font(.caption)
+                    .font(AppTypography.caption)
                     .foregroundStyle(.red)
             }
         }
@@ -824,22 +824,22 @@ struct JSONFoodItemImportRow: View {
                     ProgressView()
                         .scaleEffect(0.8)
                     Text(importer.progress)
-                        .font(.subheadline)
+                        .font(AppTypography.subheadline)
                         .foregroundStyle(Theme.Colors.textSecondary)
                 }
             } else if let result = importer.result {
                 VStack(alignment: .leading, spacing: 4) {
                     Label("Import complete", systemImage: "checkmark.circle.fill")
                         .foregroundStyle(.green)
-                        .font(.subheadline)
+                        .font(AppTypography.subheadline)
 
                     Text("\(result.imported) imported, \(result.skipped) skipped")
-                        .font(.caption)
+                        .font(AppTypography.caption)
                         .foregroundStyle(Theme.Colors.textSecondary)
 
                     if !result.errors.isEmpty {
                         Text(result.errors.joined(separator: ". "))
-                            .font(.caption)
+                            .font(AppTypography.caption)
                             .foregroundStyle(.orange)
                     }
                 }
@@ -853,7 +853,7 @@ struct JSONFoodItemImportRow: View {
 
             if let error = importer.errorMessage {
                 Text(error)
-                    .font(.caption)
+                    .font(AppTypography.caption)
                     .foregroundStyle(.red)
             }
         }
@@ -889,49 +889,49 @@ struct NutritionDisclaimerView: View {
             VStack(alignment: .leading, spacing: 20) {
                 Group {
                     Text("Nutrition Estimates")
-                        .font(.headline)
+                        .font(AppTypography.headline)
                         .foregroundStyle(Theme.Colors.textPrimary)
 
                     Text("Nutrition data in TableTogether is estimated using public food databases, including USDA FoodData Central and Open Food Facts. Estimates are generated through on-device language processing and database lookups.")
-                        .font(.subheadline)
+                        .font(AppTypography.subheadline)
                         .foregroundStyle(Theme.Colors.textSecondary)
 
                     Text("Estimates may vary from actual values due to preparation methods, portion sizes, regional product variations, and database coverage. All values should be considered approximate.")
-                        .font(.subheadline)
+                        .font(AppTypography.subheadline)
                         .foregroundStyle(Theme.Colors.textSecondary)
                 }
 
                 Group {
                     Text("Not Medical Advice")
-                        .font(.headline)
+                        .font(AppTypography.headline)
                         .foregroundStyle(Theme.Colors.textPrimary)
 
                     Text("TableTogether is not a medical device and does not diagnose, treat, cure, or prevent any medical condition. The nutrition information provided is for general informational purposes only.")
-                        .font(.subheadline)
+                        .font(AppTypography.subheadline)
                         .foregroundStyle(Theme.Colors.textSecondary)
 
                     Text("Always consult a qualified healthcare professional before making changes to your diet, especially if you have a medical condition or specific dietary requirements.")
-                        .font(.subheadline)
+                        .font(AppTypography.subheadline)
                         .foregroundStyle(Theme.Colors.textSecondary)
                 }
 
                 Group {
                     Text("Your Privacy")
-                        .font(.headline)
+                        .font(AppTypography.headline)
                         .foregroundStyle(Theme.Colors.textPrimary)
 
                     Text("Meal logs, nutrition targets, and personal insights are stored privately and never shared with other household members. If connected to Apple Health, nutrition data is written to HealthKit on your device.")
-                        .font(.subheadline)
+                        .font(AppTypography.subheadline)
                         .foregroundStyle(Theme.Colors.textSecondary)
 
                     Text("Food search queries sent to USDA and Open Food Facts are anonymous and not linked to your identity.")
-                        .font(.subheadline)
+                        .font(AppTypography.subheadline)
                         .foregroundStyle(Theme.Colors.textSecondary)
                 }
 
                 Group {
                     Text("Data Sources")
-                        .font(.headline)
+                        .font(AppTypography.headline)
                         .foregroundStyle(Theme.Colors.textPrimary)
 
                     VStack(alignment: .leading, spacing: 8) {
@@ -962,11 +962,11 @@ struct NutritionDisclaimerView: View {
     private func dataSourceRow(name: String, detail: String) -> some View {
         VStack(alignment: .leading, spacing: 2) {
             Text(name)
-                .font(.subheadline)
+                .font(AppTypography.subheadline)
                 .fontWeight(.medium)
                 .foregroundStyle(Theme.Colors.textPrimary)
             Text(detail)
-                .font(.caption)
+                .font(AppTypography.caption)
                 .foregroundStyle(Theme.Colors.textSecondary)
         }
     }

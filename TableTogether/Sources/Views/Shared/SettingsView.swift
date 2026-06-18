@@ -90,7 +90,7 @@ struct SettingsView: View {
                     if let user = currentUser {
                         HStack(spacing: 12) {
                             Image(systemName: "person.circle.fill")
-                                .font(.title2)
+                                .font(AppTypography.title2)
                                 .foregroundStyle(Theme.Colors.primary)
                             VStack(alignment: .leading, spacing: 2) {
                                 TextField("Your Name", text: Binding(
@@ -100,9 +100,9 @@ struct SettingsView: View {
                                         viewContext.saveWithLogging(context: "update display name")
                                     }
                                 ))
-                                .font(.body)
+                                .font(AppTypography.body)
                                 Text("You")
-                                    .font(.caption)
+                                    .font(AppTypography.caption)
                                     .foregroundStyle(Theme.Colors.textSecondary)
                             }
                         }
@@ -149,7 +149,7 @@ struct SettingsView: View {
                     }
                     #else
                     Text("Share from iPhone or iPad to invite others")
-                        .font(.caption)
+                        .font(AppTypography.caption)
                         .foregroundStyle(Theme.Colors.textSecondary)
                     #endif
                 } header: {
@@ -273,7 +273,7 @@ struct SettingsView: View {
                                 Text("Help & Support")
                                 Spacer()
                                 Image(systemName: "arrow.up.right")
-                                    .font(.caption)
+                                    .font(AppTypography.caption)
                             }
                         }
                     }
@@ -284,7 +284,7 @@ struct SettingsView: View {
                                 Text("Privacy Policy")
                                 Spacer()
                                 Image(systemName: "arrow.up.right")
-                                    .font(.caption)
+                                    .font(AppTypography.caption)
                             }
                         }
                     }
@@ -387,20 +387,20 @@ struct SettingsView: View {
     private func householdMemberRow(_ member: PersistenceController.HouseholdMember) -> some View {
         HStack(spacing: 12) {
             Image(systemName: member.status.iconName)
-                .font(.title2)
+                .font(AppTypography.title2)
                 .foregroundStyle(member.status == .accepted ? Theme.Colors.primary : .orange)
             VStack(alignment: .leading, spacing: 2) {
                 Text(member.name)
-                    .font(.body)
+                    .font(AppTypography.body)
                     .foregroundStyle(Theme.Colors.textPrimary)
                 Text(member.status.label)
-                    .font(.caption)
+                    .font(AppTypography.caption)
                     .foregroundStyle(Theme.Colors.textSecondary)
             }
             Spacer()
             #if os(iOS)
             Image(systemName: "chevron.right")
-                .font(.caption)
+                .font(AppTypography.caption)
                 .foregroundStyle(Theme.Colors.textSecondary)
             #endif
         }

@@ -231,7 +231,7 @@ struct GroceryListView: View {
                                     .foregroundStyle(.secondary)
                                 Spacer()
                                 Text("\(checkedItems.count)")
-                                    .font(.caption)
+                                    .font(AppTypography.caption)
                                     .foregroundStyle(.secondary)
                                     .padding(.horizontal, 8)
                                     .padding(.vertical, 4)
@@ -252,10 +252,10 @@ struct GroceryListView: View {
                                 .foregroundStyle(.secondary)
                             Spacer()
                             Text("\(checkedItems.count)")
-                                .font(.caption)
+                                .font(AppTypography.caption)
                                 .foregroundStyle(.secondary)
                             Image(systemName: checkedItemsExpanded ? "chevron.up" : "chevron.down")
-                                .font(.caption)
+                                .font(AppTypography.caption)
                                 .foregroundStyle(.secondary)
                         }
                     }
@@ -354,11 +354,11 @@ private struct ShoppingProgressHeader: View {
         VStack(spacing: 4) {
             HStack {
                 Text("\(completedItems) of \(totalItems) items")
-                    .font(.subheadline)
+                    .font(AppTypography.subheadline)
                     .foregroundStyle(.secondary)
                 Spacer()
                 Text("\(percent)%")
-                    .font(.subheadline)
+                    .font(AppTypography.subheadline)
                     .foregroundStyle(.secondary)
             }
 

@@ -130,13 +130,13 @@ struct FoodItemLibraryView: View {
     private var emptyState: some View {
         VStack(spacing: 16) {
             Image(systemName: "fork.knife.circle")
-                .font(.system(size: 48))
+                .font(AppTypography.fixed(48))
                 .foregroundStyle(Theme.Colors.textSecondary)
             Text("No Food Items Yet")
-                .font(.title3)
+                .font(AppTypography.title3)
                 .fontWeight(.medium)
             Text("Food items are cached when you log meals — TableTogether queries USDA when you describe what you ate, and saves the result here for next time.")
-                .font(.subheadline)
+                .font(AppTypography.subheadline)
                 .foregroundStyle(Theme.Colors.textSecondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 32)
@@ -154,28 +154,28 @@ private struct FoodItemLibraryRow: View {
     var body: some View {
         HStack(spacing: 12) {
             Image(systemName: sourceIcon)
-                .font(.body)
+                .font(AppTypography.body)
                 .foregroundStyle(Theme.Colors.primary)
                 .frame(width: 28)
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(foodItem.displayName)
-                    .font(.body)
+                    .font(AppTypography.body)
                     .lineLimit(1)
                 HStack(spacing: 6) {
                     if let brand = foodItem.brandOwner, !brand.isEmpty {
                         Text(brand)
-                            .font(.caption)
+                            .font(AppTypography.caption)
                             .foregroundStyle(Theme.Colors.textSecondary)
                             .lineLimit(1)
                     } else {
                         Text(foodItem.dataType)
-                            .font(.caption)
+                            .font(AppTypography.caption)
                             .foregroundStyle(Theme.Colors.textSecondary)
                     }
                     if !foodItem.userAliasesList.isEmpty {
                         Text("• \(foodItem.userAliasesList.count) alias\(foodItem.userAliasesList.count == 1 ? "" : "es")")
-                            .font(.caption)
+                            .font(AppTypography.caption)
                             .foregroundStyle(Theme.Colors.textSecondary)
                     }
                 }
@@ -185,7 +185,7 @@ private struct FoodItemLibraryRow: View {
 
             if mealSlotCount > 0 {
                 Text("\(mealSlotCount)")
-                    .font(.caption)
+                    .font(AppTypography.caption)
                     .foregroundStyle(Theme.Colors.textSecondary)
                     .padding(.horizontal, 8)
                     .padding(.vertical, 2)

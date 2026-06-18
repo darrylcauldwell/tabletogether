@@ -29,7 +29,7 @@ struct DraggableRecipeCard: View {
 
             // Recipe title
             Text(recipe.title)
-                .font(.caption)
+                .font(AppTypography.caption)
                 .fontWeight(.medium)
                 .lineLimit(2)
                 .multilineTextAlignment(.leading)
@@ -66,10 +66,10 @@ struct NewBadge: View {
     var body: some View {
         HStack(spacing: 2) {
             Image(systemName: "sparkles")
-                .font(.system(size: 8))
+                .font(AppTypography.fixed(8))
 
             Text("NEW")
-                .font(.system(size: 8, weight: .bold))
+                .font(AppTypography.fixed(8, weight: .bold))
         }
         .foregroundColor(.white)
         .padding(.horizontal, 6)
@@ -90,10 +90,10 @@ struct RecipeMetadataRow: View {
             if let totalTime = recipe.totalTimeMinutes {
                 HStack(spacing: 2) {
                     Image(systemName: "clock")
-                        .font(.system(size: 9))
+                        .font(AppTypography.fixed(9))
 
                     Text("\(totalTime)m")
-                        .font(.system(size: 10))
+                        .font(AppTypography.fixed(10))
                 }
                 .foregroundColor(.secondary)
             }
@@ -102,7 +102,7 @@ struct RecipeMetadataRow: View {
 
             if recipe.isFavorite {
                 Image(systemName: "heart.fill")
-                    .font(.system(size: 9))
+                    .font(AppTypography.fixed(9))
                     .foregroundColor(.red)
             }
         }
@@ -123,13 +123,13 @@ struct DragPreviewCard: View {
             // Title
             VStack(alignment: .leading, spacing: 2) {
                 Text(recipe.title)
-                    .font(.subheadline)
+                    .font(AppTypography.subheadline)
                     .fontWeight(.medium)
                     .lineLimit(2)
 
                 if let totalTime = recipe.totalTimeMinutes {
                     Text("\(totalTime) min")
-                        .font(.caption2)
+                        .font(AppTypography.caption2)
                         .foregroundColor(.secondary)
                 }
             }

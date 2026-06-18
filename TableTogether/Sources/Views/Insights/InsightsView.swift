@@ -249,7 +249,7 @@ struct GoalsCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             Text("Your averages")
-                .font(.headline)
+                .font(AppTypography.headline)
                 .foregroundStyle(Color.charcoal)
 
             VStack(spacing: 12) {
@@ -325,13 +325,13 @@ struct GoalProgressRow: View {
         VStack(alignment: .leading, spacing: 6) {
             HStack {
                 Text(label)
-                    .font(.subheadline)
+                    .font(AppTypography.subheadline)
                     .foregroundStyle(Color.charcoal)
 
                 Spacer()
 
                 Text("\(current) / \(target) \(unit)")
-                    .font(.caption)
+                    .font(AppTypography.caption)
                     .foregroundStyle(Color.slateGray)
             }
 
@@ -348,7 +348,7 @@ struct GoalProgressRow: View {
             .frame(height: 8)
 
             Text(progressDescription)
-                .font(.caption2)
+                .font(AppTypography.caption2)
                 .foregroundStyle(Color.slateGray)
         }
         .accessibilityElement(children: .combine)
@@ -362,11 +362,11 @@ struct EmptyInsightsView: View {
     var body: some View {
         VStack(spacing: 16) {
             Image(systemName: "chart.line.uptrend.xyaxis")
-                .font(.system(size: 48))
+                .font(AppTypography.fixed(48))
                 .foregroundStyle(Theme.Colors.textSecondary.opacity(0.5))
 
             Text("Start logging meals to see your eating patterns here.")
-                .font(.body)
+                .font(AppTypography.body)
                 .foregroundStyle(Theme.Colors.textSecondary)
                 .multilineTextAlignment(.center)
         }
@@ -390,11 +390,11 @@ struct HealthKitCard: View {
             // Header with Apple Health branding
             HStack(spacing: 10) {
                 Image(systemName: "heart.fill")
-                    .font(.title2)
+                    .font(AppTypography.title2)
                     .foregroundStyle(.red)
 
                 Text("Apple Health")
-                    .font(.headline)
+                    .font(AppTypography.headline)
                     .foregroundStyle(Theme.Colors.textPrimary)
 
                 Spacer()
@@ -442,7 +442,7 @@ struct HealthKitCard: View {
                             Image(systemName: "arrow.clockwise")
                             Text("Refresh")
                         }
-                        .font(.caption)
+                        .font(AppTypography.caption)
                         .foregroundStyle(Theme.Colors.primary)
                     }
                     .padding(.top, 4)
@@ -450,7 +450,7 @@ struct HealthKitCard: View {
 
                 if healthService.latestWeight == nil && healthService.latestHeight == nil {
                     Text("No health data found. Add your weight and height in the Health app.")
-                        .font(.caption)
+                        .font(AppTypography.caption)
                         .foregroundStyle(Theme.Colors.textSecondary)
                         .padding(.top, 4)
                 }
@@ -458,7 +458,7 @@ struct HealthKitCard: View {
                 // Not connected - show connect prompt
                 VStack(alignment: .leading, spacing: 12) {
                     Text("Connect to sync your weight and height for personalized calorie estimates. Meal logs will also be saved to Health.")
-                        .font(.subheadline)
+                        .font(AppTypography.subheadline)
                         .foregroundStyle(Theme.Colors.textSecondary)
 
                     Button {
@@ -470,7 +470,7 @@ struct HealthKitCard: View {
                             Image(systemName: "heart.circle.fill")
                             Text("Connect to Health")
                         }
-                        .font(.subheadline.weight(.medium))
+                        .font(AppTypography.subheadline.weight(.medium))
                         .foregroundStyle(.white)
                         .padding(.horizontal, 16)
                         .padding(.vertical, 10)
@@ -484,7 +484,7 @@ struct HealthKitCard: View {
 
             if let error = healthService.errorMessage {
                 Text(error)
-                    .font(.caption)
+                    .font(AppTypography.caption)
                     .foregroundStyle(.red)
             }
         }
@@ -506,18 +506,18 @@ struct HealthMetricRow: View {
     var body: some View {
         HStack(spacing: 12) {
             Image(systemName: icon)
-                .font(.system(size: 14))
+                .font(AppTypography.fixed(14))
                 .foregroundStyle(Theme.Colors.textSecondary)
                 .frame(width: 20)
 
             Text(label)
-                .font(.subheadline)
+                .font(AppTypography.subheadline)
                 .foregroundStyle(Theme.Colors.textSecondary)
 
             Spacer()
 
             Text(value)
-                .font(.subheadline.weight(.medium))
+                .font(AppTypography.subheadline.weight(.medium))
                 .foregroundStyle(Theme.Colors.textPrimary)
         }
     }
@@ -532,7 +532,7 @@ struct CalorieEstimateCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Your estimated needs")
-                .font(.headline)
+                .font(AppTypography.headline)
                 .foregroundStyle(Theme.Colors.textPrimary)
 
             if let bmr = healthService.estimatedBMR,
@@ -541,10 +541,10 @@ struct CalorieEstimateCard: View {
                     HStack {
                         VStack(alignment: .leading, spacing: 2) {
                             Text("Basal Metabolic Rate")
-                                .font(.caption)
+                                .font(AppTypography.caption)
                                 .foregroundStyle(Theme.Colors.textSecondary)
                             Text("\(bmr) cal/day")
-                                .font(.title3.weight(.medium))
+                                .font(AppTypography.title3.weight(.medium))
                                 .foregroundStyle(Theme.Colors.textPrimary)
                         }
 
@@ -552,22 +552,22 @@ struct CalorieEstimateCard: View {
 
                         VStack(alignment: .trailing, spacing: 2) {
                             Text("Maintenance")
-                                .font(.caption)
+                                .font(AppTypography.caption)
                                 .foregroundStyle(Theme.Colors.textSecondary)
                             Text("~\(dailyCal) cal/day")
-                                .font(.title3.weight(.medium))
+                                .font(AppTypography.title3.weight(.medium))
                                 .foregroundStyle(Theme.Colors.primary)
                         }
                     }
 
                     Text("Based on your weight, height, age, and sedentary activity. Adjust based on your actual activity level.")
-                        .font(.caption)
+                        .font(AppTypography.caption)
                         .foregroundStyle(Theme.Colors.textSecondary)
                         .padding(.top, 4)
                 }
             } else {
                 Text("Add your weight, height, and date of birth in the Health app to see personalized estimates.")
-                    .font(.subheadline)
+                    .font(AppTypography.subheadline)
                     .foregroundStyle(Theme.Colors.textSecondary)
             }
         }
@@ -580,31 +580,8 @@ struct CalorieEstimateCard: View {
     }
 }
 
-// MARK: - Adaptive Color Extensions for Insights
-// These colors adapt to light/dark mode using Theme.Colors
-
-extension Color {
-    /// Primary accent - Sage Green (same in both modes)
-    static let sageGreen = Theme.Colors.primary
-
-    /// Secondary accent - Warm Orange (same in both modes)
-    static let warmOrange = Theme.Colors.secondary
-
-    /// Card/surface background - adapts to mode
-    static let offWhite = Theme.Colors.cardBackground
-
-    /// Primary text - adapts to mode
-    static let charcoal = Theme.Colors.textPrimary
-
-    /// Secondary text - adapts to mode
-    static let slateGray = Theme.Colors.textSecondary
-
-    /// Positive accent (same in both modes)
-    static let softGreen = Theme.Colors.positive
-
-    /// Neutral accent (same in both modes)
-    static let softBlue = Theme.Colors.neutral
-}
+// Note: the Insights colour aliases (sageGreen, charcoal, …) now live in
+// Views/Shared/ColorPalette.swift so they aren't declared inside a screen file.
 
 #Preview {
     InsightsView()

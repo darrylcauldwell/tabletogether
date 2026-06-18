@@ -83,10 +83,10 @@ struct CookbookScannerSheet: View {
         VStack(spacing: 20) {
             Spacer()
             Image(systemName: "camera.viewfinder")
-                .font(.system(size: 60))
+                .font(AppTypography.fixed(60))
                 .foregroundColor(.appTextSecondary)
             Text("Position your camera over a cookbook page")
-                .font(.body)
+                .font(AppTypography.body)
                 .foregroundColor(.appTextSecondary)
             Button("Open Camera") {
                 showingScanner = true
@@ -103,7 +103,7 @@ struct CookbookScannerSheet: View {
             ProgressView()
                 .scaleEffect(1.5)
             Text("Recognizing text...")
-                .font(.subheadline)
+                .font(AppTypography.subheadline)
                 .foregroundColor(.appTextSecondary)
             Spacer()
         }
@@ -114,10 +114,10 @@ struct CookbookScannerSheet: View {
         VStack(spacing: 16) {
             Spacer()
             Image(systemName: "exclamationmark.triangle")
-                .font(.system(size: 40))
+                .font(AppTypography.fixed(40))
                 .foregroundColor(.appTextSecondary)
             Text(message)
-                .font(.body)
+                .font(AppTypography.body)
                 .foregroundColor(.appTextSecondary)
                 .multilineTextAlignment(.center)
             Button("Try Again") {
@@ -173,7 +173,7 @@ struct CookbookScannerSheet: View {
     private var titleSection: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Title")
-                .font(.headline)
+                .font(AppTypography.headline)
                 .foregroundColor(.appTextPrimary)
 
             TextField("Recipe title", text: $editableTitle)
@@ -187,13 +187,13 @@ struct CookbookScannerSheet: View {
     private var servingsSection: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Servings")
-                .font(.headline)
+                .font(AppTypography.headline)
                 .foregroundColor(.appTextPrimary)
 
             HStack {
                 Stepper(value: $editableServings, in: 1...50) {
                     Text("\(editableServings) servings")
-                        .font(.body)
+                        .font(AppTypography.body)
                 }
             }
             .padding()
@@ -206,19 +206,19 @@ struct CookbookScannerSheet: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Text("Ingredients")
-                    .font(.headline)
+                    .font(AppTypography.headline)
                     .foregroundColor(.appTextPrimary)
 
                 Spacer()
 
                 Text("\(editableIngredients.filter { $0.isIncluded }.count) items")
-                    .font(.caption)
+                    .font(AppTypography.caption)
                     .foregroundColor(.appTextSecondary)
             }
 
             if editableIngredients.isEmpty {
                 Text("No ingredients found. You can add them after importing.")
-                    .font(.body)
+                    .font(AppTypography.body)
                     .foregroundColor(.appTextSecondary)
                     .italic()
             } else {
@@ -232,7 +232,7 @@ struct CookbookScannerSheet: View {
                         }
 
                         TextField("Ingredient", text: $ingredient.displayText)
-                            .font(.body)
+                            .font(AppTypography.body)
                             .foregroundColor(ingredient.isIncluded ? .appTextPrimary : .appTextSecondary)
                     }
                     .padding(.vertical, 4)
@@ -245,32 +245,32 @@ struct CookbookScannerSheet: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Text("Instructions")
-                    .font(.headline)
+                    .font(AppTypography.headline)
                     .foregroundColor(.appTextPrimary)
 
                 Spacer()
 
                 Text("\(editableInstructions.count) steps")
-                    .font(.caption)
+                    .font(AppTypography.caption)
                     .foregroundColor(.appTextSecondary)
             }
 
             if editableInstructions.isEmpty {
                 Text("No instructions found. You can add them after importing.")
-                    .font(.body)
+                    .font(AppTypography.body)
                     .foregroundColor(.appTextSecondary)
                     .italic()
             } else {
                 ForEach(Array(editableInstructions.enumerated()), id: \.offset) { index, instruction in
                     HStack(alignment: .top, spacing: 8) {
                         Text("\(index + 1).")
-                            .font(.body)
+                            .font(AppTypography.body)
                             .fontWeight(.medium)
                             .foregroundColor(.appPrimary)
                             .frame(width: 24, alignment: .leading)
 
                         Text(instruction)
-                            .font(.body)
+                            .font(AppTypography.body)
                             .foregroundColor(.appTextPrimary)
                             .lineLimit(3)
                     }
@@ -283,11 +283,11 @@ struct CookbookScannerSheet: View {
     private var archetypeSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Recipe Type")
-                .font(.headline)
+                .font(AppTypography.headline)
                 .foregroundColor(.appTextPrimary)
 
             Text("Select the types that best describe this recipe:")
-                .font(.caption)
+                .font(AppTypography.caption)
                 .foregroundColor(.appTextSecondary)
 
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 140))], spacing: 8) {

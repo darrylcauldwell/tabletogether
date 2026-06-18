@@ -54,7 +54,7 @@ struct RecipeImageView: View {
         ZStack {
             Theme.Colors.cardBackground
             Image(systemName: "photo")
-                .font(.title2)
+                .font(AppTypography.title2)
                 .foregroundStyle(Theme.Colors.textSecondary)
         }
     }

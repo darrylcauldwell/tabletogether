@@ -76,13 +76,13 @@ struct DayHeaderView: View {
                 // iPhone: Show full day name with date
                 HStack {
                     Text(day.fullName)
-                        .font(.title2)
+                        .font(AppTypography.title2)
                         .fontWeight(.semibold)
 
                     Spacer()
 
                     Text("\(monthLabel) \(dateLabel)")
-                        .font(.subheadline)
+                        .font(AppTypography.subheadline)
                         .foregroundColor(.secondary)
                 }
                 .padding(.horizontal)
@@ -92,12 +92,12 @@ struct DayHeaderView: View {
             } else {
                 // iPad: Compact column header
                 Text(day.shortName)
-                    .font(.caption)
+                    .font(AppTypography.caption)
                     .fontWeight(.medium)
                     .foregroundColor(.secondary)
 
                 Text(dateLabel)
-                    .font(.title3)
+                    .font(AppTypography.title3)
                     .fontWeight(isToday ? .bold : .medium)
                     .foregroundColor(isToday ? .accentColor : .primary)
                     .frame(width: 32, height: 32)
@@ -121,11 +121,11 @@ struct EmptyMealSlotPlaceholder: View {
             if isCompact {
                 VStack(spacing: 4) {
                     Image(systemName: mealType.icon)
-                        .font(.title3)
+                        .font(AppTypography.title3)
                         .foregroundColor(.secondary.opacity(0.5))
 
                     Text(mealType.displayName)
-                        .font(.caption2)
+                        .font(AppTypography.caption2)
                         .foregroundColor(.secondary.opacity(0.5))
                 }
                 .frame(maxWidth: .infinity)
@@ -133,11 +133,11 @@ struct EmptyMealSlotPlaceholder: View {
             } else {
                 HStack(spacing: 4) {
                     Image(systemName: mealType.icon)
-                        .font(.system(size: 9))
+                        .font(AppTypography.fixed(9))
                         .foregroundColor(.secondary.opacity(0.4))
 
                     Text(mealType.displayName)
-                        .font(.system(size: 9))
+                        .font(AppTypography.fixed(9))
                         .foregroundColor(.secondary.opacity(0.4))
                 }
                 .frame(maxWidth: .infinity)

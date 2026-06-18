@@ -75,7 +75,7 @@ struct RecipeImportSheet: View {
     private var urlInputSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Recipe URL")
-                .font(.headline)
+                .font(AppTypography.headline)
                 .foregroundColor(.appTextPrimary)
 
             HStack {
@@ -117,7 +117,7 @@ struct RecipeImportSheet: View {
             .disabled(urlString.isEmpty || parser.isLoading)
 
             Text("Paste a URL from your favorite recipe website. We support most sites that use standard recipe formats.")
-                .font(.caption)
+                .font(AppTypography.caption)
                 .foregroundColor(.appTextSecondary)
         }
     }
@@ -130,7 +130,7 @@ struct RecipeImportSheet: View {
                 .scaleEffect(1.5)
 
             Text("Parsing recipe...")
-                .font(.subheadline)
+                .font(AppTypography.subheadline)
                 .foregroundColor(.appTextSecondary)
         }
         .frame(maxWidth: .infinity)
@@ -145,7 +145,7 @@ struct RecipeImportSheet: View {
             // Title Section
             VStack(alignment: .leading, spacing: 8) {
                 Text("Title")
-                    .font(.headline)
+                    .font(AppTypography.headline)
                     .foregroundColor(.appTextPrimary)
 
                 TextField("Recipe title", text: $editableTitle)
@@ -158,28 +158,28 @@ struct RecipeImportSheet: View {
             // Servings Section
             VStack(alignment: .leading, spacing: 8) {
                 Text("Servings")
-                    .font(.headline)
+                    .font(AppTypography.headline)
                     .foregroundColor(.appTextPrimary)
 
                 HStack {
                     #if os(iOS)
                     Stepper(value: $editableServings, in: 1...50) {
                         Text("\(editableServings) servings")
-                            .font(.body)
+                            .font(AppTypography.body)
                     }
                     #else
                     // tvOS-compatible stepper alternative
                     HStack(spacing: 12) {
                         Button { if editableServings > 1 { editableServings -= 1 } } label: {
                             Image(systemName: "minus.circle.fill")
-                                .font(.title3)
+                                .font(AppTypography.title3)
                         }
                         .buttonStyle(.plain)
                         Text("\(editableServings) servings")
-                            .font(.body)
+                            .font(AppTypography.body)
                         Button { if editableServings < 50 { editableServings += 1 } } label: {
                             Image(systemName: "plus.circle.fill")
-                                .font(.title3)
+                                .font(AppTypography.title3)
                         }
                         .buttonStyle(.plain)
                     }
@@ -196,9 +196,9 @@ struct RecipeImportSheet: View {
                     if let prepTime = recipe.prepTimeMinutes {
                         HStack(spacing: 4) {
                             Image(systemName: "clock")
-                                .font(.caption)
+                                .font(AppTypography.caption)
                             Text("\(prepTime) min prep")
-                                .font(.caption)
+                                .font(AppTypography.caption)
                         }
                         .chipStyle(color: .appTextSecondary)
                     }
@@ -206,9 +206,9 @@ struct RecipeImportSheet: View {
                     if let cookTime = recipe.cookTimeMinutes {
                         HStack(spacing: 4) {
                             Image(systemName: "flame")
-                                .font(.caption)
+                                .font(AppTypography.caption)
                             Text("\(cookTime) min cook")
-                                .font(.caption)
+                                .font(AppTypography.caption)
                         }
                         .chipStyle(color: .appTextSecondary)
                     }
@@ -232,19 +232,19 @@ struct RecipeImportSheet: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Text("Ingredients")
-                    .font(.headline)
+                    .font(AppTypography.headline)
                     .foregroundColor(.appTextPrimary)
 
                 Spacer()
 
                 Text("\(editableIngredients.filter { $0.isIncluded }.count) items")
-                    .font(.caption)
+                    .font(AppTypography.caption)
                     .foregroundColor(.appTextSecondary)
             }
 
             if editableIngredients.isEmpty {
                 Text("No ingredients found. You can add them after importing.")
-                    .font(.body)
+                    .font(AppTypography.body)
                     .foregroundColor(.appTextSecondary)
                     .italic()
             } else {
@@ -258,7 +258,7 @@ struct RecipeImportSheet: View {
                         }
 
                         TextField("Ingredient", text: $ingredient.displayText)
-                            .font(.body)
+                            .font(AppTypography.body)
                             .foregroundColor(ingredient.isIncluded ? .appTextPrimary : .appTextSecondary)
                     }
                     .padding(.vertical, 4)
@@ -273,32 +273,32 @@ struct RecipeImportSheet: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Text("Instructions")
-                    .font(.headline)
+                    .font(AppTypography.headline)
                     .foregroundColor(.appTextPrimary)
 
                 Spacer()
 
                 Text("\(editableInstructions.count) steps")
-                    .font(.caption)
+                    .font(AppTypography.caption)
                     .foregroundColor(.appTextSecondary)
             }
 
             if editableInstructions.isEmpty {
                 Text("No instructions found. You can add them after importing.")
-                    .font(.body)
+                    .font(AppTypography.body)
                     .foregroundColor(.appTextSecondary)
                     .italic()
             } else {
                 ForEach(Array(editableInstructions.enumerated()), id: \.offset) { index, instruction in
                     HStack(alignment: .top, spacing: 8) {
                         Text("\(index + 1).")
-                            .font(.body)
+                            .font(AppTypography.body)
                             .fontWeight(.medium)
                             .foregroundColor(.appPrimary)
                             .frame(width: 24, alignment: .leading)
 
                         Text(instruction)
-                            .font(.body)
+                            .font(AppTypography.body)
                             .foregroundColor(.appTextPrimary)
                             .lineLimit(3)
                     }
@@ -313,11 +313,11 @@ struct RecipeImportSheet: View {
     private var archetypeSelectionSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Recipe Type")
-                .font(.headline)
+                .font(AppTypography.headline)
                 .foregroundColor(.appTextPrimary)
 
             Text("Select the types that best describe this recipe:")
-                .font(.caption)
+                .font(AppTypography.caption)
                 .foregroundColor(.appTextSecondary)
 
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 140))], spacing: 8) {
@@ -450,9 +450,9 @@ struct ArchetypeSelectionChip: View {
         Button(action: action) {
             HStack(spacing: 6) {
                 Image(systemName: archetype.icon)
-                    .font(.caption)
+                    .font(AppTypography.caption)
                 Text(archetype.displayName)
-                    .font(.caption)
+                    .font(AppTypography.caption)
                     .fontWeight(.medium)
             }
             .padding(.horizontal, 12)

@@ -116,7 +116,7 @@ struct WeeklyTrendCard: View {
             VStack(alignment: .leading, spacing: 16) {
                 // Header with calm tone
                 Text("This week's eating")
-                    .font(.headline)
+                    .font(AppTypography.headline)
                     .foregroundStyle(Color.charcoal)
 
                 if !mealLogs.isEmpty {
@@ -128,7 +128,7 @@ struct WeeklyTrendCard: View {
 
                             if averageCalories > 0 {
                                 Text("Avg: ~\(averageCalories) cal/day")
-                                    .font(.caption)
+                                    .font(AppTypography.caption)
                                     .foregroundStyle(Color.slateGray)
                             }
                         }
@@ -145,7 +145,7 @@ struct WeeklyTrendCard: View {
                             .foregroundStyle(Color.sageGreen)
 
                         Text(positiveObservation)
-                            .font(.subheadline)
+                            .font(AppTypography.subheadline)
                             .foregroundStyle(Color.charcoal)
                             .fixedSize(horizontal: false, vertical: true)
                     }
@@ -155,21 +155,21 @@ struct WeeklyTrendCard: View {
                     HStack {
                         Spacer()
                         Text("See daily breakdown")
-                            .font(.caption)
+                            .font(AppTypography.caption)
                             .foregroundStyle(Color.slateGray)
                         Image(systemName: "chevron.down")
-                            .font(.caption)
+                            .font(AppTypography.caption)
                             .foregroundStyle(Color.slateGray)
                     }
                 } else {
                     // Empty state within card
                     VStack(spacing: 8) {
                         Text("No meals logged yet this week")
-                            .font(.subheadline)
+                            .font(AppTypography.subheadline)
                             .foregroundStyle(Color.slateGray)
 
                         Text("Tap the + button to log your first meal")
-                            .font(.caption)
+                            .font(AppTypography.caption)
                             .foregroundStyle(Color.slateGray)
                     }
                     .frame(maxWidth: .infinity)
@@ -270,7 +270,7 @@ struct CalorieSparklineChart: View {
                 if let date = value.as(Date.self) {
                     AxisValueLabel {
                         Text(dayAbbreviation(for: date))
-                            .font(.caption2)
+                            .font(AppTypography.caption2)
                             .foregroundStyle(Color.slateGray)
                     }
                 }

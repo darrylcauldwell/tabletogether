@@ -223,7 +223,7 @@ struct EmptyStateView: View {
     var body: some View {
         VStack(spacing: Theme.Spacing.standard) {
             Image(systemName: icon)
-                .font(.system(size: iconSize))
+                .font(AppTypography.fixed(iconSize))
                 .foregroundStyle(Theme.Colors.textSecondary)
                 .accessibilityHidden(true)
 
@@ -326,7 +326,7 @@ struct FavoriteButton: View {
             }
         } label: {
             Image(systemName: isFavorite ? "heart.fill" : "heart")
-                .font(.system(size: effectiveSize))
+                .font(AppTypography.fixed(effectiveSize))
                 .foregroundStyle(isFavorite ? Color.red : Theme.Colors.textSecondary)
                 .scaleEffect(isFavorite && !reduceMotion ? 1.1 : 1.0)
                 .frame(minWidth: 44, minHeight: 44) // Minimum touch target

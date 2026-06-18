@@ -145,7 +145,7 @@ struct QuickLogSheet: View {
                     if entryMode == .fromRecipes && !todaysPlannedMeals.isEmpty && searchText.isEmpty {
                         VStack(alignment: .leading, spacing: 8) {
                             Text("From Today's Plan")
-                                .font(.subheadline)
+                                .font(AppTypography.subheadline)
                                 .foregroundStyle(Color.slateGray)
                                 .padding(.horizontal)
 
@@ -162,9 +162,9 @@ struct QuickLogSheet: View {
                                         } label: {
                                             HStack(spacing: 6) {
                                                 Image(systemName: "calendar")
-                                                    .font(.caption)
+                                                    .font(AppTypography.caption)
                                                 Text(item.recipe.title)
-                                                    .font(.subheadline)
+                                                    .font(AppTypography.subheadline)
                                                     .lineLimit(1)
                                             }
                                             .padding(.horizontal, 12)
@@ -389,7 +389,7 @@ struct MealTypePicker: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Meal")
-                .font(.subheadline)
+                .font(AppTypography.subheadline)
                 .foregroundStyle(Color.slateGray)
 
             HStack(spacing: 12) {
@@ -426,10 +426,10 @@ struct MealTypeButton: View {
         Button(action: action) {
             VStack(spacing: 4) {
                 Image(systemName: icon)
-                    .font(.system(size: 20))
+                    .font(AppTypography.fixed(20))
 
                 Text(type.rawValue.capitalized)
-                    .font(.caption)
+                    .font(AppTypography.caption)
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 12)
@@ -459,7 +459,7 @@ struct ManualEntrySection: View {
             // Meal name with estimate button
             VStack(alignment: .leading, spacing: 6) {
                 Text("What did you eat?")
-                    .font(.subheadline)
+                    .font(AppTypography.subheadline)
                     .foregroundStyle(Color.slateGray)
 
                 HStack(spacing: 8) {
@@ -475,7 +475,7 @@ struct ManualEntrySection: View {
                         performEstimate()
                     } label: {
                         Image(systemName: "wand.and.stars")
-                            .font(.system(size: 16))
+                            .font(AppTypography.fixed(16))
                             .foregroundStyle(Color.sageGreen)
                             .frame(width: 44, height: 44)
                             .background(Color.sageGreen.opacity(0.1))
@@ -490,7 +490,7 @@ struct ManualEntrySection: View {
             // Macro fields
             VStack(alignment: .leading, spacing: 6) {
                 Text("Nutrition (optional)")
-                    .font(.subheadline)
+                    .font(AppTypography.subheadline)
                     .foregroundStyle(Color.slateGray)
 
                 HStack(spacing: 12) {
@@ -507,7 +507,7 @@ struct ManualEntrySection: View {
             }
 
             Text("Rough estimates are fine")
-                .font(.caption)
+                .font(AppTypography.caption)
                 .foregroundStyle(Color.slateGray)
         }
     }
@@ -543,7 +543,7 @@ struct MacroInputField: View {
     var body: some View {
         VStack(spacing: 4) {
             Text(label)
-                .font(.caption2)
+                .font(AppTypography.caption2)
                 .foregroundStyle(Color.slateGray)
 
             TextField("--", text: $value)
@@ -570,21 +570,21 @@ struct EstimateBreakdownCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Approximate breakdown")
-                .font(.caption)
+                .font(AppTypography.caption)
                 .foregroundStyle(Color.slateGray)
 
             VStack(spacing: 4) {
                 ForEach(estimate.components) { item in
                     HStack {
                         Text("\(item.quantity) \(item.name.lowercased())")
-                            .font(.caption)
+                            .font(AppTypography.caption)
                             .foregroundStyle(Color.slateGray)
 
                         Spacer()
 
                         if let cal = item.macros.calories {
                             Text("\(Int(cal.rounded())) cal")
-                                .font(.caption)
+                                .font(AppTypography.caption)
                                 .foregroundStyle(Color.slateGray)
                         }
                     }
@@ -618,7 +618,7 @@ struct RecentMealsSection: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Recent")
-                .font(.subheadline)
+                .font(AppTypography.subheadline)
                 .foregroundStyle(Color.slateGray)
                 .padding(.horizontal)
 
@@ -652,10 +652,10 @@ struct RecentMealChip: View {
         Button(action: action) {
             HStack(spacing: 4) {
                 Image(systemName: "clock.arrow.circlepath")
-                    .font(.caption)
+                    .font(AppTypography.caption)
 
                 Text(name)
-                    .font(.subheadline)
+                    .font(AppTypography.subheadline)
                     .lineLimit(1)
             }
             .padding(.horizontal, 12)
@@ -679,12 +679,12 @@ struct RecipeSelectionList: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Recipes")
-                .font(.subheadline)
+                .font(AppTypography.subheadline)
                 .foregroundStyle(Color.slateGray)
 
             if recipes.isEmpty {
                 Text("No recipes found")
-                    .font(.subheadline)
+                    .font(AppTypography.subheadline)
                     .foregroundStyle(Color.slateGray)
                     .padding(.vertical, 20)
                     .frame(maxWidth: .infinity)
@@ -730,13 +730,13 @@ struct RecipeSelectionRow: View {
                 // Recipe info
                 VStack(alignment: .leading, spacing: 2) {
                     Text(recipe.title)
-                        .font(.subheadline)
+                        .font(AppTypography.subheadline)
                         .foregroundStyle(Color.charcoal)
                         .lineLimit(1)
 
                     if let macros = recipe.macrosPerServing, let calories = macros.calories {
                         Text("\(Int(calories)) cal per serving")
-                            .font(.caption)
+                            .font(AppTypography.caption)
                             .foregroundStyle(Color.slateGray)
                     }
                 }
@@ -746,7 +746,7 @@ struct RecipeSelectionRow: View {
                 // Time estimate
                 if let totalTime = recipe.totalTimeMinutes {
                     Text("\(totalTime) min")
-                        .font(.caption)
+                        .font(AppTypography.caption)
                         .foregroundStyle(Color.slateGray)
                 }
             }
@@ -769,7 +769,7 @@ struct DoubleServingsAdjuster: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Servings consumed")
-                .font(.subheadline)
+                .font(AppTypography.subheadline)
                 .foregroundStyle(Color.slateGray)
 
             HStack(spacing: 16) {
@@ -781,13 +781,13 @@ struct DoubleServingsAdjuster: View {
                     }
                 } label: {
                     Image(systemName: "minus.circle.fill")
-                        .font(.system(size: 32))
+                        .font(AppTypography.fixed(32))
                         .foregroundStyle(Color.sageGreen)
                 }
                 .disabled(servings <= 0.5)
 
                 Text(servingsText)
-                    .font(.title2)
+                    .font(AppTypography.title2)
                     .fontWeight(.medium)
                     .foregroundStyle(Color.charcoal)
                     .frame(minWidth: 60)
@@ -798,7 +798,7 @@ struct DoubleServingsAdjuster: View {
                     }
                 } label: {
                     Image(systemName: "plus.circle.fill")
-                        .font(.system(size: 32))
+                        .font(AppTypography.fixed(32))
                         .foregroundStyle(Color.sageGreen)
                 }
             }

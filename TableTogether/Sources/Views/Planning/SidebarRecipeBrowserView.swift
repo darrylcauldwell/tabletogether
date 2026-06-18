@@ -85,7 +85,7 @@ struct ArchetypeFilterChip: View {
     var body: some View {
         Button(action: action) {
             Text(name)
-                .font(.caption)
+                .font(AppTypography.caption)
                 .padding(.horizontal, 10)
                 .padding(.vertical, 5)
                 .background(isSelected ? Color.accentColor.opacity(0.2) : Color.systemGray6)
@@ -110,13 +110,13 @@ struct SidebarRecipeRow: View {
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(recipe.title)
-                    .font(.subheadline)
+                    .font(AppTypography.subheadline)
                     .lineLimit(1)
                     .foregroundStyle(.primary)
 
                 if let totalTime = recipe.totalTimeMinutes {
                     Text("\(totalTime) min")
-                        .font(.caption2)
+                        .font(AppTypography.caption2)
                         .foregroundStyle(.secondary)
                 }
             }
@@ -125,7 +125,7 @@ struct SidebarRecipeRow: View {
 
             // Drag grip indicator
             Image(systemName: "line.3.horizontal")
-                .font(.caption)
+                .font(AppTypography.caption)
                 .foregroundStyle(.tertiary)
         }
         .contentShape(Rectangle())

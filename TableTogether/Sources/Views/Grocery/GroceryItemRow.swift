@@ -105,13 +105,13 @@ struct GroceryItemRow: View {
                 HStack(spacing: 8) {
                     // Item name
                     Text(itemName)
-                        .font(.body)
+                        .font(AppTypography.body)
                         .foregroundStyle(isToggled ? .secondary : .primary)
                         .strikethrough(mode == .shopping && item.isChecked)
 
                     // Quantity badge
                     Text(quantityText)
-                        .font(.caption)
+                        .font(AppTypography.caption)
                         .fontWeight(.medium)
                         .foregroundStyle(.secondary)
                         .padding(.horizontal, 6)
@@ -131,7 +131,7 @@ struct GroceryItemRow: View {
             // Manual add indicator
             if item.isManuallyAdded {
                 Image(systemName: "hand.draw.fill")
-                    .font(.caption2)
+                    .font(AppTypography.caption2)
                     .foregroundStyle(.tertiary)
             }
         }
@@ -214,7 +214,7 @@ struct GroceryItemRow: View {
             }
         } label: {
             Text(item.isInPantry ? "Need" : "Have")
-                .font(.caption)
+                .font(AppTypography.caption)
                 .fontWeight(.medium)
                 .padding(.horizontal, 10)
                 .padding(.vertical, 6)
@@ -233,7 +233,7 @@ struct GroceryItemRow: View {
             }
         } label: {
             Image(systemName: item.isChecked ? "checkmark.circle.fill" : "circle")
-                .font(.title2)
+                .font(AppTypography.title2)
                 .foregroundStyle(item.isChecked ? .green : .secondary)
                 .contentTransition(.symbolEffect(.replace))
         }
@@ -246,10 +246,10 @@ struct GroceryItemRow: View {
         } label: {
             HStack(spacing: 4) {
                 Image(systemName: "fork.knife")
-                    .font(.caption2)
+                    .font(AppTypography.caption2)
 
                 Text(sourceMealsText)
-                    .font(.caption)
+                    .font(AppTypography.caption)
             }
             .foregroundStyle(.secondary)
         }
@@ -279,7 +279,7 @@ struct GroceryItemRow: View {
     private var sourceMealsPopoverContent: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Needed for:")
-                .font(.headline)
+                .font(AppTypography.headline)
 
             ForEach(sourceMeals) { slot in
                 HStack(spacing: 8) {
@@ -288,15 +288,15 @@ struct GroceryItemRow: View {
 
                     VStack(alignment: .leading, spacing: 2) {
                         Text(slotDescription(slot))
-                            .font(.subheadline)
+                            .font(AppTypography.subheadline)
 
                         if !slot.recipesArray.isEmpty {
                             Text(slot.recipesArray.map(\.title).joined(separator: ", "))
-                                .font(.caption)
+                                .font(AppTypography.caption)
                                 .foregroundStyle(.secondary)
                         } else if let customName = slot.customMealName {
                             Text(customName)
-                                .font(.caption)
+                                .font(AppTypography.caption)
                                 .foregroundStyle(.secondary)
                         }
                     }
@@ -340,7 +340,7 @@ struct EditGroceryItemView: View {
                             if quantity > 1 { quantity -= 1 }
                         } label: {
                             Image(systemName: "minus.circle")
-                                .font(.title3)
+                                .font(AppTypography.title3)
                                 .foregroundStyle(quantity > 1 ? .primary : .tertiary)
                         }
                         .buttonStyle(.plain)
@@ -357,7 +357,7 @@ struct EditGroceryItemView: View {
                             quantity += 1
                         } label: {
                             Image(systemName: "plus.circle")
-                                .font(.title3)
+                                .font(AppTypography.title3)
                         }
                         .buttonStyle(.plain)
                     }

@@ -33,7 +33,7 @@ struct CalendarSettingsView: View {
                         VStack(alignment: .leading, spacing: 4) {
                             Text("Sync Meals to Calendar")
                             Text("Add meal plans to your calendar")
-                                .font(.caption)
+                                .font(AppTypography.caption)
                                 .foregroundStyle(Theme.Colors.textSecondary)
                         }
                     } icon: {
@@ -188,7 +188,7 @@ struct CalendarSettingsView: View {
                     Section {
                         Text(error)
                             .foregroundStyle(.red)
-                            .font(.caption)
+                            .font(AppTypography.caption)
                     }
                 }
 
@@ -196,7 +196,7 @@ struct CalendarSettingsView: View {
                     Section {
                         Text("Sync completed successfully")
                             .foregroundStyle(Theme.Colors.positive)
-                            .font(.caption)
+                            .font(AppTypography.caption)
                     }
                 }
             }

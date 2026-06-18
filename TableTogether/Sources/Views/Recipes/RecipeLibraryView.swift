@@ -398,15 +398,15 @@ struct RecipeLibraryView: View {
     private var noResultsView: some View {
         VStack(spacing: 16) {
             Image(systemName: "magnifyingglass")
-                .font(.system(size: 48))
+                .font(AppTypography.fixed(48))
                 .foregroundColor(.appTextSecondary)
 
             Text("No Recipes Found")
-                .font(.appHeading)
+                .font(AppTypography.title2Emphasized)
                 .foregroundColor(.appTextPrimary)
 
             Text("Try adjusting your search or filters.")
-                .font(.appBody)
+                .font(AppTypography.body)
                 .foregroundColor(.appTextSecondary)
 
             Button("Clear Filters") {

@@ -13,10 +13,10 @@ struct ArchetypeBadge: View {
     var body: some View {
         HStack(spacing: 4) {
             Image(systemName: archetype.icon)
-                .font(compact ? .caption2 : .caption)
+                .font(compact ? AppTypography.caption2 : AppTypography.caption)
             if !compact {
                 Text(archetype.displayName)
-                    .font(.caption)
+                    .font(AppTypography.caption)
                     .lineLimit(1)
             }
         }
@@ -43,11 +43,11 @@ struct MacroChip: View {
     var body: some View {
         VStack(spacing: 2) {
             Text(value)
-                .font(.subheadline)
+                .font(AppTypography.subheadline)
                 .fontWeight(.medium)
                 .foregroundStyle(Theme.Colors.textPrimary)
             Text(label)
-                .font(.caption2)
+                .font(AppTypography.caption2)
                 .foregroundStyle(Theme.Colors.textSecondary)
         }
         .padding(.horizontal, horizontalPadding)
@@ -111,7 +111,7 @@ struct MacroSummaryRow: View {
             .accessibilityLabel(accessibilityLabel)
         } else {
             Text("Nutrition data unavailable")
-                .font(.caption)
+                .font(AppTypography.caption)
                 .foregroundStyle(Theme.Colors.textSecondary)
         }
     }
@@ -170,11 +170,11 @@ struct UserAvatar: View {
 
             if user.avatarEmoji.isEmpty {
                 Text(initials)
-                    .font(.system(size: effectiveSize * 0.4, weight: .medium, design: .rounded))
+                    .font(AppTypography.fixed(effectiveSize * 0.4, weight: .medium, design: .rounded))
                     .foregroundColor(.white)
             } else {
                 Text(user.avatarEmoji)
-                    .font(.system(size: effectiveSize * 0.6))
+                    .font(AppTypography.fixed(effectiveSize * 0.6))
             }
         }
         .accessibilityElement(children: .ignore)
@@ -212,10 +212,10 @@ struct EmptySlotPlaceholder: View {
         Button(action: onTap) {
             VStack(spacing: spacing) {
                 Image(systemName: "plus.circle.dashed")
-                    .font(.title2)
+                    .font(AppTypography.title2)
                     .foregroundStyle(Theme.Colors.textSecondary)
                 Text("Add \(mealType.displayName)")
-                    .font(.caption)
+                    .font(AppTypography.caption)
                     .foregroundStyle(Theme.Colors.textSecondary)
             }
             .frame(maxWidth: .infinity, minHeight: max(minHeight, 44)) // Ensure minimum touch target
@@ -247,19 +247,19 @@ struct SectionHeader: View {
         HStack {
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
-                    .font(.headline)
+                    .font(AppTypography.headline)
                     .foregroundStyle(Theme.Colors.textPrimary)
                     .accessibilityAddTraits(.isHeader)
                 if let subtitle = subtitle {
                     Text(subtitle)
-                        .font(.caption)
+                        .font(AppTypography.caption)
                         .foregroundStyle(Theme.Colors.textSecondary)
                 }
             }
             Spacer()
             if let action = action {
                 Button(actionLabel, action: action)
-                    .font(.subheadline)
+                    .font(AppTypography.subheadline)
                     .accessibilityLabel("\(actionLabel) for \(title)")
             }
         }
@@ -279,7 +279,7 @@ struct LoadingView: View {
             ProgressView()
                 .scaleEffect(progressScale)
             Text(message)
-                .font(.subheadline)
+                .font(AppTypography.subheadline)
                 .foregroundStyle(Theme.Colors.textSecondary)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -312,10 +312,10 @@ struct ConfirmationDialog: View {
         VStack(spacing: outerSpacing) {
             VStack(spacing: innerSpacing) {
                 Text(title)
-                    .font(.headline)
+                    .font(AppTypography.headline)
                     .accessibilityAddTraits(.isHeader)
                 Text(message)
-                    .font(.subheadline)
+                    .font(AppTypography.subheadline)
                     .foregroundStyle(Theme.Colors.textSecondary)
                     .multilineTextAlignment(.center)
             }
@@ -401,7 +401,7 @@ struct ServingsAdjuster: View {
             }
         } label: {
             Image(systemName: "minus.circle.fill")
-                .font(.title2)
+                .font(AppTypography.title2)
                 .foregroundStyle(servings > minServings ? Theme.Colors.primary : Theme.Colors.textSecondary)
                 .frame(minWidth: 44, minHeight: 44) // Minimum touch target
         }
@@ -409,12 +409,12 @@ struct ServingsAdjuster: View {
 
         HStack(spacing: 4) {
             Text("\(servings)")
-                .font(.title3)
+                .font(AppTypography.title3)
                 .fontWeight(.semibold)
                 .frame(minWidth: minTextWidth)
 
             Text(servings == 1 ? "serving" : "servings")
-                .font(.subheadline)
+                .font(AppTypography.subheadline)
                 .foregroundStyle(Theme.Colors.textSecondary)
         }
 
@@ -424,7 +424,7 @@ struct ServingsAdjuster: View {
             }
         } label: {
             Image(systemName: "plus.circle.fill")
-                .font(.title2)
+                .font(AppTypography.title2)
                 .foregroundStyle(servings < maxServings ? Theme.Colors.primary : Theme.Colors.textSecondary)
                 .frame(minWidth: 44, minHeight: 44) // Minimum touch target
         }
@@ -441,7 +441,7 @@ struct SyncStatusIndicator: View {
     var body: some View {
         HStack(spacing: 6) {
             Image(systemName: isSharing ? "checkmark.icloud" : "icloud")
-                .font(.caption)
+                .font(AppTypography.caption)
                 .foregroundStyle(isSharing ? .green.opacity(0.8) : Theme.Colors.textSecondary)
         }
         .accessibilityElement(children: .combine)
@@ -471,12 +471,12 @@ struct SyncErrorBanner: View {
                 VStack(alignment: .leading, spacing: spacing) {
                     HStack(spacing: spacing) {
                         Image(systemName: "exclamationmark.icloud")
-                            .font(.body)
+                            .font(AppTypography.body)
                             .foregroundStyle(.orange)
                             .accessibilityHidden(true)
 
                         Text(error.message)
-                            .font(.subheadline)
+                            .font(AppTypography.subheadline)
                             .foregroundStyle(Theme.Colors.textPrimary)
 
                         Spacer()
@@ -488,7 +488,7 @@ struct SyncErrorBanner: View {
                                 onRetry()
                             } label: {
                                 Text("Retry")
-                                    .font(.subheadline.weight(.medium))
+                                    .font(AppTypography.subheadline.weight(.medium))
                             }
                             .buttonStyle(.bordered)
                         }
@@ -497,7 +497,7 @@ struct SyncErrorBanner: View {
                             onDismiss()
                         } label: {
                             Text("Dismiss")
-                                .font(.subheadline.weight(.medium))
+                                .font(AppTypography.subheadline.weight(.medium))
                         }
                         .buttonStyle(.bordered)
                     }
@@ -505,12 +505,12 @@ struct SyncErrorBanner: View {
             } else {
                 HStack(spacing: spacing) {
                     Image(systemName: "exclamationmark.icloud")
-                        .font(.body)
+                        .font(AppTypography.body)
                         .foregroundStyle(.orange)
                         .accessibilityHidden(true)
 
                     Text(error.message)
-                        .font(.subheadline)
+                        .font(AppTypography.subheadline)
                         .foregroundStyle(Theme.Colors.textPrimary)
 
                     Spacer()
@@ -520,7 +520,7 @@ struct SyncErrorBanner: View {
                             onRetry()
                         } label: {
                             Text("Retry")
-                                .font(.subheadline.weight(.medium))
+                                .font(AppTypography.subheadline.weight(.medium))
                         }
                         .buttonStyle(.bordered)
                         .controlSize(.small)
@@ -530,7 +530,7 @@ struct SyncErrorBanner: View {
                         onDismiss()
                     } label: {
                         Image(systemName: "xmark")
-                            .font(.caption.weight(.semibold))
+                            .font(AppTypography.caption.weight(.semibold))
                             .foregroundStyle(Theme.Colors.textSecondary)
                             .frame(minWidth: 44, minHeight: 44) // Minimum touch target
                     }
@@ -565,10 +565,10 @@ struct OfflineBanner: View {
         if !networkMonitor.isConnected {
             HStack(spacing: spacing) {
                 Image(systemName: "wifi.slash")
-                    .font(.subheadline)
+                    .font(AppTypography.subheadline)
                     .accessibilityHidden(true)
                 Text("You're offline. Changes will sync when reconnected.")
-                    .font(.subheadline)
+                    .font(AppTypography.subheadline)
                 Spacer()
             }
             .foregroundStyle(Theme.Colors.textSecondary)

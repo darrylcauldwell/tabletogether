@@ -79,9 +79,9 @@ struct MealLogView: View {
                     } label: {
                         HStack(spacing: 10) {
                             Image(systemName: "plus.circle.fill")
-                                .font(.title2)
+                                .font(AppTypography.title2)
                             Text("Log a Meal")
-                                .font(.headline)
+                                .font(AppTypography.headline)
                         }
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 14)
@@ -151,12 +151,12 @@ struct MealLogView: View {
     private var todaySection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Today")
-                .font(.headline)
+                .font(AppTypography.headline)
                 .foregroundStyle(Theme.Colors.textPrimary)
 
             if todayLogs.isEmpty {
                 Text("No meals logged yet today.")
-                    .font(.subheadline)
+                    .font(AppTypography.subheadline)
                     .foregroundStyle(Theme.Colors.textSecondary)
                     .padding(.vertical, 8)
             } else {
@@ -251,7 +251,7 @@ struct MealLogView: View {
     private var recentDaysSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Recent Days")
-                .font(.headline)
+                .font(AppTypography.headline)
                 .foregroundStyle(Theme.Colors.textPrimary)
 
             ForEach(recentDays, id: \.date) { day in
@@ -269,15 +269,15 @@ struct MealLogView: View {
     private var emptyState: some View {
         VStack(spacing: 16) {
             Image(systemName: "square.and.pencil")
-                .font(.system(size: 48))
+                .font(AppTypography.fixed(48))
                 .foregroundStyle(Theme.Colors.textSecondary.opacity(0.5))
 
             Text("Your meal log is empty.")
-                .font(.body)
+                .font(AppTypography.body)
                 .foregroundStyle(Theme.Colors.textSecondary)
 
             Text("Tap \"Log a Meal\" to record what you eat. Over time, you'll see patterns in the Insights tab.")
-                .font(.subheadline)
+                .font(AppTypography.subheadline)
                 .foregroundStyle(Theme.Colors.textSecondary)
                 .multilineTextAlignment(.center)
         }

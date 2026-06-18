@@ -33,18 +33,18 @@ struct PlannedMealRow: View {
         VStack(spacing: 8) {
             HStack(spacing: 12) {
                 Image(systemName: mealTypeIcon)
-                    .font(.system(size: 14))
+                    .font(AppTypography.fixed(14))
                     .foregroundStyle(Theme.Colors.primary.opacity(0.6))
                     .frame(width: 24)
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(mealName)
-                        .font(.subheadline)
+                        .font(AppTypography.subheadline)
                         .foregroundStyle(Theme.Colors.textPrimary)
                         .lineLimit(1)
 
                     Text("From plan")
-                        .font(.caption2)
+                        .font(AppTypography.caption2)
                         .foregroundStyle(Theme.Colors.textSecondary)
                 }
 
@@ -54,7 +54,7 @@ struct PlannedMealRow: View {
             HStack(spacing: 12) {
                 Button(action: onConfirm) {
                     Text("Confirm")
-                        .font(.caption)
+                        .font(AppTypography.caption)
                         .fontWeight(.medium)
                         .padding(.horizontal, 12)
                         .padding(.vertical, 6)
@@ -66,7 +66,7 @@ struct PlannedMealRow: View {
 
                 Button(action: onSkip) {
                     Text("Skip")
-                        .font(.caption)
+                        .font(AppTypography.caption)
                         .fontWeight(.medium)
                         .padding(.horizontal, 12)
                         .padding(.vertical, 6)
@@ -115,19 +115,19 @@ struct SkippedMealLogRow: View {
     var body: some View {
         HStack(spacing: 12) {
             Image(systemName: mealTypeIcon)
-                .font(.system(size: 14))
+                .font(AppTypography.fixed(14))
                 .foregroundStyle(Theme.Colors.textSecondary.opacity(0.5))
                 .frame(width: 24)
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(mealName)
-                    .font(.subheadline)
+                    .font(AppTypography.subheadline)
                     .foregroundStyle(Theme.Colors.textSecondary)
                     .strikethrough()
                     .lineLimit(1)
 
                 Text("Skipped")
-                    .font(.caption2)
+                    .font(AppTypography.caption2)
                     .foregroundStyle(Theme.Colors.textSecondary.opacity(0.7))
             }
 

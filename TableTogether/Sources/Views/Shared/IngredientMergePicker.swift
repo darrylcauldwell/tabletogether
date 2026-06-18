@@ -51,7 +51,7 @@ struct IngredientMergePicker: View {
             List {
                 Section {
                     Text("Choose the canonical ingredient. **\(source.name)** will be deleted and added as an alias on whichever ingredient you pick.")
-                        .font(.subheadline)
+                        .font(AppTypography.subheadline)
                         .foregroundStyle(Theme.Colors.textSecondary)
                 }
 
@@ -68,7 +68,7 @@ struct IngredientMergePicker: View {
                             } label: {
                                 HStack {
                                     Image(systemName: candidate.category.iconName)
-                                        .font(.body)
+                                        .font(AppTypography.body)
                                         .foregroundStyle(Theme.Colors.primary)
                                         .frame(width: 24)
                                     VStack(alignment: .leading, spacing: 2) {
@@ -76,13 +76,13 @@ struct IngredientMergePicker: View {
                                             .foregroundStyle(.primary)
                                         if !candidate.userAliasesList.isEmpty {
                                             Text("\(candidate.userAliasesList.count) alias\(candidate.userAliasesList.count == 1 ? "" : "es")")
-                                                .font(.caption)
+                                                .font(AppTypography.caption)
                                                 .foregroundStyle(Theme.Colors.textSecondary)
                                         }
                                     }
                                     Spacer()
                                     Image(systemName: "chevron.right")
-                                        .font(.caption)
+                                        .font(AppTypography.caption)
                                         .foregroundStyle(Theme.Colors.textSecondary)
                                 }
                             }

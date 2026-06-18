@@ -114,13 +114,13 @@ struct CookingModeView: View {
 
             HStack {
                 Text("Step \(currentStepIndex + 1) of \(instructions.count)")
-                    .font(.caption)
+                    .font(AppTypography.caption)
                     .foregroundColor(.gray)
 
                 Spacer()
 
                 Text("\(completedSteps.count) completed")
-                    .font(.caption)
+                    .font(AppTypography.caption)
                     .foregroundColor(.gray)
             }
         }
@@ -136,7 +136,7 @@ struct CookingModeView: View {
 
             // Step indicator
             Text("STEP \(currentStepIndex + 1)")
-                .font(.headline)
+                .font(AppTypography.headline)
                 .fontWeight(.bold)
                 .foregroundColor(.green)
                 .tracking(2)
@@ -144,7 +144,7 @@ struct CookingModeView: View {
             // Step text
             ScrollView {
                 Text(currentStep)
-                    .font(.title2)
+                    .font(AppTypography.title2)
                     .fontWeight(.medium)
                     .foregroundColor(.white)
                     .multilineTextAlignment(.center)
@@ -170,7 +170,7 @@ struct CookingModeView: View {
     private var timerDisplay: some View {
         VStack(spacing: 8) {
             Text(formatTime(timerSeconds))
-                .font(.system(size: 64, weight: .thin, design: .monospaced))
+                .font(AppTypography.fixed(64, weight: .thin, design: .monospaced))
                 .foregroundColor(timerSeconds <= 10 && timerRunning ? .red : .white)
 
             HStack(spacing: 16) {
@@ -178,7 +178,7 @@ struct CookingModeView: View {
                     timerRunning.toggle()
                 } label: {
                     Image(systemName: timerRunning ? "pause.fill" : "play.fill")
-                        .font(.title2)
+                        .font(AppTypography.title2)
                         .foregroundColor(.white)
                         .frame(width: 50, height: 50)
                         .background(Color.gray.opacity(0.3))
@@ -190,7 +190,7 @@ struct CookingModeView: View {
                     timerRunning = false
                 } label: {
                     Image(systemName: "stop.fill")
-                        .font(.title2)
+                        .font(AppTypography.title2)
                         .foregroundColor(.white)
                         .frame(width: 50, height: 50)
                         .background(Color.gray.opacity(0.3))
@@ -216,7 +216,7 @@ struct CookingModeView: View {
                 }
             } label: {
                 Image(systemName: "chevron.left")
-                    .font(.title)
+                    .font(AppTypography.title)
                     .foregroundColor(currentStepIndex > 0 ? .white : .gray)
                     .frame(width: 60, height: 60)
                     .background(Color.gray.opacity(0.3))
@@ -243,7 +243,7 @@ struct CookingModeView: View {
                 }
             } label: {
                 Image(systemName: completedSteps.contains(currentStepIndex) ? "checkmark.circle.fill" : "checkmark.circle")
-                    .font(.system(size: 40))
+                    .font(AppTypography.fixed(40))
                     .foregroundColor(completedSteps.contains(currentStepIndex) ? .green : .white)
                     .frame(width: 80, height: 80)
                     .background(completedSteps.contains(currentStepIndex) ? Color.green.opacity(0.2) : Color.gray.opacity(0.3))
@@ -259,7 +259,7 @@ struct CookingModeView: View {
                 }
             } label: {
                 Image(systemName: "chevron.right")
-                    .font(.title)
+                    .font(AppTypography.title)
                     .foregroundColor(currentStepIndex < instructions.count - 1 ? .white : .gray)
                     .frame(width: 60, height: 60)
                     .background(Color.gray.opacity(0.3))
@@ -275,13 +275,13 @@ struct CookingModeView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
                 Text("Ingredients")
-                    .font(.title2)
+                    .font(AppTypography.title2)
                     .fontWeight(.bold)
                     .foregroundColor(.white)
                     .padding(.horizontal)
 
                 Text("Tap to check off as you use them")
-                    .font(.caption)
+                    .font(AppTypography.caption)
                     .foregroundColor(.gray)
                     .padding(.horizontal)
 
@@ -307,17 +307,17 @@ struct CookingModeView: View {
         } label: {
             HStack(spacing: 16) {
                 Image(systemName: isChecked ? "checkmark.circle.fill" : "circle")
-                    .font(.title2)
+                    .font(AppTypography.title2)
                     .foregroundColor(isChecked ? .green : .gray)
 
                 VStack(alignment: .leading, spacing: 4) {
                     Text(ingredient.displayName)
-                        .font(.body)
+                        .font(AppTypography.body)
                         .foregroundColor(isChecked ? .gray : .white)
                         .strikethrough(isChecked)
 
                     Text(ingredient.formattedScaledQuantity(for: servings, baseServings: Int(recipe.servings)))
-                        .font(.caption)
+                        .font(AppTypography.caption)
                         .foregroundColor(.gray)
                 }
 
@@ -325,7 +325,7 @@ struct CookingModeView: View {
 
                 if let note = ingredient.preparationNote, !note.isEmpty {
                     Text(note)
-                        .font(.caption)
+                        .font(AppTypography.caption)
                         .foregroundColor(.orange)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 4)
@@ -350,9 +350,9 @@ struct CookingModeView: View {
             } label: {
                 VStack(spacing: 4) {
                     Image(systemName: "timer")
-                        .font(.title2)
+                        .font(AppTypography.title2)
                     Text("Timer")
-                        .font(.caption)
+                        .font(AppTypography.caption)
                 }
                 .foregroundColor(.white)
             }
@@ -369,7 +369,7 @@ struct CookingModeView: View {
                         Image(systemName: "checkmark.circle.fill")
                         Text("Done Cooking")
                     }
-                    .font(.headline)
+                    .font(AppTypography.headline)
                     .foregroundColor(.black)
                     .padding(.horizontal, 24)
                     .padding(.vertical, 12)
@@ -383,10 +383,10 @@ struct CookingModeView: View {
             // Servings indicator
             VStack(spacing: 4) {
                 Text("\(servings)")
-                    .font(.title2)
+                    .font(AppTypography.title2)
                     .fontWeight(.semibold)
                 Text("servings")
-                    .font(.caption)
+                    .font(AppTypography.caption)
             }
             .foregroundColor(.gray)
         }

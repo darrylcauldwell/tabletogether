@@ -71,10 +71,10 @@ struct MealSlotEditorSheet: View {
         Section {
             VStack(alignment: .leading, spacing: 4) {
                 Text(slot.slotDescription)
-                    .font(.headline)
+                    .font(AppTypography.headline)
                 if let weekPlan = slot.weekPlan {
                     Text(weekPlan.shortWeekDisplay)
-                        .font(.caption)
+                        .font(AppTypography.caption)
                         .foregroundStyle(.secondary)
                 }
             }
@@ -88,10 +88,10 @@ struct MealSlotEditorSheet: View {
                     HStack {
                         VStack(alignment: .leading) {
                             Text(recipe.title)
-                                .font(.body)
+                                .font(AppTypography.body)
                             if let time = recipe.formattedTotalTime {
                                 Text(time)
-                                    .font(.caption)
+                                    .font(AppTypography.caption)
                                     .foregroundStyle(.secondary)
                             }
                         }
@@ -195,7 +195,7 @@ struct MealSlotEditorSheet: View {
             Text("Per serving")
         } footer: {
             Text("Visible only to you. Aggregated across the meal's components.")
-                .font(.caption2)
+                .font(AppTypography.caption2)
                 .foregroundStyle(Theme.Colors.textSecondary)
         }
     }
@@ -233,9 +233,9 @@ struct MealSlotEditorSheet: View {
         } label: {
             HStack(spacing: 4) {
                 Image(systemName: icon)
-                    .font(.caption)
+                    .font(AppTypography.caption)
                 Text(name)
-                    .font(.caption)
+                    .font(AppTypography.caption)
             }
             .padding(.horizontal, 10)
             .padding(.vertical, 6)
@@ -340,19 +340,19 @@ struct RecipePickerView: View {
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(recipe.title)
-                    .font(.body)
+                    .font(AppTypography.body)
                     .foregroundStyle(.primary)
 
                 HStack(spacing: 8) {
                     if let time = recipe.formattedTotalTime {
                         Label(time, systemImage: "clock")
-                            .font(.caption)
+                            .font(AppTypography.caption)
                             .foregroundStyle(.secondary)
                     }
 
                     if recipe.isFavorite {
                         Image(systemName: "heart.fill")
-                            .font(.caption)
+                            .font(AppTypography.caption)
                             .foregroundStyle(.red)
                     }
                 }

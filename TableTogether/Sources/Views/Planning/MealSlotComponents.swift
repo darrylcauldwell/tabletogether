@@ -10,10 +10,10 @@ struct MealTypeIndicator: View {
     var body: some View {
         HStack(spacing: 4) {
             Image(systemName: mealType.icon)
-                .font(isCompact ? .caption : .system(size: 9))
+                .font(isCompact ? AppTypography.caption : AppTypography.fixed(9))
 
             Text(mealType.displayName)
-                .font(isCompact ? .caption : .system(size: 9))
+                .font(isCompact ? AppTypography.caption : AppTypography.fixed(9))
         }
         .foregroundColor(.secondary)
     }
@@ -37,11 +37,11 @@ struct MealArchetypeBadge: View {
     var body: some View {
         HStack(spacing: 2) {
             Image(systemName: archetype.icon)
-                .font(.caption2)
+                .font(AppTypography.caption2)
 
             if isCompact {
                 Text(archetype.name)
-                    .font(.caption2)
+                    .font(AppTypography.caption2)
                     .lineLimit(1)
             }
         }
@@ -63,11 +63,11 @@ struct RecentEditBadge: View {
     var body: some View {
         HStack(spacing: 2) {
             Image(systemName: "pencil.circle.fill")
-                .font(.caption2)
+                .font(AppTypography.caption2)
 
             if isCompact {
                 Text(userName)
-                    .font(.caption2)
+                    .font(AppTypography.caption2)
                     .lineLimit(1)
             }
         }
@@ -190,14 +190,14 @@ struct RecipeSlotCard: View {
             VStack(alignment: .leading, spacing: isCompact ? 2 : 1) {
                 // Primary line — first component
                 Text(primaryName)
-                    .font(isCompact ? .subheadline : .caption2)
+                    .font(isCompact ? AppTypography.subheadline : AppTypography.caption2)
                     .fontWeight(.medium)
                     .lineLimit(isCompact ? 2 : 1)
 
                 // Secondary line — additional components, dimmed
                 if !secondaryNames.isEmpty {
                     Text(secondaryLine)
-                        .font(.caption2)
+                        .font(AppTypography.caption2)
                         .foregroundColor(.secondary)
                         .lineLimit(1)
                         .truncationMode(.tail)
@@ -207,12 +207,12 @@ struct RecipeSlotCard: View {
                     HStack(spacing: 8) {
                         if let totalTime = totalTimeMinutes {
                             Label("\(totalTime) min", systemImage: "clock")
-                                .font(.caption2)
+                                .font(AppTypography.caption2)
                                 .foregroundColor(.secondary)
                         }
 
                         Text("\(servings) servings")
-                            .font(.caption2)
+                            .font(AppTypography.caption2)
                             .foregroundColor(.secondary)
                     }
                 }
@@ -235,7 +235,7 @@ struct RecipePlaceholderImage: View {
                 .fill(Color.systemGray5)
 
             Image(systemName: "fork.knife")
-                .font(.system(size: size * 0.4))
+                .font(AppTypography.fixed(size * 0.4))
                 .foregroundColor(.secondary)
         }
         .frame(width: size, height: size)
@@ -256,18 +256,18 @@ struct CustomMealCard: View {
                         .fill(Color.systemGray5)
 
                     Image(systemName: "pencil")
-                        .font(.caption)
+                        .font(AppTypography.caption)
                         .foregroundColor(.secondary)
                 }
                 .frame(width: 50, height: 50)
             } else {
                 Image(systemName: "pencil")
-                    .font(.system(size: 9))
+                    .font(AppTypography.fixed(9))
                     .foregroundColor(.secondary)
             }
 
             Text(name)
-                .font(isCompact ? .subheadline : .caption2)
+                .font(isCompact ? AppTypography.subheadline : AppTypography.caption2)
                 .foregroundColor(.primary)
                 .lineLimit(isCompact ? 2 : 2)
 
@@ -290,11 +290,11 @@ struct DropTargetPlaceholder: View {
             if isCompact {
                 VStack(spacing: 4) {
                     Image(systemName: isTargeted ? "plus.circle.fill" : "plus.circle")
-                        .font(.title3)
+                        .font(AppTypography.title3)
                         .foregroundColor(isTargeted ? .accentColor : .secondary)
 
                     Text(isTargeted ? "Drop recipe here" : "Add meal")
-                        .font(.caption)
+                        .font(AppTypography.caption)
                         .foregroundColor(isTargeted ? .accentColor : .secondary)
                 }
             } else {
@@ -302,11 +302,11 @@ struct DropTargetPlaceholder: View {
                 // (~12pt) and .body icon, plus a soft sage-tinted background to
                 // give the empty slot visual weight without shouting.
                 Image(systemName: isTargeted ? "plus.circle.fill" : "plus.circle")
-                    .font(.body)
+                    .font(AppTypography.body)
                     .foregroundColor(isTargeted ? .accentColor : .secondary)
 
                 Text(isTargeted ? "Drop here" : "Add meal")
-                    .font(.caption)
+                    .font(AppTypography.caption)
                     .foregroundColor(isTargeted ? .accentColor : .secondary)
             }
 
@@ -336,7 +336,7 @@ struct AssignedUsersRow: View {
 
             if users.count > 4 {
                 Text("+\(users.count - 4)")
-                    .font(.caption2)
+                    .font(AppTypography.caption2)
                     .foregroundColor(.secondary)
                     .padding(.leading, 8)
             }
@@ -376,11 +376,11 @@ struct UserAvatarView: View {
 
             if user.avatarEmoji.isEmpty {
                 Text(initials)
-                    .font(.system(size: size * 0.4, weight: .medium, design: .rounded))
+                    .font(AppTypography.fixed(size * 0.4, weight: .medium, design: .rounded))
                     .foregroundColor(.white)
             } else {
                 Text(user.avatarEmoji)
-                    .font(.system(size: size * 0.6))
+                    .font(AppTypography.fixed(size * 0.6))
             }
         }
         .frame(width: size, height: size)
@@ -482,7 +482,7 @@ struct RecipePickerSheet: View {
                     if filteredRecipes.isEmpty && trimmedQuery.isEmpty {
                         Text("No recipes yet — add some from the Recipes tab.")
                             .foregroundStyle(Theme.Colors.textSecondary)
-                            .font(.subheadline)
+                            .font(AppTypography.subheadline)
                     } else {
                         ForEach(filteredRecipes) { recipe in
                             Button {
@@ -530,12 +530,12 @@ struct RecipeRowView: View {
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(recipe.title)
-                    .font(.body)
+                    .font(AppTypography.body)
                     .foregroundColor(.primary)
 
                 if let totalTime = recipe.totalTimeMinutes {
                     Text("\(totalTime) min")
-                        .font(.caption)
+                        .font(AppTypography.caption)
                         .foregroundColor(.secondary)
                 }
             }
@@ -545,7 +545,7 @@ struct RecipeRowView: View {
             if recipe.isFavorite {
                 Image(systemName: "heart.fill")
                     .foregroundColor(.red)
-                    .font(.caption)
+                    .font(AppTypography.caption)
             }
         }
     }

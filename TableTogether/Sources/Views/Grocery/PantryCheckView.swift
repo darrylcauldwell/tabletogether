@@ -214,7 +214,7 @@ struct PantryCheckView: View {
     private var hintBanner: some View {
         HStack {
             Text("Tap \"Have\" on items you already have at home")
-                .font(.caption)
+                .font(AppTypography.caption)
                 .foregroundStyle(.secondary)
 
             Spacer()
@@ -225,7 +225,7 @@ struct PantryCheckView: View {
                 }
             } label: {
                 Image(systemName: "xmark")
-                    .font(.caption2)
+                    .font(AppTypography.caption2)
                     .foregroundStyle(.tertiary)
             }
             .buttonStyle(.plain)
@@ -242,7 +242,7 @@ struct PantryCheckView: View {
                 markAllRemainingAsNeeded()
             } label: {
                 Label("All remaining needed", systemImage: "cart.badge.plus")
-                    .font(.subheadline)
+                    .font(AppTypography.subheadline)
             }
             .buttonStyle(.bordered)
             .tint(.accentColor)
@@ -268,17 +268,17 @@ struct PantryCheckView: View {
             Spacer()
 
             Image(systemName: "checkmark.circle.fill")
-                .font(.system(size: 48))
+                .font(AppTypography.fixed(48))
                 .foregroundStyle(.green)
 
             Text("Pantry check done")
-                .font(.title2)
+                .font(AppTypography.title2)
                 .fontWeight(.semibold)
 
             let shoppingCount = neededItems.count
             let pantryCount = alreadyHaveItems.count
             Text("\(shoppingCount) items on your shopping list, \(pantryCount) already in your pantry.")
-                .font(.subheadline)
+                .font(AppTypography.subheadline)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 32)
@@ -290,7 +290,7 @@ struct PantryCheckView: View {
                     }
                 } label: {
                     Label("Review again", systemImage: "arrow.uturn.backward")
-                        .font(.subheadline)
+                        .font(AppTypography.subheadline)
                 }
                 .buttonStyle(.bordered)
             }
@@ -349,7 +349,7 @@ struct PantryCheckView: View {
                             .foregroundStyle(.secondary)
                         Spacer()
                         Text("\(alreadyHaveItems.count)")
-                            .font(.caption)
+                            .font(AppTypography.caption)
                             .foregroundStyle(.secondary)
                             .padding(.horizontal, 8)
                             .padding(.vertical, 4)
@@ -369,10 +369,10 @@ struct PantryCheckView: View {
                         .foregroundStyle(.secondary)
                     Spacer()
                     Text("\(alreadyHaveItems.count)")
-                        .font(.caption)
+                        .font(AppTypography.caption)
                         .foregroundStyle(.secondary)
                     Image(systemName: inPantryExpanded ? "chevron.up" : "chevron.down")
-                        .font(.caption)
+                        .font(AppTypography.caption)
                         .foregroundStyle(.secondary)
                 }
             }
@@ -567,7 +567,7 @@ private struct PantryDateRangeHeader: View {
             selectPreset(preset)
         } label: {
             Text(preset.rawValue)
-                .font(.subheadline)
+                .font(AppTypography.subheadline)
                 .fontWeight(isSelected ? .semibold : .regular)
                 .padding(.horizontal, 12)
                 .padding(.vertical, 6)
@@ -580,7 +580,7 @@ private struct PantryDateRangeHeader: View {
 
     private var dateLabel: some View {
         Text(dateRangeLabel)
-            .font(.caption)
+            .font(AppTypography.caption)
             .foregroundStyle(.secondary)
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal)
@@ -606,11 +606,11 @@ private struct PantryDateRangeHeader: View {
         return VStack(spacing: 4) {
             HStack {
                 Text("\(completedItems) of \(totalItems) items checked")
-                    .font(.subheadline)
+                    .font(AppTypography.subheadline)
                     .foregroundStyle(.secondary)
                 Spacer()
                 Text("\(percent)%")
-                    .font(.subheadline)
+                    .font(AppTypography.subheadline)
                     .foregroundStyle(.secondary)
             }
 

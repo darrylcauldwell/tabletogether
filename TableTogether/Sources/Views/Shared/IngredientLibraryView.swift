@@ -129,13 +129,13 @@ struct IngredientLibraryView: View {
     private var emptyState: some View {
         VStack(spacing: 16) {
             Image(systemName: "leaf")
-                .font(.system(size: 48))
+                .font(AppTypography.fixed(48))
                 .foregroundStyle(Theme.Colors.textSecondary)
             Text("No Ingredients Yet")
-                .font(.title3)
+                .font(AppTypography.title3)
                 .fontWeight(.medium)
             Text("Ingredient master records are created when you import recipes or run **Reorganise Ingredient Library** in Settings.")
-                .font(.subheadline)
+                .font(AppTypography.subheadline)
                 .foregroundStyle(Theme.Colors.textSecondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 32)
@@ -158,17 +158,17 @@ private struct IngredientLibraryRow: View {
     var body: some View {
         HStack(spacing: 12) {
             Image(systemName: ingredient.category.iconName)
-                .font(.body)
+                .font(AppTypography.body)
                 .foregroundStyle(Theme.Colors.primary)
                 .frame(width: 28)
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(ingredient.name)
-                    .font(.body)
+                    .font(AppTypography.body)
                     .lineLimit(1)
                 if !ingredient.userAliasesList.isEmpty {
                     Text("\(ingredient.userAliasesList.count) alias\(ingredient.userAliasesList.count == 1 ? "" : "es")")
-                        .font(.caption)
+                        .font(AppTypography.caption)
                         .foregroundStyle(Theme.Colors.textSecondary)
                 }
             }
@@ -177,7 +177,7 @@ private struct IngredientLibraryRow: View {
 
             if recipeCount > 0 {
                 Text("\(recipeCount)")
-                    .font(.caption)
+                    .font(AppTypography.caption)
                     .foregroundStyle(Theme.Colors.textSecondary)
                     .padding(.horizontal, 8)
                     .padding(.vertical, 2)
@@ -204,10 +204,10 @@ private struct CategoryFilterChip: View {
             HStack(spacing: 4) {
                 if let icon {
                     Image(systemName: icon)
-                        .font(.caption)
+                        .font(AppTypography.caption)
                 }
                 Text(title)
-                    .font(.caption)
+                    .font(AppTypography.caption)
                     .fontWeight(isSelected ? .semibold : .regular)
             }
             .padding(.horizontal, 12)

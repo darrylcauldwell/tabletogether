@@ -99,7 +99,7 @@ struct DayRowView: View {
 
             if populatedSlots.isEmpty {
                 Text("No meals planned")
-                    .font(.subheadline)
+                    .font(AppTypography.subheadline)
                     .foregroundStyle(Theme.Colors.textSecondary.opacity(0.7))
                     .italic()
                     .padding(.horizontal)
@@ -126,13 +126,13 @@ struct DayRowView: View {
     private var header: some View {
         HStack(alignment: .firstTextBaseline, spacing: 10) {
             Text(day.shortName.uppercased())
-                .font(.caption)
+                .font(AppTypography.caption)
                 .fontWeight(.semibold)
                 .tracking(0.5)
                 .foregroundStyle(isToday ? Theme.Colors.primary : Theme.Colors.textSecondary)
 
             Text(dayNumber)
-                .font(.title2)
+                .font(AppTypography.title2)
                 .fontWeight(.semibold)
                 .foregroundStyle(isToday ? Theme.Colors.primary : .primary)
 
@@ -147,9 +147,9 @@ struct DayRowView: View {
         } label: {
             HStack(spacing: 6) {
                 Image(systemName: "plus.circle")
-                    .font(.subheadline)
+                    .font(AppTypography.subheadline)
                 Text("Add meal")
-                    .font(.subheadline)
+                    .font(AppTypography.subheadline)
             }
             .foregroundStyle(Theme.Colors.textSecondary)
         }
@@ -226,21 +226,21 @@ struct MealSlotListRow: View {
     var body: some View {
         HStack(alignment: .firstTextBaseline, spacing: 12) {
             Text(slot.mealType.displayName)
-                .font(.caption)
+                .font(AppTypography.caption)
                 .fontWeight(.semibold)
                 .foregroundStyle(Theme.Colors.primary)
                 .frame(width: 72, alignment: .leading)
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(primaryLine)
-                    .font(.body)
+                    .font(AppTypography.body)
                     .foregroundStyle(.primary)
                     .lineLimit(2)
                     .multilineTextAlignment(.leading)
 
                 if let secondaryLine {
                     Text(secondaryLine)
-                        .font(.caption)
+                        .font(AppTypography.caption)
                         .foregroundStyle(Theme.Colors.textSecondary)
                         .lineLimit(1)
                 }

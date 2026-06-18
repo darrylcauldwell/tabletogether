@@ -15,7 +15,7 @@ struct TimerPickerSheet: View {
         NavigationStack {
             VStack(spacing: 24) {
                 Text("Set Timer")
-                    .font(.title2)
+                    .font(AppTypography.title2)
                     .fontWeight(.semibold)
 
                 // Quick select buttons
@@ -25,7 +25,7 @@ struct TimerPickerSheet: View {
                             selectedMinutes = minutes
                         } label: {
                             Text("\(minutes) min")
-                                .font(.subheadline)
+                                .font(AppTypography.subheadline)
                                 .fontWeight(selectedMinutes == minutes ? .bold : .regular)
                                 .foregroundColor(selectedMinutes == minutes ? .white : .primary)
                                 .frame(maxWidth: .infinity)
@@ -56,7 +56,7 @@ struct TimerPickerSheet: View {
                     dismiss()
                 } label: {
                     Text("Start Timer")
-                        .font(.headline)
+                        .font(AppTypography.headline)
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity)
                         .padding()

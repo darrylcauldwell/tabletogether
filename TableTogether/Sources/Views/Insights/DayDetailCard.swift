@@ -101,11 +101,11 @@ struct DayDetailCard: View {
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(dayDescription)
-                        .font(.headline)
+                        .font(AppTypography.headline)
                         .foregroundStyle(Color.charcoal)
 
                     Text(daySubtitle)
-                        .font(.caption)
+                        .font(AppTypography.caption)
                         .foregroundStyle(Color.slateGray)
                 }
 
@@ -121,7 +121,7 @@ struct DayDetailCard: View {
             // Meal logs
             if sortedLogs.isEmpty {
                 Text("No meals logged")
-                    .font(.subheadline)
+                    .font(AppTypography.subheadline)
                     .foregroundStyle(Color.slateGray)
                     .padding(.vertical, 8)
             } else {
@@ -203,19 +203,19 @@ struct MealLogRow: View {
         HStack(spacing: 12) {
             // Meal type icon
             Image(systemName: mealTypeIcon)
-                .font(.system(size: 14))
+                .font(AppTypography.fixed(14))
                 .foregroundStyle(Color.sageGreen)
                 .frame(width: 24)
 
             // Meal name
             VStack(alignment: .leading, spacing: 2) {
                 Text(mealName)
-                    .font(.subheadline)
+                    .font(AppTypography.subheadline)
                     .foregroundStyle(Color.charcoal)
                     .lineLimit(1)
 
                 Text(log.mealType.rawValue.capitalized)
-                    .font(.caption2)
+                    .font(AppTypography.caption2)
                     .foregroundStyle(Color.slateGray)
             }
 
@@ -262,15 +262,15 @@ struct CompactMacroChip: View {
         HStack(spacing: 2) {
             if let label {
                 Text(label)
-                    .font(.caption2)
+                    .font(AppTypography.caption2)
                     .fontWeight(.medium)
             }
             Text("\(value)")
-                .font(.caption)
+                .font(AppTypography.caption)
                 .fontWeight(.medium)
             if label == nil {
                 Text(unit)
-                    .font(.caption2)
+                    .font(AppTypography.caption2)
             }
         }
         .foregroundStyle(color)
@@ -298,7 +298,7 @@ struct DayTotalsRow: View {
     var body: some View {
         HStack {
             Text("Day total")
-                .font(.subheadline)
+                .font(AppTypography.subheadline)
                 .fontWeight(.medium)
                 .foregroundStyle(Color.charcoal)
 
@@ -307,26 +307,26 @@ struct DayTotalsRow: View {
             HStack(spacing: 12) {
                 if totals.calories > 0 {
                     Text("\(totals.calories) cal")
-                        .font(.subheadline)
+                        .font(AppTypography.subheadline)
                         .foregroundStyle(Color.charcoal)
                 }
 
                 HStack(spacing: 8) {
                     if totals.protein > 0 {
                         Text("P: \(totals.protein)g")
-                            .font(.caption)
+                            .font(AppTypography.caption)
                             .foregroundStyle(Color.slateGray)
                     }
 
                     if totals.carbs > 0 {
                         Text("C: \(totals.carbs)g")
-                            .font(.caption)
+                            .font(AppTypography.caption)
                             .foregroundStyle(Color.slateGray)
                     }
 
                     if totals.fat > 0 {
                         Text("F: \(totals.fat)g")
-                            .font(.caption)
+                            .font(AppTypography.caption)
                             .foregroundStyle(Color.slateGray)
                     }
                 }
@@ -385,7 +385,7 @@ struct DayCharacterBadge: View {
     var body: some View {
         if character != .none {
             Text(character.label)
-                .font(.caption)
+                .font(AppTypography.caption)
                 .foregroundStyle(character.color)
                 .padding(.horizontal, 8)
                 .padding(.vertical, 4)

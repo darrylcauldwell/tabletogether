@@ -136,7 +136,7 @@ struct IngredientEditorRow: View {
 
             HStack {
                 TextField("Preparation note (e.g., diced)", text: $ingredient.preparationNote)
-                    .font(.caption)
+                    .font(AppTypography.caption)
                     .foregroundColor(.appTextSecondary)
 
                 Toggle("Optional", isOn: $ingredient.isOptional)
@@ -148,7 +148,7 @@ struct IngredientEditorRow: View {
 
                 if ingredient.isOptional {
                     Text("Optional")
-                        .font(.caption)
+                        .font(AppTypography.caption)
                         .foregroundColor(.appTextSecondary)
                 }
             }
@@ -166,12 +166,12 @@ struct TagChip: View {
     var body: some View {
         HStack(spacing: 4) {
             Text(tag)
-                .font(.caption)
+                .font(AppTypography.caption)
                 .foregroundColor(.appTextPrimary)
 
             Button(action: onRemove) {
                 Image(systemName: "xmark.circle.fill")
-                    .font(.caption)
+                    .font(AppTypography.caption)
                     .foregroundColor(.appTextSecondary)
             }
         }
@@ -193,9 +193,9 @@ struct ArchetypeToggleChip: View {
         Button(action: action) {
             HStack(spacing: 4) {
                 Image(systemName: archetype.icon)
-                    .font(.caption2)
+                    .font(AppTypography.caption2)
                 Text(archetype.displayName)
-                    .font(.caption)
+                    .font(AppTypography.caption)
                     .fontWeight(.medium)
                     .lineLimit(1)
             }

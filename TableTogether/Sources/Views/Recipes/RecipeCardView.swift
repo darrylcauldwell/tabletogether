@@ -60,7 +60,7 @@ struct RecipeCardView: View {
                 // Title with favorite indicator
                 HStack {
                     Text(recipe.title)
-                        .font(.subheadline)
+                        .font(AppTypography.subheadline)
                         .fontWeight(.semibold)
                         .foregroundColor(.appTextPrimary)
                         .lineLimit(2)
@@ -70,7 +70,7 @@ struct RecipeCardView: View {
 
                     if recipe.isFavorite {
                         Image(systemName: "heart.fill")
-                            .font(.caption)
+                            .font(AppTypography.caption)
                             .foregroundColor(.appSecondary)
                     }
                 }
@@ -78,7 +78,7 @@ struct RecipeCardView: View {
                 // Cookbook attribution (subtle, only when set)
                 if let cookbook = recipe.cookbook, !cookbook.isEmpty {
                     Text(cookbook)
-                        .font(.caption2)
+                        .font(AppTypography.caption2)
                         .italic()
                         .foregroundColor(.appTextSecondary)
                         .lineLimit(1)
@@ -100,9 +100,9 @@ struct RecipeCardView: View {
                 if let time = recipe.formattedTotalTime {
                     HStack(spacing: 4) {
                         Image(systemName: "clock")
-                            .font(.caption2)
+                            .font(AppTypography.caption2)
                         Text(time)
-                            .font(.caption)
+                            .font(AppTypography.caption)
                     }
                     .foregroundColor(.appTextSecondary)
                 }
@@ -128,7 +128,7 @@ struct RecipeCardView: View {
                 // Title with favorite indicator
                 HStack {
                     Text(recipe.title)
-                        .font(.body)
+                        .font(AppTypography.body)
                         .fontWeight(.semibold)
                         .foregroundColor(.appTextPrimary)
                         .lineLimit(1)
@@ -137,7 +137,7 @@ struct RecipeCardView: View {
 
                     if recipe.isFavorite {
                         Image(systemName: "heart.fill")
-                            .font(.caption)
+                            .font(AppTypography.caption)
                             .foregroundColor(.appSecondary)
                     }
                 }
@@ -145,7 +145,7 @@ struct RecipeCardView: View {
                 // Cookbook attribution (subtle, only when set)
                 if let cookbook = recipe.cookbook, !cookbook.isEmpty {
                     Text(cookbook)
-                        .font(.caption2)
+                        .font(AppTypography.caption2)
                         .italic()
                         .foregroundColor(.appTextSecondary)
                         .lineLimit(1)
@@ -166,17 +166,17 @@ struct RecipeCardView: View {
                     if let time = recipe.formattedTotalTime {
                         HStack(spacing: 4) {
                             Image(systemName: "clock")
-                                .font(.caption2)
+                                .font(AppTypography.caption2)
                             Text(time)
-                                .font(.caption)
+                                .font(AppTypography.caption)
                         }
                     }
 
                     HStack(spacing: 4) {
                         Image(systemName: "person.2")
-                            .font(.caption2)
+                            .font(AppTypography.caption2)
                         Text("\(Int(recipe.servings)) servings")
-                            .font(.caption)
+                            .font(AppTypography.caption)
                     }
                 }
                 .foregroundColor(.appTextSecondary)
@@ -185,7 +185,7 @@ struct RecipeCardView: View {
             Spacer()
 
             Image(systemName: "chevron.right")
-                .font(.caption)
+                .font(AppTypography.caption)
                 .foregroundColor(.appTextSecondary)
         }
         .padding(12)
@@ -204,7 +204,7 @@ struct RecipeCardView: View {
         ZStack {
             Color.appPrimary.opacity(0.1)
             Image(systemName: "fork.knife")
-                .font(.title)
+                .font(AppTypography.title)
                 .foregroundColor(.appPrimary.opacity(0.5))
         }
     }

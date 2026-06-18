@@ -71,18 +71,18 @@ struct GroceryCategorySection: View {
             HStack(spacing: 8) {
                 // Category icon
                 Image(systemName: category.iconName)
-                    .font(.body)
+                    .font(AppTypography.body)
                     .foregroundStyle(category.color)
                     .frame(width: 24, height: 24)
 
                 // Category name
                 Text(category.displayName)
-                    .font(.headline)
+                    .font(AppTypography.headline)
                     .foregroundStyle(.primary)
 
                 // Item count badge
                 Text("\(items.count)")
-                    .font(.caption)
+                    .font(AppTypography.caption)
                     .fontWeight(.medium)
                     .foregroundStyle(.secondary)
                     .padding(.horizontal, 6)
@@ -100,7 +100,7 @@ struct GroceryCategorySection: View {
 
                 // Expand/collapse chevron
                 Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
-                    .font(.caption)
+                    .font(AppTypography.caption)
                     .foregroundStyle(.secondary)
             }
             .contentShape(Rectangle())
