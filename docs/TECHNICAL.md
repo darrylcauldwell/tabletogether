@@ -88,10 +88,21 @@ Helper: `UUID.deterministic(from: String)` in `Sources/Extensions/UUID+Determini
 | `@Query` | SwiftData reads with optional `#Predicate` filter | `@Query(filter: ...)` |
 | `@FetchRequest` | Core Data reads (most of this app) | `@FetchRequest(sortDescriptors: ...)` |
 | `@Environment` | Injected services and system values | `@Environment(\.managedObjectContext)` |
-| `@Bindable` | Two-way binding to a CoreData NSManagedObject | `@Bindable var recipe: Recipe` |
+| `@ObservedObject` | Two-way binding to a Core Data `NSManagedObject` | `@ObservedObject var recipe: Recipe` |
 | `@State` | Local UI state only | `@State private var showingDetail = false` |
 
-**Never** use `@State` for model data. **Never** use `@ObservedObject` — use `@Environment` for `@Observable` services.
+**Never** use `@State` for model data.
+
+### Core Data exception to the "no `@ObservedObject`" rule
+
+The general convention (used across the author's other projects) is *never* use
+`@ObservedObject` — bind to models with `@Bindable`. That rule assumes SwiftData `@Model`
+types, which conform to the `Observable` macro. **This app uses Core Data, so it does not
+apply.** `NSManagedObject` subclasses (`Recipe`, `Ingredient`, `MealSlot`, …) conform to
+`ObservableObject`, not `Observable`, so `@Bindable` does not compile against them.
+`@ObservedObject` is the correct — and only — idiom for two-way binding to a managed object
+here. Use `@Environment` to inject the `@Observable` services (e.g. `PersistenceController`),
+and `@ObservedObject` to observe a managed object passed into a row/detail view.
 
 ## Concurrency
 
