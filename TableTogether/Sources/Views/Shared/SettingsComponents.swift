@@ -57,7 +57,7 @@ struct IngredientDatabaseView: View {
                     Text(ingredient.name)
                     Spacer()
                     if let cal = ingredient.caloriesPer100g {
-                        Text("\(Int(cal)) cal/100g")
+                        Text("\(Int(truncating: cal)) cal/100g")
                             .font(AppTypography.caption)
                             .foregroundStyle(Theme.Colors.textSecondary)
                     }

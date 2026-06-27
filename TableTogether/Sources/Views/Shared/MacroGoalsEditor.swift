@@ -119,7 +119,7 @@ struct SettingsNumberField: View {
 // MARK: - Measurement System Helper
 
 /// Determines the measurement system for the current locale
-private enum HealthMeasurementSystem {
+enum HealthMeasurementSystem {
     case metric    // kg, cm
     case uk        // stones + lbs, cm
     case us        // lbs, ft + in

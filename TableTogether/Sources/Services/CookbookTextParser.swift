@@ -47,15 +47,12 @@ struct CookbookTextParser {
     private static func parseWithHeaders(lines: [String], rawText: String) -> ParseResult? {
         var ingredientHeaderIndex: Int?
         var instructionHeaderIndex: Int?
-        var servesLine: String?
 
         for (index, line) in lines.enumerated() {
             if isSectionHeader(line, keywords: ["ingredients"]) {
                 ingredientHeaderIndex = index
             } else if isSectionHeader(line, keywords: ["method", "directions", "instructions", "steps", "preparation"]) {
                 instructionHeaderIndex = index
-            } else if isServesLine(line) {
-                servesLine = line
             }
         }
 

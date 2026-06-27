@@ -185,8 +185,8 @@ final class PersistenceController {
     // MARK: - Constants
 
     nonisolated static let cloudKitContainerID = "iCloud.dev.dreamfold.tabletogether"
-    nonisolated(unsafe) static let appTransactionAuthor = "TableTogether"
-    nonisolated(unsafe) static let tokenPrefix = "HistoryToken_"
+    nonisolated static let appTransactionAuthor = "TableTogether"
+    nonisolated static let tokenPrefix = "HistoryToken_"
 
     /// Store filenames — single source of truth so the private/shared store can be identified
     /// from a `nonisolated` history-processing context (which can't touch the @MainActor
@@ -395,16 +395,20 @@ final class PersistenceController {
                           userInfo: [NSLocalizedDescriptionKey: "Shared store not available"])
         }
 
-        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-            container.acceptShareInvitations(from: [metadata], into: sharedStore) { _, error in
-                if let error {
-                    self.lastError = error.localizedDescription
-                    continuation.resume(throwing: error)
-                } else {
-                    AppLogger.sharing.info("Accepted household share invitation")
-                    continuation.resume()
+        do {
+            try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+                container.acceptShareInvitations(from: [metadata], into: sharedStore) { _, error in
+                    if let error {
+                        continuation.resume(throwing: error)
+                    } else {
+                        AppLogger.sharing.info("Accepted household share invitation")
+                        continuation.resume()
+                    }
                 }
             }
+        } catch {
+            lastError = error.localizedDescription
+            throw error
         }
 
         await fetchExistingShare()
@@ -621,8 +625,11 @@ final class PersistenceController {
             // before those merges ran could advance the token past not-yet-merged
             // transactions (lost on a kill in between). historyQueue is serial, and
             // mergeChanges is idempotent, so re-processing after a stale-token read is safe.
-            let notifications = transactions.map { $0.objectIDNotification() }
-            let tokenData: Data? = transactions.last?.token.flatMap {
+            // objectIDNotification() yields non-Sendable NSNotifications, but their payload is
+            // only NSManagedObjectIDs, which are safe to transfer across the actor hop below.
+            nonisolated(unsafe) let notifications = transactions.map { $0.objectIDNotification() }
+            let lastToken = transactions.last?.token
+            let tokenData: Data? = lastToken.flatMap {
                 try? NSKeyedArchiver.archivedData(withRootObject: $0, requiringSecureCoding: true)
             }
             Task { @MainActor in
@@ -823,7 +830,6 @@ final class PersistenceController {
                 // Delete SQLite files
                 if let url = storeURL {
                     for suffix in ["", "-wal", "-shm"] {
-                        let fileURL = url.appendingPathExtension(suffix.isEmpty ? "" : String(suffix.dropFirst()))
                         let actualURL = suffix.isEmpty ? url : URL(fileURLWithPath: url.path + suffix)
                         try? FileManager.default.removeItem(at: actualURL)
                     }

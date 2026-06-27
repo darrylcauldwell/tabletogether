@@ -78,7 +78,7 @@ struct HouseholdShareItem: Transferable {
 
 // MARK: - CKShare sharing via ShareLink (for resending existing invites)
 
-extension CKShare: @preconcurrency @retroactive Transferable {
+extension CKShare: @retroactive Transferable {
     public nonisolated static var transferRepresentation: some TransferRepresentation {
         CKShareTransferRepresentation { share in
             .existing(share, container: CKContainer(identifier: PersistenceController.cloudKitContainerID))

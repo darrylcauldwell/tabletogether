@@ -57,7 +57,7 @@ struct RecipeLibraryView: View {
         case .title:
             result.sort { $0.title.localizedCompare($1.title) == .orderedAscending }
         case .recent:
-            result.sort { ($0.createdAt ?? .distantPast) > ($1.createdAt ?? .distantPast) }
+            result.sort { $0.createdAt > $1.createdAt }
         case .mostCooked:
             result.sort { $0.timesCooked > $1.timesCooked }
         case .favorite:
