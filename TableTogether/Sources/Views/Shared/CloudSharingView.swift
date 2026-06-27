@@ -4,60 +4,109 @@ import CloudKit
 import CoreData
 import os
 
-/// UIViewControllerRepresentable wrapper for UICloudSharingController.
+/// Presents the system cloud-sharing UI for the household.
 ///
-/// UICloudSharingController handles the entire sharing flow internally:
-/// - Creates the CKShare and zone on CloudKit (with its own loading spinner)
-/// - Generates the share URL
-/// - Presents the system share sheet (iMessage, Mail, etc.)
+/// The household CKShare is created (or reused) *before* the sharing controller is
+/// shown, so we can hand a ready share to `UICloudSharingController(share:container:)`
+/// rather than the deprecated `preparationHandler` initializer. Share creation is
+/// async, so this view shows a spinner while `container.share(...)` exports the zone.
 ///
 /// This avoids the timing issue where ShareLink + CKShareTransferRepresentation
 /// hangs because iMessage can't compose without a URL, and the URL isn't ready
 /// until CloudKit finishes exporting the share zone. #70
-struct CloudSharingView: UIViewControllerRepresentable {
+struct CloudSharingView: View {
     let household: Household
     let persistenceController: PersistenceController
 
-    func makeUIViewController(context: Context) -> UICloudSharingController {
+    @Environment(\.dismiss) private var dismiss
+    @State private var preparedShare: PreparedShare?
+    @State private var errorMessage: String?
+
+    var body: some View {
+        Group {
+            if let preparedShare {
+                CloudSharingControllerView(
+                    share: preparedShare.share,
+                    container: preparedShare.container,
+                    persistenceController: persistenceController
+                )
+                .ignoresSafeArea()
+            } else if let errorMessage {
+                shareErrorView(errorMessage)
+            } else {
+                ProgressView("Preparing invitation…")
+                    .controlSize(.large)
+            }
+        }
+        .task { await prepareShare() }
+    }
+
+    @ViewBuilder
+    private func shareErrorView(_ message: String) -> some View {
+        VStack(spacing: 16) {
+            Image(systemName: "exclamationmark.icloud")
+                .font(.largeTitle)
+                .foregroundStyle(Theme.Colors.textSecondary)
+            Text("Couldn't prepare the invitation")
+                .font(AppTypography.cardTitle)
+            Text(message)
+                .font(AppTypography.caption)
+                .foregroundStyle(Theme.Colors.textSecondary)
+                .multilineTextAlignment(.center)
+            Button("Done") { dismiss() }
+                .buttonStyle(.borderedProminent)
+        }
+        .padding()
+    }
+
+    /// Reuses an existing household share when one already has a URL, otherwise creates
+    /// and persists a new share. Runs once — `.task` re-fires on reappear, but the
+    /// `preparedShare` guard makes that a no-op.
+    private func prepareShare() async {
+        guard preparedShare == nil, errorMessage == nil else { return }
         let container = persistenceController.container
         let ckContainer = CKContainer(identifier: PersistenceController.cloudKitContainerID)
 
-        // Check for an existing share first
         if let shareSet = try? container.fetchShares(matching: [household.objectID]),
            let (_, existingShare) = shareSet.first,
            existingShare.url != nil {
-            AppLogger.sharing.info("Presenting UICloudSharingController with existing share")
-            let controller = UICloudSharingController(share: existingShare, container: ckContainer)
-            controller.delegate = context.coordinator
-            return controller
+            AppLogger.sharing.info("Reusing existing household share")
+            preparedShare = PreparedShare(share: existingShare, container: ckContainer)
+            return
         }
 
-        // Create a new share via the preparation handler.
-        // UICloudSharingController shows its own spinner while CloudKit
-        // creates the zone and exports the share record.
-        AppLogger.sharing.info("Presenting UICloudSharingController with preparation handler")
-        let controller = UICloudSharingController { controller, preparationCompletion in
-            Task {
-                do {
-                    let obj = await container.viewContext.perform {
-                        container.viewContext.object(with: self.household.objectID)
-                    }
-                    let (_, share, ckContainer) = try await container.share([obj], to: nil)
-                    share[CKShare.SystemFieldKey.title] = "TableTogether Household" as CKRecordValue
-                    share.publicPermission = .none
-                    AppLogger.sharing.info("Share prepared — handing to UICloudSharingController")
-                    // UICloudSharingController requires the completion to be called on the main thread
-                    DispatchQueue.main.async {
-                        preparationCompletion(share, ckContainer, nil)
-                    }
-                } catch {
-                    AppLogger.sharing.error("Share preparation failed: \(error.localizedDescription)")
-                    DispatchQueue.main.async {
-                        preparationCompletion(nil, nil, error)
-                    }
-                }
+        AppLogger.sharing.info("Creating new household share")
+        let householdID = household.objectID
+        do {
+            let obj = await container.viewContext.perform {
+                container.viewContext.object(with: householdID)
             }
+            let (_, share, sharedContainer) = try await container.share([obj], to: nil)
+            share[CKShare.SystemFieldKey.title] = "TableTogether Household" as CKRecordValue
+            share.publicPermission = .none
+            AppLogger.sharing.info("Household share created")
+            preparedShare = PreparedShare(share: share, container: sharedContainer)
+        } catch {
+            AppLogger.sharing.error("Share preparation failed: \(error.localizedDescription)")
+            errorMessage = error.localizedDescription
         }
+    }
+}
+
+/// A share that has already been created/exported on CloudKit, ready to present.
+private struct PreparedShare {
+    let share: CKShare
+    let container: CKContainer
+}
+
+/// UIViewControllerRepresentable wrapper that presents a ready CKShare.
+private struct CloudSharingControllerView: UIViewControllerRepresentable {
+    let share: CKShare
+    let container: CKContainer
+    let persistenceController: PersistenceController
+
+    func makeUIViewController(context: Context) -> UICloudSharingController {
+        let controller = UICloudSharingController(share: share, container: container)
         controller.delegate = context.coordinator
         return controller
     }
