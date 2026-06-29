@@ -132,8 +132,19 @@ struct TVContentView: View {
 // MARK: - Week View
 
 struct WeekView: View {
-    @Environment(\.managedObjectContext) private var viewContext
-    @State private var weekPlan: WeekPlan?
+    // Live fetch so plan edits from iPhone/iPad appear without relaunching.
+    @FetchRequest private var weekPlans: FetchedResults<WeekPlan>
+    @State private var loadedWeekStart = WeekPlan.normalizeToMonday(Date())
+
+    init() {
+        let monday = WeekPlan.normalizeToMonday(Date())
+        _weekPlans = FetchRequest(
+            sortDescriptors: [],
+            predicate: NSPredicate(format: "weekStartDate == %@", monday as NSDate)
+        )
+    }
+
+    private var weekPlan: WeekPlan? { weekPlans.first }
 
     private var days: [DayOfWeek] {
         DayOfWeek.allCases
@@ -152,22 +163,16 @@ struct WeekView: View {
                 .tvSafeArea()
             }
         }
-        .onAppear {
-            loadWeekPlan()
-        }
-    }
-
-    private func loadWeekPlan() {
-        let weekStart = WeekPlan.normalizeToMonday(Date())
-
-        let request = NSFetchRequest<WeekPlan>(entityName: "WeekPlan")
-        request.predicate = NSPredicate(format: "weekStartDate == %@", weekStart as NSDate)
-
-        do {
-            let plans = try viewContext.fetch(request)
-            weekPlan = plans.first
-        } catch {
-            AppLogger.swiftData.error("Error loading week plan: \(error)")
+        .task {
+            // Repoint the fetch at the new week on a week rollover (always-on display).
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(60))
+                let monday = WeekPlan.normalizeToMonday(Date())
+                if monday != loadedWeekStart {
+                    loadedWeekStart = monday
+                    weekPlans.nsPredicate = NSPredicate(format: "weekStartDate == %@", monday as NSDate)
+                }
+            }
         }
     }
 }

@@ -13,15 +13,31 @@ import CoreData
 // - Shows household presence
 
 struct AmbientView: View {
-    @Environment(\.managedObjectContext) private var viewContext
     @FetchRequest(sortDescriptors: [NSSortDescriptor(keyPath: \User.displayName, ascending: true)])
     private var users: FetchedResults<User>
 
-    @State private var weekPlan: WeekPlan?
-    @State private var todaySlots: [MealSlot] = []
+    // Live fetch of the current week's plan so meal-plan edits made on iPhone/iPad
+    // appear without relaunching, and a plan that syncs in after launch isn't missed.
+    @FetchRequest private var weekPlans: FetchedResults<WeekPlan>
+
+    @State private var loadedWeekStart = WeekPlan.normalizeToMonday(Date())
     @State private var selectedSlot: MealSlot?
     @State private var showingRecipeView = false
     @State private var currentTime = Date()
+
+    init() {
+        let monday = WeekPlan.normalizeToMonday(Date())
+        _weekPlans = FetchRequest(
+            sortDescriptors: [],
+            predicate: NSPredicate(format: "weekStartDate == %@", monday as NSDate)
+        )
+    }
+
+    /// Today's slots, derived from the fetched plan. Computed (not stored) so a
+    /// day-of-week rollover at midnight is reflected without an explicit reload.
+    private var todaySlots: [MealSlot] {
+        weekPlans.first?.slots(for: today) ?? []
+    }
 
     private var today: DayOfWeek {
         let weekday = Calendar.current.component(.weekday, from: Date())
@@ -114,13 +130,18 @@ struct AmbientView: View {
                 }
             }
         }
-        .onAppear {
-            loadTodaysMeals()
-        }
         .task {
             while !Task.isCancelled {
                 try? await Task.sleep(for: .seconds(60))
                 currentTime = Date()
+                // On a week rollover, repoint the live fetch at the new week. A
+                // day-of-week rollover within the same week needs no action — todaySlots
+                // derives from `today`, which is recomputed on each render.
+                let monday = WeekPlan.normalizeToMonday(Date())
+                if monday != loadedWeekStart {
+                    loadedWeekStart = monday
+                    weekPlans.nsPredicate = NSPredicate(format: "weekStartDate == %@", monday as NSDate)
+                }
             }
         }
     }
@@ -263,24 +284,6 @@ struct AmbientView: View {
         .padding(.top, TVTheme.Spacing.lg)
     }
 
-    // MARK: - Data Loading
-
-    private func loadTodaysMeals() {
-        let weekStart = WeekPlan.normalizeToMonday(Date())
-
-        let request = NSFetchRequest<WeekPlan>(entityName: "WeekPlan")
-        request.predicate = NSPredicate(format: "weekStartDate == %@", weekStart as NSDate)
-
-        do {
-            let plans = try viewContext.fetch(request)
-            if let plan = plans.first {
-                weekPlan = plan
-                todaySlots = plan.slots(for: today)
-            }
-        } catch {
-            AppLogger.swiftData.error("Error loading week plan: \(error)")
-        }
-    }
 }
 
 // MARK: - Inspiration Mode View
