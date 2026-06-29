@@ -21,6 +21,27 @@ pass() { echo "  [PASS] $1"; }
 fail() { echo "  [FAIL] $1"; FAIL=1; }
 stage() { STAGE=$((STAGE + 1)); echo ""; echo "=== Stage $STAGE: $1 ==="; }
 
+# Run a build/test command and report pass/fail by its REAL exit status.
+# Redirecting to a log (instead of `if cmd | grep -q error:`) is deliberate:
+# under `set -o pipefail` the old form reported PASS on genuine failures, because
+# the failed command's non-zero exit propagated through the pipe and sent the
+# `if` down the else/PASS branch — silently defeating the whole validation gate.
+# Args: <label> <logfile> <command...>
+run_checked() {
+  local label="$1"; shift
+  local log="$1"; shift
+  set +e
+  "$@" > "$log" 2>&1
+  local rc=$?
+  set -e
+  if [ "$rc" -ne 0 ]; then
+    fail "$label (exit $rc; see $log)"
+    grep -E "error:|TEST FAILED|FAILED" "$log" | head -20 | sed 's/^/      /' || true
+  else
+    pass "$label"
+  fi
+}
+
 # Ensure we're in the repo root
 cd "$(git rev-parse --show-toplevel)"
 
@@ -28,7 +49,13 @@ cd "$(git rev-parse --show-toplevel)"
 stage "SwiftLint"
 
 if command -v swiftlint > /dev/null 2>&1; then
-  if swiftlint --quiet 2>&1 | tee /tmp/swiftlint.log | grep -q "error:"; then
+  # Grep the captured log (not the live pipe) so swiftlint's own non-zero exit
+  # under pipefail can't masquerade as a clean run. We only care whether the
+  # output contains error-level violations; warnings are allowed.
+  set +e
+  swiftlint --quiet > /tmp/swiftlint.log 2>&1
+  set -e
+  if grep -q "error:" /tmp/swiftlint.log; then
     fail "SwiftLint found errors"
   else
     pass "SwiftLint passed (warnings allowed)"
@@ -157,45 +184,36 @@ fi
 
 stage "Build Verification (iOS Simulator)"
 
-if xcodebuild clean build \
+run_checked "iOS Simulator build" /tmp/preflight_ios_build.log \
+  xcodebuild clean build \
   -project TableTogether.xcodeproj \
   -scheme TableTogether \
   -destination 'generic/platform=iOS Simulator' \
   -configuration Debug \
   CODE_SIGNING_ALLOWED=NO \
-  -quiet 2>&1 | grep -q "error:"; then
-  fail "iOS build failed"
-else
-  pass "iOS Simulator build succeeded"
-fi
+  -quiet
 
 stage "Build Verification (Mac Catalyst)"
 
-if xcodebuild clean build \
+run_checked "Mac Catalyst build" /tmp/preflight_mac_build.log \
+  xcodebuild clean build \
   -project TableTogether.xcodeproj \
   -scheme TableTogether \
   -destination 'platform=macOS,variant=Mac Catalyst' \
   -configuration Debug \
   CODE_SIGNING_ALLOWED=NO \
-  -quiet 2>&1 | grep -q "error:"; then
-  fail "Mac Catalyst build failed"
-else
-  pass "Mac Catalyst build succeeded"
-fi
+  -quiet
 
 stage "Build Verification (tvOS Simulator)"
 
-if xcodebuild clean build \
+run_checked "tvOS Simulator build" /tmp/preflight_tvos_build.log \
+  xcodebuild clean build \
   -project TableTogetherTV/TableTogetherTV.xcodeproj \
   -scheme TableTogetherTV \
   -destination 'generic/platform=tvOS Simulator' \
   -configuration Debug \
   CODE_SIGNING_ALLOWED=NO \
-  -quiet 2>&1 | grep -q "error:"; then
-  fail "tvOS build failed"
-else
-  pass "tvOS Simulator build succeeded"
-fi
+  -quiet
 
 stage "Unit Tests"
 
@@ -209,17 +227,14 @@ if [ -z "$SIM_ID" ]; then
 fi
 
 if [ -n "$SIM_ID" ]; then
-  if xcodebuild clean test \
+  run_checked "Unit tests" /tmp/preflight_tests.log \
+    xcodebuild clean test \
     -project TableTogether.xcodeproj \
     -scheme TableTogether \
     -destination "id=$SIM_ID" \
     -configuration Debug \
     CODE_SIGNING_ALLOWED=NO \
-    -quiet 2>&1 | grep -q "TEST FAILED"; then
-    fail "Unit tests failed"
-  else
-    pass "Unit tests passed"
-  fi
+    -quiet
 else
   pass "No iOS simulator available — skipping tests"
 fi
