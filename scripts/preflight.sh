@@ -171,7 +171,25 @@ if [ -n "$MODEL_CHANGES" ]; then
 
   pass "CloudKit schema warning displayed"
 else
-  pass "No Core Data model changes detected"
+  pass "No uncommitted Core Data model changes detected"
+fi
+
+# Deploy-state check: the git-diff check above only catches UNCOMMITTED changes.
+# Compare the current model against the last hash recorded by
+# scripts/mark-schema-deployed.sh so a committed-but-undeployed schema change
+# can't silently ship and break CloudKit sync.
+MODEL_CONTENTS="$XCDATAMODELD_PATH/TableTogether.xcdatamodel/contents"
+DEPLOYED_HASH_FILE="scripts/.deployed-schema-hash"
+if [ -f "$DEPLOYED_HASH_FILE" ] && [ -f "$MODEL_CONTENTS" ]; then
+  CURRENT_MODEL_HASH=$(git hash-object "$MODEL_CONTENTS")
+  DEPLOYED_HASH=$(tr -d ' \n' < "$DEPLOYED_HASH_FILE")
+  if [ "$CURRENT_MODEL_HASH" != "$DEPLOYED_HASH" ]; then
+    fail "Core Data model differs from the last-deployed CloudKit schema — deploy Dev→Production in the CloudKit Dashboard, then run scripts/mark-schema-deployed.sh"
+  else
+    pass "Core Data model matches the last-deployed CloudKit schema"
+  fi
+else
+  pass "No deployed-schema marker yet (run scripts/mark-schema-deployed.sh after the first deploy)"
 fi
 
 if $QUICK; then
