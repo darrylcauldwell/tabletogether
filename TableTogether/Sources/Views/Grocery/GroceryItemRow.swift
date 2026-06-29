@@ -427,6 +427,7 @@ struct EditGroceryItemView: View {
         item.quantity = quantity
         item.unit = selectedUnit
         item.category = selectedCategory
+        item.managedObjectContext?.saveWithLogging(context: "edit grocery item")
     }
 }
 

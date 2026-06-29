@@ -453,6 +453,7 @@ struct PantryCheckView: View {
             pantryCheckComplete = true
             hasSeenPantryHint = true
         }
+        viewContext.saveWithLogging(context: "mark all remaining as needed")
     }
 
     private func togglePantryItem(_ item: GroceryItem) {
@@ -470,6 +471,7 @@ struct PantryCheckView: View {
                 hasSeenPantryHint = true
             }
         }
+        viewContext.saveWithLogging(context: "toggle pantry item")
     }
 
     private func deleteItem(_ item: GroceryItem) {
@@ -479,6 +481,7 @@ struct PantryCheckView: View {
                 viewContext.delete(groupItem)
             }
         }
+        viewContext.saveWithLogging(context: "delete pantry item")
     }
 
     /// Syncs pantry state within ingredient groups when date range expands.
@@ -491,12 +494,17 @@ struct PantryCheckView: View {
                 groups[key, default: []].append(item)
             }
         }
+        var didChange = false
         for (_, items) in groups {
             if items.contains(where: { $0.isInPantry }) {
                 for item in items where !item.isInPantry {
                     item.isInPantry = true
+                    didChange = true
                 }
             }
+        }
+        if didChange {
+            viewContext.saveWithLogging(context: "sync pantry states")
         }
     }
 

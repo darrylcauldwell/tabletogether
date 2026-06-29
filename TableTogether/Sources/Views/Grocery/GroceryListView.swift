@@ -298,6 +298,7 @@ struct GroceryListView: View {
                 }
             }
         }
+        viewContext.saveWithLogging(context: "toggle grocery item")
     }
 
     private func deleteItem(_ item: GroceryItem) {
@@ -307,6 +308,7 @@ struct GroceryListView: View {
                 viewContext.delete(groupItem)
             }
         }
+        viewContext.saveWithLogging(context: "delete grocery item")
     }
 
     private func generateShareText() -> String {

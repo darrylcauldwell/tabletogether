@@ -216,6 +216,7 @@ struct AddGroceryItemView: View {
         )
 
         weekPlan.addToGroceryItems(newItem)
+        viewContext.saveWithLogging(context: "add grocery item")
         dismiss()
     }
 }
