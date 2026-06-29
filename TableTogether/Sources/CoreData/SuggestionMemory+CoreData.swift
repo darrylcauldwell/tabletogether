@@ -93,6 +93,22 @@ public class SuggestionMemory: NSManagedObject {
         return score
     }
 
+    // MARK: - Find or Create
+
+    /// Returns the SuggestionMemory for a recipe, creating one (scoped to the recipe's
+    /// household) if none exists yet. One memory per recipe.
+    static func findOrCreate(for recipe: Recipe, in context: NSManagedObjectContext) -> SuggestionMemory {
+        let request = NSFetchRequest<SuggestionMemory>(entityName: "SuggestionMemory")
+        request.predicate = NSPredicate(format: "recipe == %@", recipe)
+        request.fetchLimit = 1
+        if let existing = try? context.fetch(request).first {
+            return existing
+        }
+        let memory = SuggestionMemory(context: context, recipe: recipe)
+        memory.household = recipe.household
+        return memory
+    }
+
     // MARK: - Convenience Initializer
 
     @discardableResult

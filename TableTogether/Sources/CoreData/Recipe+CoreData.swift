@@ -171,6 +171,12 @@ public class Recipe: NSManagedObject {
         timesCooked += 1
         lastCookedDate = Date()
         modifiedAt = Date()
+        // Record into the suggestion-intelligence layer. The SuggestionEngine reads
+        // SuggestionMemory (not Recipe.timesCooked), so without this the familiarity
+        // gradient and the "Your go-tos" tray stay permanently empty.
+        if let context = managedObjectContext {
+            SuggestionMemory.findOrCreate(for: self, in: context).recordCooking()
+        }
     }
 
     func toggleFavorite() {

@@ -4,6 +4,7 @@ import CoreData
 /// Full-screen cooking mode for step-by-step recipe guidance
 struct CookingModeView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.managedObjectContext) private var viewContext
     var recipe: Recipe
     let servings: Int
 
@@ -363,6 +364,7 @@ struct CookingModeView: View {
             if completedSteps.count == instructions.count {
                 Button {
                     recipe.markAsCooked()
+                    viewContext.saveWithLogging(context: "mark recipe cooked")
                     dismiss()
                 } label: {
                     HStack {
