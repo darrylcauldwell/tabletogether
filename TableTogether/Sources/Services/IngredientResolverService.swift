@@ -153,17 +153,22 @@ final class IngredientResolverService {
         context: NSManagedObjectContext,
         household: Household?
     ) -> FoodItem {
-        // Check if already cached by fdcId
+        // Check if already cached by fdcId. fdcId == 0 is a sentinel: Open Food Facts
+        // results map a missing/non-numeric barcode to 0, and hand-curated imports
+        // default to 0. Deduping on it would collide every sentinel food onto the
+        // first one (returning the wrong product with the wrong macros), so only
+        // dedup when we have a real, unique fdcId.
         let fdcId = Int32(result.fdcId)
-        let request = NSFetchRequest<FoodItem>(entityName: "FoodItem")
-        request.predicate = NSPredicate(format: "fdcId == %d", fdcId)
-
-        do {
-            if let existing = try context.fetch(request).first {
-                return existing
+        if fdcId != 0 {
+            let request = NSFetchRequest<FoodItem>(entityName: "FoodItem")
+            request.predicate = NSPredicate(format: "fdcId == %d", fdcId)
+            do {
+                if let existing = try context.fetch(request).first {
+                    return existing
+                }
+            } catch {
+                AppLogger.swiftData.error("Failed to fetch FoodItem by fdcId: \(error.localizedDescription)")
             }
-        } catch {
-            AppLogger.swiftData.error("Failed to fetch FoodItem by fdcId: \(error.localizedDescription)")
         }
 
         // Build common portions from USDA measures
