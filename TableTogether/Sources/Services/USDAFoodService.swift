@@ -340,9 +340,13 @@ struct USDAFoodResult: Codable {
     /// Sodium in mg per 100g (Nutrient 1093)
     var sodiumMgPer100g: Double? { nutrientValue(id: 1093) }
 
-    /// Whether this result has all four core macros (calories, protein, carbs, fat) with non-zero values.
+    /// Whether this result has usable macros: calories present plus at least one of
+    /// protein/carbs/fat. Requiring calories AND a macro avoids accepting calorie-only
+    /// SR Legacy rows (which would short-circuit the Open Food Facts supplement and
+    /// yield items with zero protein/carbs/fat), while still allowing legitimately
+    /// single-macro foods like oils or egg whites.
     var hasCompleteMacros: Bool {
-        caloriesPer100g > 0 || proteinPer100g > 0 || carbsPer100g > 0 || fatPer100g > 0
+        caloriesPer100g > 0 && (proteinPer100g > 0 || carbsPer100g > 0 || fatPer100g > 0)
     }
 
     /// Clean display name (removes "RAW", extra commas, etc.)
