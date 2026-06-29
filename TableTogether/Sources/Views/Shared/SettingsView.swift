@@ -14,8 +14,8 @@ private enum AppURLs {
 struct SettingsView: View {
     @Environment(\.managedObjectContext) private var viewContext
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.privateDataManager) private var privateDataManager
-    @Environment(\.calendarService) private var calendarService
+    @Environment(PrivateDataManager.self) private var privateDataManager
+    @Environment(CalendarService.self) private var calendarService
     private var persistenceController: PersistenceController { PersistenceController.shared }
 
     /// App version shown in the About section, read from the bundle (CFBundleShortVersionString)
@@ -63,7 +63,7 @@ struct SettingsView: View {
 
     /// Personal settings from private storage
     private var settings: PersonalSettings {
-        privateDataManager?.settings ?? PersonalSettings()
+        privateDataManager.settings
     }
 
     var body: some View {
@@ -168,7 +168,7 @@ struct SettingsView: View {
                         get: { settings.showMacroInsights },
                         set: { newValue in
                             Task {
-                                await privateDataManager?.setShowMacroInsights(newValue)
+                                await privateDataManager.setShowMacroInsights(newValue)
                             }
                         }
                     ))
@@ -200,7 +200,7 @@ struct SettingsView: View {
                                 .foregroundStyle(Theme.Colors.primary)
                             Text("Calendar Sync")
                             Spacer()
-                            Text(calendarService?.settings.isEnabled == true ? "On" : "Off")
+                            Text(calendarService.settings.isEnabled ? "On" : "Off")
                                 .foregroundStyle(Theme.Colors.textSecondary)
                         }
                     }
@@ -525,4 +525,6 @@ private struct BackfillAlertsModifier: ViewModifier {
 #Preview {
     SettingsView()
         .environment(\.managedObjectContext, PersistenceController.preview.viewContext)
+        .environment(PrivateDataManager())
+        .environment(CalendarService.shared)
 }

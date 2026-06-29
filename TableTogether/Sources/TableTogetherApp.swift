@@ -36,8 +36,8 @@ struct TableTogetherApp: App {
         WindowGroup {
             ContentView()
                 .environment(\.managedObjectContext, persistenceController.viewContext)
-                .environment(\.privateDataManager, privateDataManager)
-                .environment(\.calendarService, calendarService)
+                .environment(privateDataManager)
+                .environment(calendarService)
                 .environment(\.deepLinkMealSlotId, $deepLinkMealSlotId)
                 .preferredColorScheme(selectedColorScheme)
                 .task {

@@ -11,7 +11,7 @@ import EventKit
 /// - View sync status
 /// - Manually sync or clear events
 struct CalendarSettingsView: View {
-    @Environment(\.calendarService) private var calendarService
+    @Environment(CalendarService.self) private var calendarService
     @Environment(\.managedObjectContext) private var viewContext
 
     @State private var showingCalendarPicker = false
@@ -21,7 +21,7 @@ struct CalendarSettingsView: View {
     @State private var showingSyncSuccess = false
 
     private var service: CalendarService {
-        calendarService ?? CalendarService.shared
+        calendarService
     }
 
     var body: some View {
@@ -364,4 +364,5 @@ struct ReminderPickerView: View {
     NavigationStack {
         CalendarSettingsView()
     }
+    .environment(CalendarService.shared)
 }

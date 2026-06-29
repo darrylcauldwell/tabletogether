@@ -11,7 +11,7 @@ import HealthKit
 /// and are never shared with other household members.
 struct InsightsView: View {
     @Environment(\.managedObjectContext) private var viewContext
-    @Environment(\.privateDataManager) private var privateDataManager
+    @Environment(PrivateDataManager.self) private var privateDataManager
     @State private var healthService = HealthKitService.shared
 
     @FetchRequest(sortDescriptors: [SortDescriptor(\.displayName)]) private var users: FetchedResults<User>
@@ -28,12 +28,12 @@ struct InsightsView: View {
 
     /// Personal settings from private storage
     private var settings: PersonalSettings {
-        privateDataManager?.settings ?? PersonalSettings()
+        privateDataManager.settings
     }
 
     /// Meal logs from private storage
     private var weeklyLogs: [PrivateMealLog] {
-        privateDataManager?.mealLogs ?? []
+        privateDataManager.mealLogs
     }
 
     /// Recipe lookup for macro calculations
@@ -128,8 +128,8 @@ struct InsightsView: View {
                 #endif
             }
             .task {
-                await privateDataManager?.fetchCurrentWeekLogs()
-                await privateDataManager?.fetchSettings()
+                await privateDataManager.fetchCurrentWeekLogs()
+                await privateDataManager.fetchSettings()
             }
         }
     }
@@ -587,4 +587,5 @@ struct CalorieEstimateCard: View {
 #Preview {
     InsightsView()
         .environment(\.managedObjectContext, PersistenceController.preview.viewContext)
+        .environment(PrivateDataManager())
 }

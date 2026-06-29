@@ -4,7 +4,7 @@ import CloudKit
 // MARK: - Macro Goals Editor
 
 struct MacroGoalsEditor: View {
-    @Environment(\.privateDataManager) private var privateDataManager
+    @Environment(PrivateDataManager.self) private var privateDataManager
 
     @State private var calorieText = ""
     @State private var proteinText = ""
@@ -12,7 +12,7 @@ struct MacroGoalsEditor: View {
     @State private var fatText = ""
 
     private var settings: PersonalSettings {
-        privateDataManager?.settings ?? PersonalSettings()
+        privateDataManager.settings
     }
 
     var body: some View {
@@ -56,7 +56,7 @@ struct MacroGoalsEditor: View {
             Section {
                 Button("Clear All Goals", role: .destructive) {
                     Task {
-                        await privateDataManager?.clearGoals()
+                        await privateDataManager.clearGoals()
                         loadCurrentValues()
                     }
                 }
@@ -88,7 +88,7 @@ struct MacroGoalsEditor: View {
         updated.dailyProteinTarget = Int(proteinText)
         updated.dailyCarbTarget = Int(carbText)
         updated.dailyFatTarget = Int(fatText)
-        await privateDataManager?.saveSettings(updated)
+        await privateDataManager.saveSettings(updated)
     }
 }
 

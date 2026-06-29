@@ -6,7 +6,7 @@ import CoreData
 ///
 /// All meal log data is personal and stored in CloudKit private database.
 struct MealLogView: View {
-    @Environment(\.privateDataManager) private var privateDataManager
+    @Environment(PrivateDataManager.self) private var privateDataManager
     @FetchRequest(sortDescriptors: [SortDescriptor(\.title)]) private var recipes: FetchedResults<Recipe>
     @FetchRequest(sortDescriptors: [SortDescriptor(\.dayOfWeekRaw), SortDescriptor(\.mealTypeRaw)]) private var mealSlots: FetchedResults<MealSlot>
     @FetchRequest(sortDescriptors: [SortDescriptor(\.displayName)]) private var users: FetchedResults<User>
@@ -21,7 +21,7 @@ struct MealLogView: View {
     }
 
     private var weeklyLogs: [PrivateMealLog] {
-        return privateDataManager?.mealLogs ?? []
+        return privateDataManager.mealLogs
     }
 
     private var recipeLookup: SimpleRecipeLookup {
@@ -128,7 +128,7 @@ struct MealLogView: View {
                 Button("Delete", role: .destructive) {
                     if let log = logToDelete {
                         Task {
-                            await privateDataManager?.deleteMealLog(log)
+                            await privateDataManager.deleteMealLog(log)
                         }
                     }
                     logToDelete = nil
@@ -137,10 +137,10 @@ struct MealLogView: View {
                 Text("This meal log entry will be permanently removed.")
             }
             .task {
-                await privateDataManager?.fetchCurrentWeekLogs()
+                await privateDataManager.fetchCurrentWeekLogs()
                 // Auto-populate from plan
-                if let manager = privateDataManager, let user = currentUser {
-                    await manager.syncPlannedMeals(slots: Array(mealSlots), currentUser: user)
+                if let user = currentUser {
+                    await privateDataManager.syncPlannedMeals(slots: Array(mealSlots), currentUser: user)
                 }
             }
         }
@@ -169,12 +169,12 @@ struct MealLogView: View {
                                 recipeLookup: recipeLookup,
                                 onConfirm: {
                                     Task {
-                                        await privateDataManager?.updateLogStatus(log, status: .consumed)
+                                        await privateDataManager.updateLogStatus(log, status: .consumed)
                                     }
                                 },
                                 onSkip: {
                                     Task {
-                                        await privateDataManager?.updateLogStatus(log, status: .skipped)
+                                        await privateDataManager.updateLogStatus(log, status: .skipped)
                                     }
                                 }
                             )
@@ -211,7 +211,7 @@ struct MealLogView: View {
                                 .contextMenu {
                                     Button {
                                         Task {
-                                            await privateDataManager?.updateLogStatus(log, status: .consumed)
+                                            await privateDataManager.updateLogStatus(log, status: .consumed)
                                         }
                                     } label: {
                                         Label("Mark as Eaten", systemImage: "checkmark.circle")
@@ -361,4 +361,5 @@ struct MealLogView: View {
 #Preview {
     MealLogView()
         .environment(\.managedObjectContext, PersistenceController.preview.viewContext)
+        .environment(PrivateDataManager())
 }

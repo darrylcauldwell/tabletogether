@@ -520,15 +520,6 @@ final class PrivateDataManager {
     }
 }
 
-// MARK: - Environment Key
-
-private struct PrivateDataManagerKey: EnvironmentKey {
-    static let defaultValue: PrivateDataManager? = nil
-}
-
-extension EnvironmentValues {
-    var privateDataManager: PrivateDataManager? {
-        get { self[PrivateDataManagerKey.self] }
-        set { self[PrivateDataManagerKey.self] = newValue }
-    }
-}
+// PrivateDataManager is injected as a non-optional @Observable via
+// `.environment(privateDataManager)` and read with `@Environment(PrivateDataManager.self)`,
+// so no custom EnvironmentKey is needed.

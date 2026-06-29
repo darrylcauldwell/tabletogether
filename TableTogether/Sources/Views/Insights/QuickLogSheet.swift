@@ -15,7 +15,7 @@ enum LogEntryMode: Hashable {
 /// If connected to Apple Health, nutrition data is also written to HealthKit.
 struct QuickLogSheet: View {
     @Environment(\.managedObjectContext) private var viewContext
-    @Environment(\.privateDataManager) private var privateDataManager
+    @Environment(PrivateDataManager.self) private var privateDataManager
     @Environment(\.dismiss) private var dismiss
     @State private var healthService = HealthKitService.shared
     @State private var estimator = MealEstimatorService()
@@ -82,7 +82,7 @@ struct QuickLogSheet: View {
 
     private var recentMeals: [RecentMealItem] {
         // Get unique recent meals from private storage
-        guard let manager = privateDataManager else { return [] }
+        let manager = privateDataManager
 
         var seen = Set<String>()
         var items: [RecentMealItem] = []
@@ -291,7 +291,7 @@ struct QuickLogSheet: View {
     }
 
     private func logMeal() async {
-        guard let manager = privateDataManager else { return }
+        let manager = privateDataManager
 
         let log: PrivateMealLog
         var calories: Int?

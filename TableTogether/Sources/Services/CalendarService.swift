@@ -556,17 +556,8 @@ enum CalendarSyncError: LocalizedError {
     }
 }
 
-// MARK: - Environment Key
-
-struct CalendarServiceKey: EnvironmentKey {
-    static let defaultValue: CalendarService? = nil
-}
-
-extension EnvironmentValues {
-    var calendarService: CalendarService? {
-        get { self[CalendarServiceKey.self] }
-        set { self[CalendarServiceKey.self] = newValue }
-    }
-}
+// CalendarService is injected as a non-optional @Observable via
+// `.environment(calendarService)` and read with `@Environment(CalendarService.self)`,
+// so no custom EnvironmentKey is needed.
 
 // Note: ArchetypeType.color and IngredientCategory.color are defined in Color+Extensions.swift
