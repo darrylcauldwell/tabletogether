@@ -85,8 +85,9 @@ struct InsightsView: View {
                         .padding(.horizontal)
                     }
 
-                    // Calorie estimate card (when HealthKit data is available)
-                    if healthService.isAuthorized && healthService.estimatedDailyCalories != nil {
+                    // Calorie estimate card — shown whenever an estimate can be computed,
+                    // whether from HealthKit data or manually-entered weight/height/age.
+                    if healthService.estimatedDailyCalories != nil {
                         CalorieEstimateCard(healthService: healthService)
                             .padding(.horizontal)
                     }

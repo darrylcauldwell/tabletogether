@@ -163,23 +163,35 @@ final class HealthKitService {
             HKCharacteristicType(.dateOfBirth)
         ]
 
-        // Types to write (nutrition data)
-        let writeTypes: Set<HKSampleType> = [
-            HKQuantityType(.dietaryEnergyConsumed),
-            HKQuantityType(.dietaryProtein),
-            HKQuantityType(.dietaryCarbohydrates),
-            HKQuantityType(.dietaryFatTotal)
-        ]
-
         do {
-            try await healthStore.requestAuthorization(toShare: writeTypes, read: readTypes)
-            isAuthorized = true
+            try await healthStore.requestAuthorization(toShare: Self.nutritionWriteTypes, read: readTypes)
+            // requestAuthorization does NOT throw when the user denies access, so
+            // "the call returned" is not the same as "we're authorized". Derive the
+            // flag from the actual write status, which gates HealthKit writes.
+            isAuthorized = hasWriteAuthorization
 
             // Fetch initial data after authorization
             await fetchAllHealthData()
         } catch {
             errorMessage = "Failed to authorize HealthKit: \(error.localizedDescription)"
             isAuthorized = false
+        }
+    }
+
+    /// Nutrition sample types the app writes to HealthKit.
+    private static let nutritionWriteTypes: Set<HKSampleType> = [
+        HKQuantityType(.dietaryEnergyConsumed),
+        HKQuantityType(.dietaryProtein),
+        HKQuantityType(.dietaryCarbohydrates),
+        HKQuantityType(.dietaryFatTotal)
+    ]
+
+    /// Whether every nutrition write type is actually granted. Unlike the request
+    /// completing, this reflects real permission and is queryable on launch without
+    /// re-prompting.
+    private var hasWriteAuthorization: Bool {
+        Self.nutritionWriteTypes.allSatisfy {
+            healthStore.authorizationStatus(for: $0) == .sharingAuthorized
         }
     }
 
@@ -362,6 +374,13 @@ final class HealthKitService {
 
     private init() {
         checkAuthorizationStatus()
+        // Restore the connected state without re-prompting: write authorization is
+        // queryable on launch, so a previously-connected user isn't shown the
+        // "Connect to Apple Health" prompt again and their metric/estimate cards reappear.
+        if hasWriteAuthorization {
+            isAuthorized = true
+            Task { await fetchAllHealthData() }
+        }
     }
 }
 
