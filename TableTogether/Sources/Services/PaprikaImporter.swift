@@ -176,6 +176,9 @@ final class PaprikaImporter {
             progress = "Done"
 
         } catch {
+            // Discard any uncommitted inserts so a failed import doesn't leave partial
+            // state pending in the context.
+            context.rollback()
             errorMessage = error.localizedDescription
         }
 

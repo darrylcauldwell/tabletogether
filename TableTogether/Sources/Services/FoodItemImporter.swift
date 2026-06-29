@@ -173,7 +173,11 @@ final class FoodItemImporter {
         do {
             try context.save()
         } catch {
+            // Nothing was committed — roll back and report zero imported rather than a
+            // false success count with the inserts still pending in the context.
+            context.rollback()
             errors.append("Save failed: \(error.localizedDescription)")
+            return FoodItemImportResult(imported: 0, skipped: skipped, errors: errors)
         }
 
         return FoodItemImportResult(imported: imported, skipped: skipped, errors: errors)
