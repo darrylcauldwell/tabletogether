@@ -72,6 +72,7 @@ struct CompactNavigationView: View {
         }
     }()
     @State private var showSettings = false
+    @Environment(\.deepLinkMealSlotId) private var deepLinkMealSlotId
 
     var body: some View {
         TabView(selection: $selectedTab) {
@@ -128,6 +129,13 @@ struct CompactNavigationView: View {
         .sheet(isPresented: $showSettings) {
             SettingsView()
         }
+        .onChange(of: deepLinkMealSlotId?.wrappedValue) { _, slotId in
+            // A tabletogether://meal/{id} deep link opens the meal planner. Reset the
+            // id afterwards so re-tapping the same link navigates again.
+            guard slotId != nil else { return }
+            selectedTab = .plan
+            deepLinkMealSlotId?.wrappedValue = nil
+        }
     }
 }
 
@@ -156,6 +164,7 @@ struct RegularNavigationView: View {
     @State private var columnVisibility: NavigationSplitViewVisibility = .doubleColumn
     @State private var sidebarMode: SidebarMode = .navigation
     @State private var showSettings = false
+    @Environment(\.deepLinkMealSlotId) private var deepLinkMealSlotId
 
     var body: some View {
         NavigationSplitView(columnVisibility: $columnVisibility) {
@@ -169,6 +178,14 @@ struct RegularNavigationView: View {
         }
         .navigationSplitViewStyle(.balanced)
         .tint(Theme.Colors.primary)
+        .onChange(of: deepLinkMealSlotId?.wrappedValue) { _, slotId in
+            // A tabletogether://meal/{id} deep link opens the meal planner. Reset the
+            // id afterwards so re-tapping the same link navigates again.
+            guard slotId != nil else { return }
+            selectedSection = .plan
+            sidebarMode = .navigation
+            deepLinkMealSlotId?.wrappedValue = nil
+        }
         #if targetEnvironment(macCatalyst)
         .onReceive(NotificationCenter.default.publisher(for: .navigateToSection)) { notification in
             if let section = notification.object as? SidebarSection {
