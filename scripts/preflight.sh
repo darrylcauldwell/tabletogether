@@ -76,10 +76,19 @@ fi
 
 TV_VERSIONS=$(grep "MARKETING_VERSION" TableTogetherTV/TableTogetherTV.xcodeproj/project.pbxproj 2>/dev/null | sed 's/.*= //' | sed 's/;.*//' | sort -u)
 TV_COUNT=$(echo "$TV_VERSIONS" | wc -l | tr -d ' ')
+TV_VERSION=$(echo "$TV_VERSIONS" | tr -d ' "' | head -1)
 if [ "$TV_COUNT" -le 1 ]; then
-  pass "tvOS MARKETING_VERSION = $(echo "$TV_VERSIONS" | tr -d ' ')"
+  pass "tvOS MARKETING_VERSION = $TV_VERSION"
 else
   fail "Multiple tvOS MARKETING_VERSION values: $TV_VERSIONS"
+fi
+
+# Cross-target check: iOS (project.yml) and tvOS (pbxproj) must agree. The Fastfile
+# now derives its version from project.yml, so it can't drift independently.
+if [ -n "$IOS_VERSION" ] && [ -n "$TV_VERSION" ] && [ "$IOS_VERSION" != "$TV_VERSION" ]; then
+  fail "iOS ($IOS_VERSION) and tvOS ($TV_VERSION) MARKETING_VERSION differ"
+else
+  pass "iOS and tvOS MARKETING_VERSION agree ($IOS_VERSION)"
 fi
 
 # --- Stage 2: Metadata Limits ---

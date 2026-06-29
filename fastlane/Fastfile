@@ -1,6 +1,8 @@
 default_platform(:ios)
 
-MARKETING_VERSION = "1.2"
+# Single source of truth: read the marketing version from project.yml so the
+# Fastfile can never drift from the iOS target's MARKETING_VERSION.
+MARKETING_VERSION = File.read(File.expand_path("../../project.yml", __FILE__))[/MARKETING_VERSION:\s*"?([\d.]+)"?/, 1]
 
 platform :ios do
   desc "Push a new beta build to TestFlight"
