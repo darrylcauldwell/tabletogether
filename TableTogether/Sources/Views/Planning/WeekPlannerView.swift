@@ -151,31 +151,21 @@ struct WeekPlannerView: View {
     private func copyFromLastWeek() {
         guard let previousWeekStart = Calendar.current.date(byAdding: .weekOfYear, value: -1, to: currentWeekStart),
               let previousPlan = weekPlans.first(where: { Calendar.current.isDate($0.weekStartDate, inSameDayAs: previousWeekStart) }),
-              let currentPlan = currentWeekPlan else { return }
+              let currentPlan = currentWeekPlan,
+              let user = currentUser else { return }
 
-        for previousSlot in previousPlan.slotsArray {
-            if let currentSlot = currentPlan.slotsArray.first(where: { $0.dayOfWeek == previousSlot.dayOfWeek && $0.mealType == previousSlot.mealType }) {
-                currentSlot.recipes = previousSlot.recipes
-                currentSlot.archetype = previousSlot.archetype
-                currentSlot.customMealName = previousSlot.customMealName
-                currentSlot.servingsPlanned = previousSlot.servingsPlanned
-                currentSlot.modifiedAt = Date()
-            }
-        }
-
+        // Route through the model mutator so plate components are carried over and
+        // modifiedBy is set, instead of inlining a recipes-only copy.
+        currentPlan.copyFrom(previousPlan, by: user)
         viewContext.saveWithLogging(context: "copy from last week")
     }
 
     private func clearWeek() {
-        guard let weekPlan = currentWeekPlan else { return }
+        guard let weekPlan = currentWeekPlan, let user = currentUser else { return }
 
-        for slot in weekPlan.slotsArray {
-            slot.recipes = NSSet()
-            slot.archetype = nil
-            slot.customMealName = nil
-            slot.modifiedAt = Date()
-        }
-
+        // Route through clearAll so plate components are deleted (not orphaned) and
+        // modifiedBy is set.
+        weekPlan.clearAll(by: user)
         viewContext.saveWithLogging(context: "clear week")
     }
 }

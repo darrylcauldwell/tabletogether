@@ -137,6 +137,29 @@ public class MealSlotComponent: NSManagedObject {
         }
     }
 
+    // MARK: - Copy
+
+    /// Creates a deep copy of this component attached to another slot (for copy-week).
+    /// Setting `slot` updates the inverse `components` relationship automatically.
+    @discardableResult
+    func copy(to destinationSlot: MealSlot, in context: NSManagedObjectContext) -> MealSlotComponent {
+        let entity = NSEntityDescription.entity(forEntityName: "MealSlotComponent", in: context)!
+        let copy = MealSlotComponent(entity: entity, insertInto: context)
+        copy.id = UUID()
+        copy.slot = destinationSlot
+        copy.recipe = self.recipe
+        copy.ingredient = self.ingredient
+        copy.foodItem = self.foodItem
+        copy.portionScale = self.portionScale
+        copy.quantity = self.quantity
+        copy.unit = self.unit
+        copy.portionLabel = self.portionLabel
+        copy.order = self.order
+        copy.createdAt = Date()
+        copy.modifiedAt = Date()
+        return copy
+    }
+
     // MARK: - Convenience Initializers
 
     /// Create a recipe component (a portion of a recipe on the plate).

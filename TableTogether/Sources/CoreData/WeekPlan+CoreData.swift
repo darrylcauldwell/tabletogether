@@ -156,9 +156,23 @@ public class WeekPlan: NSManagedObject {
                 }
                 matchingSlot.servingsPlanned = otherSlot.servingsPlanned
                 matchingSlot.archetype = otherSlot.archetype
+                copyComponents(from: otherSlot, to: matchingSlot)
             }
         }
         modifiedAt = Date()
+    }
+
+    /// Replaces the destination slot's plate components with deep copies of the source's,
+    /// so copy-week carries multi-component meals over instead of dropping them.
+    private func copyComponents(from source: MealSlot, to destination: MealSlot) {
+        guard let context = managedObjectContext else { return }
+        for existing in destination.storedComponents {
+            context.delete(existing)
+        }
+        destination.components = NSSet()
+        for component in source.storedComponents {
+            component.copy(to: destination, in: context)
+        }
     }
 
     func clearAll(by user: User) {

@@ -189,6 +189,11 @@ public class MealSlot: NSManagedObject {
         self.recipes = NSSet()
         self.customMealName = nil
         self.isSkipped = false
+        // Delete any plate components too, otherwise they're orphaned but still shown.
+        for component in storedComponents {
+            managedObjectContext?.delete(component)
+        }
+        self.components = NSSet()
         self.modifiedAt = Date()
         self.modifiedBy = user
     }
