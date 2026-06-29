@@ -98,10 +98,12 @@ final class PersistenceController {
                 // Stable per-participant ID. Prefer the CloudKit user record name if
                 // available; fall back to email, then phone, then a positional index
                 // so two pending invitations don't collapse into one row.
-                let participantID = participant.userIdentity.userRecordID?.recordName
-                    ?? email
-                    ?? phone
-                    ?? "pending-\(index)"
+                let participantID = Self.participantID(
+                    recordName: participant.userIdentity.userRecordID?.recordName,
+                    email: email,
+                    phone: phone,
+                    index: index
+                )
 
                 return HouseholdMember(
                     id: participantID,
@@ -557,10 +559,12 @@ final class PersistenceController {
             .filter { $0.role != .owner }
             .enumerated()
         let resolved = pendingParticipants.first { index, participant in
-            let id = participant.userIdentity.userRecordID?.recordName
-                ?? participant.userIdentity.lookupInfo?.emailAddress
-                ?? participant.userIdentity.lookupInfo?.phoneNumber
-                ?? "pending-\(index)"
+            let id = Self.participantID(
+                recordName: participant.userIdentity.userRecordID?.recordName,
+                email: participant.userIdentity.lookupInfo?.emailAddress,
+                phone: participant.userIdentity.lookupInfo?.phoneNumber,
+                index: index
+            )
             return id == memberID
         }
 
@@ -771,7 +775,15 @@ final class PersistenceController {
     }
 
     /// Check whether a CKError indicates stale zone references.
-    private nonisolated func isStaleZoneError(_ error: Error?) -> Bool {
+    /// Stable per-participant ID: prefer the CloudKit user record name, then email,
+    /// then phone, then a positional fallback so two pending invitations (all-nil
+    /// identity) don't collapse into one row. Shared by householdMembers and
+    /// removeParticipant so the two can never disagree.
+    nonisolated static func participantID(recordName: String?, email: String?, phone: String?, index: Int) -> String {
+        recordName ?? email ?? phone ?? "pending-\(index)"
+    }
+
+    nonisolated func isStaleZoneError(_ error: Error?) -> Bool {
         guard let error else { return false }
         let nsError = error as NSError
 
