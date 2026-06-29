@@ -424,10 +424,20 @@ final class PersistenceController {
     /// that is preferable to data loss. Users can recover via "Reset All Sync Data"
     /// in CloudKit Diagnostics, which clears local stores and re-downloads from CloudKit.
     func fetchExistingShare() async {
-        guard let privateStore = privatePersistentStore else { return }
+        // The owner's share lives in the private store; a participant's accepted share
+        // lives in the shared store. Check both — querying only the private store left
+        // participants with blank isSharing/participantCount/householdMembers and made
+        // stop-sharing cleanup (which keys off existingShare) unreachable for them.
+        var stores: [NSPersistentStore] = []
+        if let privateStore = privatePersistentStore { stores.append(privateStore) }
+        if let sharedStore = sharedPersistentStore { stores.append(sharedStore) }
+        guard !stores.isEmpty else { return }
 
         do {
-            let shares = try container.fetchShares(in: privateStore)
+            var shares: [CKShare] = []
+            for store in stores {
+                shares.append(contentsOf: try container.fetchShares(in: store))
+            }
 
             if shares.contains(where: { $0.url == nil }) {
                 AppLogger.sharing.fault("Found orphaned share(s) with nil URL — filtering out. Use 'Reset All Sync Data' to clean up.")
