@@ -55,6 +55,12 @@ struct MealSlotEditorSheet: View {
 
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") {
+                        // Edits are applied live to the managed object via onChange, so
+                        // Cancel must discard them — otherwise they stay dirty in the
+                        // context and get persisted by the next save anywhere. The app
+                        // saves after each edit elsewhere, so the context is normally
+                        // clean apart from this sheet's pending changes.
+                        viewContext.rollback()
                         dismiss()
                     }
                 }
