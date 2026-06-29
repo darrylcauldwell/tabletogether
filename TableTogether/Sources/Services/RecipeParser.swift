@@ -407,44 +407,11 @@ final class BasicRecipeParser: RecipeParserProtocol {
     private func parseIngredientString(_ string: String) -> ParsedIngredient {
         let trimmed = string.trimmingCharacters(in: .whitespacesAndNewlines)
 
-        // Try to extract quantity and unit
-        var quantity: Double = 1
-        var unit: MeasurementUnit = .piece
-        var name = trimmed
+        // Shared tokenizer: normalizes unicode fractions, converts imperial weights to
+        // metric, and disambiguates the single-letter T/t (tablespoon vs teaspoon).
+        let (quantity, unit, remainder) = ParserUtilities.parseLeadingQuantityAndUnit(trimmed)
+        var name = remainder
         var preparationNote: String?
-
-        // Common patterns: "1 cup flour", "2 tablespoons butter", "1/2 teaspoon salt"
-        let patterns: [(String, MeasurementUnit)] = [
-            (#"^([\d./]+)\s*(?:cups?|c\.?)\s+"#, .cup),
-            (#"^([\d./]+)\s*(?:tablespoons?|tbsp?\.?|T\.?)\s+"#, .tablespoon),
-            (#"^([\d./]+)\s*(?:teaspoons?|tsp?\.?|t\.?)\s+"#, .teaspoon),
-            (#"^([\d./]+)\s*(?:grams?|g\.?)\s+"#, .gram),
-            (#"^([\d./]+)\s*(?:kg|kilograms?)\s+"#, .kilogram),
-            (#"^([\d./]+)\s*(?:ml|milliliters?)\s+"#, .milliliter),
-            (#"^([\d./]+)\s*(?:l|liters?)\s+"#, .liter),
-            (#"^([\d./]+)\s*(?:pieces?|pcs?\.?)\s+"#, .piece),
-            (#"^([\d./]+)\s*(?:slices?)\s+"#, .slice),
-            (#"^([\d./]+)\s*(?:cloves?)\s+"#, .clove),
-            (#"^([\d./]+)\s*(?:bunch(?:es)?)\s+"#, .bunch),
-            (#"^([\d./]+)\s*(?:pinch(?:es)?)\s+"#, .pinch),
-            (#"^([\d./]+)\s+"#, .piece) // Fallback for just a number
-        ]
-
-        for (pattern, matchedUnit) in patterns {
-            if let regex = try? NSRegularExpression(pattern: pattern, options: .caseInsensitive),
-               let match = regex.firstMatch(in: trimmed, options: [], range: NSRange(trimmed.startIndex..., in: trimmed)) {
-
-                if let quantityRange = Range(match.range(at: 1), in: trimmed) {
-                    let quantityStr = String(trimmed[quantityRange])
-                    quantity = parseFraction(quantityStr)
-                }
-
-                unit = matchedUnit
-                name = String(trimmed[trimmed.index(trimmed.startIndex, offsetBy: match.range.length)...])
-                    .trimmingCharacters(in: .whitespacesAndNewlines)
-                break
-            }
-        }
 
         // Check for preparation notes (after comma)
         if let commaIndex = name.firstIndex(of: ",") {
@@ -470,29 +437,6 @@ final class BasicRecipeParser: RecipeParserProtocol {
             isOptional: isOptional,
             originalText: trimmed
         )
-    }
-
-    private func parseFraction(_ string: String) -> Double {
-        // Handle fractions like "1/2", "1 1/2", etc.
-        let components = string.components(separatedBy: " ")
-
-        var total: Double = 0
-
-        for component in components {
-            if component.contains("/") {
-                let fractionParts = component.components(separatedBy: "/")
-                if fractionParts.count == 2,
-                   let numerator = Double(fractionParts[0]),
-                   let denominator = Double(fractionParts[1]),
-                   denominator != 0 {
-                    total += numerator / denominator
-                }
-            } else if let num = Double(component) {
-                total += num
-            }
-        }
-
-        return total > 0 ? total : 1
     }
 
     /// Suggests archetypes based on recipe characteristics.

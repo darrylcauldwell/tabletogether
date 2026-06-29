@@ -45,33 +45,10 @@ enum IngredientParser {
     static func parse(_ text: String) -> RecipeEditorView.EditableIngredientItem {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
 
-        let patterns: [(String, MeasurementUnit)] = [
-            (#"^([\d./]+)\s*(?:cups?|c\.?)\s+"#, .cup),
-            (#"^([\d./]+)\s*(?:tablespoons?|tbsp?\.?|T\.?)\s+"#, .tablespoon),
-            (#"^([\d./]+)\s*(?:teaspoons?|tsp?\.?|t\.?)\s+"#, .teaspoon),
-            (#"^([\d./]+)\s*(?:grams?|g\.?)\s+"#, .gram),
-            (#"^([\d./]+)\s*(?:kg|kilograms?)\s+"#, .kilogram),
-            (#"^([\d./]+)\s*(?:ml|milliliters?)\s+"#, .milliliter),
-            (#"^([\d./]+)\s*(?:l|liters?)\s+"#, .liter),
-            (#"^([\d./]+)\s+"#, .piece),
-        ]
-
-        var quantity: Double = 1
-        var unit: MeasurementUnit = .piece
-        var name = trimmed
-
-        for (pattern, matchedUnit) in patterns {
-            if let regex = try? NSRegularExpression(pattern: pattern, options: .caseInsensitive),
-               let match = regex.firstMatch(in: trimmed, options: [], range: NSRange(trimmed.startIndex..., in: trimmed)) {
-                if let quantityRange = Range(match.range(at: 1), in: trimmed) {
-                    quantity = parseFraction(String(trimmed[quantityRange]))
-                }
-                unit = matchedUnit
-                name = String(trimmed[trimmed.index(trimmed.startIndex, offsetBy: match.range.length)...])
-                    .trimmingCharacters(in: .whitespacesAndNewlines)
-                break
-            }
-        }
+        // Shared tokenizer: normalizes unicode fractions, converts imperial weights to
+        // metric, and disambiguates the single-letter T/t (tablespoon vs teaspoon).
+        let (quantity, unit, remainder) = ParserUtilities.parseLeadingQuantityAndUnit(trimmed)
+        var name = remainder
 
         var preparationNote = ""
         if let commaIndex = name.firstIndex(of: ",") {

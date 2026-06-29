@@ -518,7 +518,9 @@ final class PaprikaImporter {
 
     /// Parses a single Paprika ingredient line like "2 cups flour, sifted" or "1/2 tsp salt".
     private func parseIngredientLine(_ line: String) -> ParsedIngredient {
-        var text = line.trimmingCharacters(in: .whitespaces)
+        // Normalize unicode fractions (½ -> 1/2) so the numeric parser, which matches
+        // only [\d], doesn't lose them.
+        var text = ParserUtilities.normalizeUnicodeFractions(line.trimmingCharacters(in: .whitespaces))
 
         // Split off preparation note after comma
         var preparationNote: String?
@@ -534,15 +536,16 @@ final class PaprikaImporter {
         var remaining = text
         let quantity = parseLeadingQuantity(&remaining)
 
-        // Try to match a unit from the remaining text
-        let (unit, afterUnit) = parseLeadingUnit(remaining)
+        // Try to match a unit from the remaining text. Imperial weights carry a
+        // multiplier that converts the quantity to the matched metric unit.
+        let (unit, afterUnit, multiplier) = parseLeadingUnit(remaining)
 
         // Whatever is left is the ingredient name
         let name = afterUnit.trimmingCharacters(in: .whitespaces)
 
         return ParsedIngredient(
             name: name.isEmpty ? text : name,
-            quantity: quantity ?? 1,
+            quantity: (quantity ?? 1) * multiplier,
             unit: unit ?? .piece,
             preparationNote: preparationNote
         )
@@ -597,40 +600,43 @@ final class PaprikaImporter {
         return nil
     }
 
-    /// Attempts to match a unit keyword at the start of the text.
-    /// Returns the matched MeasurementUnit and the remaining text after the unit.
-    private func parseLeadingUnit(_ text: String) -> (MeasurementUnit?, String) {
+    /// Attempts to match a unit keyword at the start of the text. Returns the matched
+    /// MeasurementUnit, the remaining text after the unit, and a quantity multiplier
+    /// (1 except for imperial weights, which convert to metric — e.g. oz -> g at 28.35x).
+    private func parseLeadingUnit(_ text: String) -> (unit: MeasurementUnit?, remaining: String, multiplier: Double) {
         let lower = text.lowercased()
 
-        // Order matters: longer matches first to avoid partial matches
-        let unitMappings: [(keywords: [String], unit: MeasurementUnit)] = [
-            (["tablespoons", "tablespoon", "tbsps", "tbsp", "tbs"], .tablespoon),
-            (["teaspoons", "teaspoon", "tsps", "tsp"], .teaspoon),
-            (["kilograms", "kilogram", "kgs", "kg"], .kilogram),
-            (["milliliters", "millilitres", "milliliter", "millilitre", "mls", "ml"], .milliliter),
-            (["liters", "litres", "liter", "litre", "lts", "lt", "l"], .liter),
-            (["grams", "gram", "gms", "gm", "g"], .gram),
-            (["cups", "cup"], .cup),
-            (["pieces", "piece", "pcs", "pc"], .piece),
-            (["slices", "slice"], .slice),
-            (["cloves", "clove"], .clove),
-            (["bunches", "bunch"], .bunch),
-            (["pinches", "pinch"], .pinch),
+        // Order matters: longer matches first to avoid partial matches.
+        let unitMappings: [(keywords: [String], unit: MeasurementUnit, multiplier: Double)] = [
+            (["tablespoons", "tablespoon", "tbsps", "tbsp", "tbs"], .tablespoon, 1),
+            (["teaspoons", "teaspoon", "tsps", "tsp"], .teaspoon, 1),
+            (["kilograms", "kilogram", "kgs", "kg"], .kilogram, 1),
+            (["milliliters", "millilitres", "milliliter", "millilitre", "mls", "ml"], .milliliter, 1),
+            (["liters", "litres", "liter", "litre", "lts", "lt", "l"], .liter, 1),
+            (["grams", "gram", "gms", "gm", "g"], .gram, 1),
+            (["ounces", "ounce", "oz"], .gram, ParserUtilities.gramsPerOunce),
+            (["pounds", "pound", "lbs", "lb"], .kilogram, ParserUtilities.kilogramsPerPound),
+            (["cups", "cup"], .cup, 1),
+            (["pieces", "piece", "pcs", "pc"], .piece, 1),
+            (["slices", "slice"], .slice, 1),
+            (["cloves", "clove"], .clove, 1),
+            (["bunches", "bunch"], .bunch, 1),
+            (["pinches", "pinch"], .pinch, 1),
         ]
 
-        for (keywords, unit) in unitMappings {
+        for (keywords, unit, multiplier) in unitMappings {
             for keyword in keywords {
                 if lower.hasPrefix(keyword) {
                     let afterKeyword = lower.index(lower.startIndex, offsetBy: keyword.count)
                     // Ensure the keyword is followed by a word boundary (space, end, or period)
                     if afterKeyword == lower.endIndex || lower[afterKeyword] == " " || lower[afterKeyword] == "." {
                         let remaining = String(text[text.index(text.startIndex, offsetBy: keyword.count)...])
-                        return (unit, remaining.trimmingCharacters(in: .whitespaces))
+                        return (unit, remaining.trimmingCharacters(in: .whitespaces), multiplier)
                     }
                 }
             }
         }
 
-        return (nil, text)
+        return (nil, text, 1)
     }
 }

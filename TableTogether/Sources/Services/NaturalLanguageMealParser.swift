@@ -15,7 +15,11 @@ final class NaturalLanguageMealParser {
 
     /// Parses a meal description into individual ingredients.
     func parse(description: String) async -> MealParseResult {
-        let input = description.trimmingCharacters(in: .whitespacesAndNewlines)
+        // Normalize unicode fractions (½ -> 1/2) up front so quantity parsing, which
+        // matches only [\d], doesn't lose them.
+        let input = ParserUtilities.normalizeUnicodeFractions(
+            description.trimmingCharacters(in: .whitespacesAndNewlines)
+        )
         guard !input.isEmpty else {
             return MealParseResult(originalDescription: description, ingredients: [], isAIParsed: false)
         }

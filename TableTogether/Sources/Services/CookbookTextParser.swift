@@ -179,54 +179,14 @@ struct CookbookTextParser {
     // MARK: - Ingredient Parsing
 
     static func parseIngredientLine(_ line: String) -> ParsedIngredient? {
-        var trimmed = line.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmed = line.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return nil }
 
-        // Normalize unicode fractions
-        trimmed = normalizeUnicodeFractions(trimmed)
-
-        var quantity: Double = 1
-        var unit: MeasurementUnit = .piece
-        var name = trimmed
+        // Shared tokenizer: normalizes unicode fractions, converts imperial weights to
+        // metric, and disambiguates the single-letter T/t (tablespoon vs teaspoon).
+        let (quantity, unit, remainder) = ParserUtilities.parseLeadingQuantityAndUnit(trimmed)
+        var name = remainder
         var preparationNote: String?
-
-        // Each pattern maps to a unit and a quantity multiplier. Imperial weights have no
-        // dedicated MeasurementUnit case, so we convert the *quantity* to the metric unit
-        // (e.g. 4 oz -> 113.4 g) rather than aliasing the token to a wrong-magnitude unit.
-        // Aliasing oz->gram / lb->kg 1:1 silently produced 28x / 2.2x macro errors.
-        let gramsPerOunce = 28.349523
-        let kilogramsPerPound = 0.45359237
-        let patterns: [(String, MeasurementUnit, Double)] = [
-            (#"^([\d./]+\s*[\d./]*)\s*(?:cups?|c\.?)\s+"#, .cup, 1),
-            (#"^([\d./]+\s*[\d./]*)\s*(?:tablespoons?|tbsp?\.?|T\.?)\s+"#, .tablespoon, 1),
-            (#"^([\d./]+\s*[\d./]*)\s*(?:teaspoons?|tsp?\.?|t\.?)\s+"#, .teaspoon, 1),
-            (#"^([\d./]+\s*[\d./]*)\s*(?:grams?|g\.?)\s+"#, .gram, 1),
-            (#"^([\d./]+\s*[\d./]*)\s*(?:kg|kilograms?)\s+"#, .kilogram, 1),
-            (#"^([\d./]+\s*[\d./]*)\s*(?:ml|milliliters?|millilitres?)\s+"#, .milliliter, 1),
-            (#"^([\d./]+\s*[\d./]*)\s*(?:l|liters?|litres?)\s+"#, .liter, 1),
-            (#"^([\d./]+\s*[\d./]*)\s*(?:oz|ounces?)\s+"#, .gram, gramsPerOunce),
-            (#"^([\d./]+\s*[\d./]*)\s*(?:lbs?|pounds?)\s+"#, .kilogram, kilogramsPerPound),
-            (#"^([\d./]+\s*[\d./]*)\s*(?:pieces?|pcs?\.?)\s+"#, .piece, 1),
-            (#"^([\d./]+\s*[\d./]*)\s*(?:slices?)\s+"#, .slice, 1),
-            (#"^([\d./]+\s*[\d./]*)\s*(?:cloves?)\s+"#, .clove, 1),
-            (#"^([\d./]+\s*[\d./]*)\s*(?:bunch(?:es)?)\s+"#, .bunch, 1),
-            (#"^([\d./]+\s*[\d./]*)\s*(?:pinch(?:es)?)\s+"#, .pinch, 1),
-            (#"^([\d./]+\s*[\d./]*)\s+"#, .piece, 1) // Fallback: just a number
-        ]
-
-        for (pattern, matchedUnit, quantityMultiplier) in patterns {
-            if let regex = try? NSRegularExpression(pattern: pattern, options: .caseInsensitive),
-               let match = regex.firstMatch(in: trimmed, options: [], range: NSRange(trimmed.startIndex..., in: trimmed)) {
-
-                if let quantityRange = Range(match.range(at: 1), in: trimmed) {
-                    quantity = parseFraction(String(trimmed[quantityRange])) * quantityMultiplier
-                }
-                unit = matchedUnit
-                name = String(trimmed[trimmed.index(trimmed.startIndex, offsetBy: match.range.length)...])
-                    .trimmingCharacters(in: .whitespacesAndNewlines)
-                break
-            }
-        }
 
         // Extract preparation note after comma
         if let commaIndex = name.firstIndex(of: ",") {
@@ -255,41 +215,6 @@ struct CookbookTextParser {
     }
 
     // MARK: - Helpers
-
-    private static func parseFraction(_ string: String) -> Double {
-        let components = string.trimmingCharacters(in: .whitespaces)
-            .components(separatedBy: " ")
-            .filter { !$0.isEmpty }
-
-        var total: Double = 0
-        for component in components {
-            if component.contains("/") {
-                let parts = component.components(separatedBy: "/")
-                if parts.count == 2,
-                   let num = Double(parts[0]),
-                   let denom = Double(parts[1]),
-                   denom != 0 {
-                    total += num / denom
-                }
-            } else if let num = Double(component) {
-                total += num
-            }
-        }
-        return total > 0 ? total : 1
-    }
-
-    private static func normalizeUnicodeFractions(_ text: String) -> String {
-        var result = text
-        let replacements: [(String, String)] = [
-            ("½", "1/2"), ("¼", "1/4"), ("¾", "3/4"),
-            ("⅓", "1/3"), ("⅔", "2/3"), ("⅛", "1/8"),
-            ("⅜", "3/8"), ("⅝", "5/8"), ("⅞", "7/8"),
-        ]
-        for (unicode, ascii) in replacements {
-            result = result.replacingOccurrences(of: unicode, with: ascii)
-        }
-        return result
-    }
 
     private static func cleanInstructionLine(_ line: String) -> String {
         var cleaned = line.trimmingCharacters(in: .whitespacesAndNewlines)
