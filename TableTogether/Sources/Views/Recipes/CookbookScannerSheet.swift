@@ -383,6 +383,7 @@ struct CookbookScannerSheet: View {
 
         recipe.household = households.first
 
+        viewContext.saveWithLogging(context: "import scanned recipe")
         AppLogger.scanner.info("Imported scanned recipe: \(editableTitle)")
         dismiss()
     }

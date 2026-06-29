@@ -420,18 +420,26 @@ struct RecipeImportSheet: View {
             recipe.addToRecipeIngredients(recipeIngredient)
         }
 
-        // Fetch and store image if available
+        recipe.household = households.first
+
+        // Persist the recipe + ingredients now; without this the import is lost on
+        // termination and doesn't sync until some unrelated later save.
+        viewContext.saveWithLogging(context: "import recipe")
+
+        // Fetch and store the image asynchronously, then persist it too.
         if let imageURL = parsed.imageURL {
             Task {
-                if let imageData = try? await fetchImageData(from: imageURL) {
+                do {
+                    let imageData = try await fetchImageData(from: imageURL)
                     await MainActor.run {
                         recipe.imageData = imageData
+                        viewContext.saveWithLogging(context: "import recipe image")
                     }
+                } catch {
+                    AppLogger.parser.error("Failed to fetch imported recipe image: \(error.localizedDescription)")
                 }
             }
         }
-
-        recipe.household = households.first
 
         dismiss()
     }
