@@ -198,17 +198,20 @@ enum ArchetypeType: String, Codable, CaseIterable, Hashable, Sendable, Identifia
     /// Alias for iconName for compatibility.
     var icon: String { iconName }
 
-    /// Accent color hex code for the archetype.
+    /// Accent color hex for the archetype. Single source of truth — `ArchetypeType.color`
+    /// derives from this. Uses the muted Material-300 palette (per the UX colour guardrails)
+    /// rather than the previous saturated set (Gold/Yellow/Sky-Blue), which also disagreed
+    /// with `.color` and showed the same archetype in two colours on different screens.
     var colorHex: String {
         switch self {
-        case .quickWeeknight: return "#FFB347"  // Orange
-        case .comfort: return "#DDA0DD"         // Plum
-        case .leftovers: return "#87CEEB"       // Sky Blue
-        case .newExperimental: return "#FFD700" // Gold
-        case .bigBatch: return "#98D8C8"        // Mint
-        case .familyFavorite: return "#F7DC6F"  // Yellow
-        case .lightFresh: return "#90EE90"      // Light Green
-        case .slowCook: return "#D2691E"        // Chocolate
+        case .quickWeeknight: return "4FC3F7"   // Light blue
+        case .comfort: return "FFB74D"          // Orange
+        case .leftovers: return "81C784"        // Green
+        case .newExperimental: return "BA68C8"  // Purple
+        case .bigBatch: return "4DB6AC"         // Teal
+        case .familyFavorite: return "F06292"   // Pink
+        case .lightFresh: return "AED581"       // Light green
+        case .slowCook: return "A1887F"         // Brown
         }
     }
 }

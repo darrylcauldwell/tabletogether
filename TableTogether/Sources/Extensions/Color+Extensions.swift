@@ -130,16 +130,9 @@ extension IngredientCategory {
 // MARK: - Archetype Colors
 
 extension ArchetypeType {
+    /// Derived from `colorHex`, the single source of truth, so the badge, slot views
+    /// and design-system helper can't show the same archetype in different colours.
     var color: Color {
-        switch self {
-        case .quickWeeknight: return Color(hex: "4FC3F7") // Light blue
-        case .comfort: return Color(hex: "FFB74D") // Orange
-        case .leftovers: return Color(hex: "81C784") // Green
-        case .newExperimental: return Color(hex: "BA68C8") // Purple
-        case .bigBatch: return Color(hex: "4DB6AC") // Teal
-        case .familyFavorite: return Color(hex: "F06292") // Pink
-        case .lightFresh: return Color(hex: "AED581") // Light green
-        case .slowCook: return Color(hex: "A1887F") // Brown
-        }
+        Color(hex: colorHex)
     }
 }
