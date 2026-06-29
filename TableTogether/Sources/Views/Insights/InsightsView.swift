@@ -23,7 +23,7 @@ struct InsightsView: View {
 
     /// Current user (for display purposes only - avatar shown in toolbar)
     private var currentUser: User? {
-        users.first // In a real app, would match CloudKit identity
+        User.current(in: users)
     }
 
     /// Personal settings from private storage

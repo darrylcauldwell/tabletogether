@@ -19,7 +19,7 @@ struct WeekPlannerView: View {
     @State private var showingRecentChanges: Bool = false
 
     private var currentUser: User? {
-        users.first // In production, would be based on CloudKit identity
+        User.current(in: users)
     }
 
     private var currentWeekPlan: WeekPlan? {

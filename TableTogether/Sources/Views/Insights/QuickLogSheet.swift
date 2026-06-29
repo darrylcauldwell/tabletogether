@@ -46,7 +46,7 @@ struct QuickLogSheet: View {
     @State private var isSmartEstimate = false
 
     private var currentUser: User? {
-        users.first
+        User.current(in: users)
     }
 
     /// Today's planned meals where the current user is assigned

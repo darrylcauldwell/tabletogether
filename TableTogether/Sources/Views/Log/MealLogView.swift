@@ -17,7 +17,7 @@ struct MealLogView: View {
     @State private var showDeleteConfirmation = false
 
     private var currentUser: User? {
-        users.first
+        User.current(in: users)
     }
 
     private var weeklyLogs: [PrivateMealLog] {

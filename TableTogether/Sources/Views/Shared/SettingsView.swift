@@ -58,7 +58,7 @@ struct SettingsView: View {
     }
 
     var currentUser: User? {
-        users.first // In a real app, would be based on CloudKit identity
+        User.current(in: users)
     }
 
     /// Personal settings from private storage

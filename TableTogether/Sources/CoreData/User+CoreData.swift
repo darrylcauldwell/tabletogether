@@ -59,6 +59,21 @@ public class User: NSManagedObject {
     /// duplicate user records.
     static let defaultMeID = UUID(uuidString: "00000000-0000-0000-0000-000000000002")!
 
+    /// Resolves the local device's user. The on-device "Me" user is seeded with
+    /// `defaultMeID`, so prefer that over an alphabetical `users.first`, which could
+    /// pick another household member after sharing — and, via syncPlannedMeals, seed
+    /// that member's planned meals into this device's private log. Falls back to the
+    /// first user when no "Me" user exists yet.
+    ///
+    /// Note: once a household is shared, every member's "Me" user carries the same
+    /// `defaultMeID`, so this cannot fully disambiguate members; that needs per-device
+    /// unique user IDs (a separate change). This still fixes the common single-device
+    /// and pre-share case where an alphabetically-earlier member was treated as current.
+    static func current<S: Sequence>(in users: S) -> User? where S.Element == User {
+        let all = Array(users)
+        return all.first(where: { $0.id == User.defaultMeID }) ?? all.first
+    }
+
     // MARK: - Convenience Initializer
 
     @discardableResult
