@@ -208,55 +208,80 @@ public class WeekPlan: NSManagedObject {
     // MARK: - Grocery List Generation
 
     func generateGroceryList(context: NSManagedObjectContext) {
-        var neededIngredients: [UUID: (ingredient: Ingredient, quantity: Double, unit: MeasurementUnit, slots: [MealSlot])] = [:]
+        // Key derived items by (ingredient identity, unit). The same ingredient
+        // measured in two units (e.g. grams in one recipe, tbsp in another) must
+        // stay as two separate line items — there's no unit-conversion table to
+        // combine them honestly. Ingredients with no linked Ingredient master fall
+        // back to their free-text name so they aren't silently dropped.
+        struct Key: Hashable {
+            let identity: String
+            let unit: MeasurementUnit
+        }
+        func identity(forIngredient ingredient: Ingredient?, name: String?) -> String? {
+            if let ingredient { return ingredient.id.uuidString }
+            let trimmed = (name ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+            return trimmed.isEmpty ? nil : "name:" + trimmed.lowercased()
+        }
 
+        var needed: [Key: (ingredient: Ingredient?, name: String?, quantity: Double, unit: MeasurementUnit, slots: [MealSlot])] = [:]
         for slot in plannedSlots {
             for recipe in slot.recipesArray {
                 for ri in recipe.recipeIngredientsArray {
-                    guard let ingredient = ri.ingredient else { continue }
+                    guard let id = identity(forIngredient: ri.ingredient, name: ri.customName) else { continue }
+                    let key = Key(identity: id, unit: ri.unit)
                     let scaled = ri.scaledQuantity(originalServings: Int(recipe.servings), newServings: Int(slot.servingsPlanned))
-                    if var entry = neededIngredients[ingredient.id] {
+                    if var entry = needed[key] {
                         entry.quantity += scaled
                         entry.slots.append(slot)
-                        neededIngredients[ingredient.id] = entry
+                        needed[key] = entry
                     } else {
-                        neededIngredients[ingredient.id] = (ingredient, scaled, ri.unit, [slot])
+                        needed[key] = (ri.ingredient, ri.customName, scaled, ri.unit, [slot])
                     }
                 }
             }
         }
 
-        // Index existing derived items
-        var existingByIngredient: [UUID: GroceryItem] = [:]
+        // Index existing derived items by the same composite key.
+        var existingByKey: [Key: GroceryItem] = [:]
         var duplicates: [GroceryItem] = []
         for item in groceryItemsArray where !item.isManuallyAdded {
-            if let ingredientID = item.ingredient?.id {
-                if existingByIngredient[ingredientID] == nil {
-                    existingByIngredient[ingredientID] = item
-                } else {
-                    duplicates.append(item)
-                }
+            guard let id = identity(forIngredient: item.ingredient, name: item.customName) else { continue }
+            let key = Key(identity: id, unit: item.unit)
+            if existingByKey[key] == nil {
+                existingByKey[key] = item
+            } else {
+                duplicates.append(item)
             }
         }
 
-        // Update existing or create new
-        var keepIDs = Set<UUID>()
-        for (ingredientID, info) in neededIngredients {
-            keepIDs.insert(ingredientID)
-            if let existing = existingByIngredient[ingredientID] {
+        // Update existing (preserving checked/pantry state) or create new.
+        var keepKeys = Set<Key>()
+        for (key, info) in needed {
+            keepKeys.insert(key)
+            if let existing = existingByKey[key] {
                 existing.quantity = info.quantity
                 existing.unit = info.unit
                 existing.sourceSlots = NSSet(array: info.slots)
+            } else if let ingredient = info.ingredient {
+                let newItem = GroceryItem(context: context, ingredient: ingredient, quantity: info.quantity, unit: info.unit)
+                newItem.sourceSlots = NSSet(array: info.slots)
+                newItem.weekPlan = self
+                addToGroceryItems(newItem)
             } else {
-                let newItem = GroceryItem(context: context, ingredient: info.ingredient, quantity: info.quantity, unit: info.unit)
+                // Unlinked ingredient — create a recipe-derived item from its free-text
+                // name. The customName initializer marks items manually-added; clear
+                // that so this still reconciles as a derived item on the next regenerate.
+                let newItem = GroceryItem(context: context, customName: info.name ?? "Unknown Item", quantity: info.quantity, unit: info.unit, category: .other)
+                newItem.isManuallyAdded = false
+                newItem.pantryChecked = false
                 newItem.sourceSlots = NSSet(array: info.slots)
                 newItem.weekPlan = self
                 addToGroceryItems(newItem)
             }
         }
 
-        // Remove obsolete
-        for (ingredientID, item) in existingByIngredient where !keepIDs.contains(ingredientID) {
+        // Remove obsolete derived items.
+        for (key, item) in existingByKey where !keepKeys.contains(key) {
             duplicates.append(item)
         }
         for item in duplicates {

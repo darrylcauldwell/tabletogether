@@ -46,10 +46,14 @@ final class GroceryListGenerator {
 
                 // Process each recipe ingredient
                 for recipeIngredient in recipe.recipeIngredientsArray {
-                    // Skip if ingredient is nil
-                    guard let ingredient = recipeIngredient.ingredient else { continue }
+                    // Prefer the linked Ingredient master; fall back to the free-text
+                    // customName so unlinked rows aren't silently dropped from the list.
+                    let ingredient = recipeIngredient.ingredient
+                    guard let identity = Self.identity(ingredient: ingredient, name: recipeIngredient.customName) else {
+                        continue
+                    }
 
-                    let key = AggregationKey(ingredientID: ingredient.id, unit: recipeIngredient.unit)
+                    let key = AggregationKey(identity: identity, unit: recipeIngredient.unit)
                     let adjustedQuantity = recipeIngredient.quantity * servingMultiplier
 
                     if var existing = ingredientAggregation[key] {
@@ -61,6 +65,9 @@ final class GroceryListGenerator {
                         // Create new aggregation entry
                         ingredientAggregation[key] = IngredientAggregation(
                             ingredient: ingredient,
+                            fallbackName: ingredient == nil
+                                ? recipeIngredient.customName?.trimmingCharacters(in: .whitespacesAndNewlines)
+                                : nil,
                             totalQuantity: adjustedQuantity,
                             unit: recipeIngredient.unit,
                             sourceSlots: [slot]
@@ -72,9 +79,24 @@ final class GroceryListGenerator {
 
         // Convert aggregations to GroceryItems
         var groceryItems = ingredientAggregation.values.map { aggregation -> GroceryItem in
+            guard let ingredient = aggregation.ingredient else {
+                // Unlinked ingredient — recipe-derived item from its free-text name.
+                let item = GroceryItem(
+                    context: context,
+                    customName: aggregation.fallbackName ?? "Unknown Item",
+                    quantity: aggregation.totalQuantity,
+                    unit: aggregation.unit,
+                    category: .other,
+                    weekPlan: weekPlan
+                )
+                item.isManuallyAdded = false
+                item.pantryChecked = false
+                item.sourceSlots = NSSet(array: aggregation.sourceSlots)
+                return item
+            }
             let item = GroceryItem(
                 context: context,
-                ingredient: aggregation.ingredient,
+                ingredient: ingredient,
                 quantity: aggregation.totalQuantity,
                 unit: aggregation.unit,
                 weekPlan: weekPlan
@@ -122,20 +144,32 @@ final class GroceryListGenerator {
             }
             .sorted { $0.0.sortOrder < $1.0.sortOrder }
     }
+
+    /// Aggregation identity for a recipe ingredient: the linked master's id when
+    /// present, otherwise its normalised free-text name. Returns nil when there is
+    /// neither — nothing to put on the list.
+    fileprivate static func identity(ingredient: Ingredient?, name: String?) -> String? {
+        if let ingredient { return ingredient.id.uuidString }
+        let trimmed = (name ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? nil : "name:" + trimmed.lowercased()
+    }
 }
 
 // MARK: - Private Types
 
 /// Composite key for grocery aggregation: quantities only combine when both the
-/// ingredient and its unit match, so mismatched units aren't silently summed.
+/// ingredient identity and its unit match, so mismatched units aren't silently
+/// summed. Identity is the linked master's id, or the free-text name when unlinked.
 private struct AggregationKey: Hashable {
-    let ingredientID: UUID
+    let identity: String
     let unit: MeasurementUnit
 }
 
-/// Internal type for aggregating ingredient quantities.
+/// Internal type for aggregating ingredient quantities. `ingredient` is nil for
+/// unlinked rows, in which case `fallbackName` carries the free-text name.
 private struct IngredientAggregation {
-    let ingredient: Ingredient
+    let ingredient: Ingredient?
+    let fallbackName: String?
     var totalQuantity: Double
     let unit: MeasurementUnit
     var sourceSlots: [MealSlot]
