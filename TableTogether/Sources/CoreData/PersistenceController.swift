@@ -918,7 +918,9 @@ final class PersistenceController {
         let privateDescription = NSPersistentStoreDescription(
             url: storeDirectory.appendingPathComponent(Self.privateStoreFileName)
         )
-        privateDescription.configuration = "Private"
+        // Use the default configuration (no named configuration) to match init()
+        // and resyncSharedStore — the model defines no "Private"/"Shared"
+        // configurations, so naming one would throw 134080 and reload nothing.
         privateDescription.cloudKitContainerOptions = NSPersistentCloudKitContainerOptions(
             containerIdentifier: Self.cloudKitContainerID
         )
@@ -930,7 +932,6 @@ final class PersistenceController {
         let sharedDescription = NSPersistentStoreDescription(
             url: storeDirectory.appendingPathComponent(Self.sharedStoreFileName)
         )
-        sharedDescription.configuration = "Shared"
         let sharedOptions = NSPersistentCloudKitContainerOptions(
             containerIdentifier: Self.cloudKitContainerID
         )
@@ -941,6 +942,8 @@ final class PersistenceController {
 
         container.persistentStoreDescriptions = [privateDescription, sharedDescription]
 
+        // Clear any prior load error so the post-reload check reflects only this attempt.
+        storeLoadError = nil
         container.loadPersistentStores { description, error in
             if let error {
                 AppLogger.sync.fault("Failed to reload store '\(description.configuration ?? "default")': \(error.localizedDescription)")
@@ -956,11 +959,19 @@ final class PersistenceController {
                 }
             }
         }
-        sharedStoreHealthy = true
-        recoveryAttemptCount = 0
-        lastSyncEvents.removeAll()
+
+        // loadPersistentStores fires its completion synchronously for SQLite stores,
+        // so storeLoadError is current here. Only declare recovery healthy if the
+        // reload actually succeeded — otherwise we'd mask a genuine load failure.
         syncRecoveryInProgress = false
-        AppLogger.sync.info("All sync data reset — waiting for CloudKit re-sync")
+        if storeLoadError == nil {
+            sharedStoreHealthy = true
+            recoveryAttemptCount = 0
+            lastSyncEvents.removeAll()
+            AppLogger.sync.info("All sync data reset — waiting for CloudKit re-sync")
+        } else {
+            AppLogger.sync.fault("All sync data reset failed to reload stores: \(storeLoadError ?? "unknown")")
+        }
     }
 }
 
