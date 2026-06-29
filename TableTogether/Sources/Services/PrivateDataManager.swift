@@ -57,6 +57,20 @@ final class PrivateDataManager {
     /// Local cache keys
     private let mealLogsCacheKey = "PrivateMealLogsCache"
     private let lastSyncKey = "PrivateDataLastSync"
+    private let pendingMealLogIDsKey = "PrivateMealLogPendingIDs"
+
+    /// IDs of meal logs whose CloudKit save failed and still need to sync. Persisted
+    /// so a never-synced offline log survives relaunch and isn't dropped by a later
+    /// successful fetch that replaces the in-memory array.
+    private var pendingMealLogIDs: Set<UUID> {
+        get {
+            let strings = UserDefaults.standard.stringArray(forKey: pendingMealLogIDsKey) ?? []
+            return Set(strings.compactMap { UUID(uuidString: $0) })
+        }
+        set {
+            UserDefaults.standard.set(newValue.map { $0.uuidString }, forKey: pendingMealLogIDsKey)
+        }
+    }
 
     // MARK: - Initialization
 
@@ -107,8 +121,16 @@ final class PrivateDataManager {
             settingsRecord = record
 
             if let fetchedSettings = PersonalSettings(from: record) {
-                settings = fetchedSettings
-                settings.saveToLocalCache()
+                // Last-write-wins: only adopt the server copy when it's at least as new
+                // as local. Otherwise a prior failed save's local edits would be
+                // clobbered by stale server data on the next fetch.
+                if fetchedSettings.modifiedAt >= settings.modifiedAt {
+                    settings = fetchedSettings
+                    settings.saveToLocalCache()
+                } else {
+                    AppLogger.cloudKit.info("Local settings newer than server — re-pushing local copy")
+                    await saveSettings(settings)
+                }
                 updateLastSync()
             }
         } catch let error as CKError where error.code == .unknownItem {
@@ -219,11 +241,25 @@ final class PrivateDataManager {
                 }
             }
 
-            mealLogs = fetchedLogs.sorted { $0.date > $1.date }
+            // Preserve unsynced local logs (failed saves) that fall in this range and
+            // aren't on the server yet, so a successful fetch doesn't drop them. Without
+            // this, the wholesale replace below would silently lose a never-synced log.
+            let fetchedIDs = Set(fetchedLogs.map { $0.id })
+            let pending = pendingMealLogIDs
+            let preserved = mealLogs.filter {
+                pending.contains($0.id) && !fetchedIDs.contains($0.id)
+                    && $0.date >= startDate && $0.date <= endDate
+            }
+            mealLogs = (fetchedLogs + preserved).sorted { $0.date > $1.date }
             mealLogRecords = fetchedRecords
             saveMealLogsToCache()
             updateLastSync()
             clearSyncError()
+
+            // Best-effort: re-push the preserved pending logs now that the network is up.
+            for log in preserved {
+                await saveMealLog(log)
+            }
         } catch let error as CKError {
             AppLogger.cloudKit.error("Failed to fetch meal logs", error: error)
             setSyncError(from: error)
@@ -267,16 +303,19 @@ final class PrivateDataManager {
         do {
             let savedRecord = try await privateDatabase.save(record)
             mealLogRecords[log.id] = savedRecord
+            pendingMealLogIDs.remove(log.id)
             updateLastSync()
             clearSyncError()
         } catch let error as CKError {
             AppLogger.cloudKit.error("Failed to save meal log", error: error)
+            pendingMealLogIDs.insert(log.id)
             setSyncError(from: error)
-            // Local state already updated
+            // Local state already updated; tracked as pending for retry on next fetch.
         } catch {
             AppLogger.cloudKit.error("Failed to save meal log", error: error)
+            pendingMealLogIDs.insert(log.id)
             syncError = SyncError(message: "Meal log saved locally. Will sync when online.")
-            // Local state already updated
+            // Local state already updated; tracked as pending for retry on next fetch.
         }
     }
 
@@ -285,6 +324,7 @@ final class PrivateDataManager {
         // Update local state immediately
         mealLogs.removeAll { $0.id == log.id }
         mealLogRecords.removeValue(forKey: log.id)
+        pendingMealLogIDs.remove(log.id)
         saveMealLogsToCache()
 
         // Skip CloudKit if unavailable
