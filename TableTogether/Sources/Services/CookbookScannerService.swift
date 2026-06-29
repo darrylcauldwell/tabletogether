@@ -81,11 +81,18 @@ final class CookbookScannerService {
     // MARK: - Vision OCR
 
     private func recognizeText(from images: [UIImage]) async throws -> String {
+        // Extract CGImages on the main actor, then run the OCR off it.
+        let cgImages = images.compactMap { $0.cgImage }
+        return try await Self.recognizeText(fromCGImages: cgImages)
+    }
+
+    /// Runs Vision OCR off the main actor. `handler.perform` is synchronous, CPU-heavy
+    /// work (accurate recognition with language correction); marking this `nonisolated`
+    /// hops it to the cooperative thread pool instead of freezing the UI for seconds.
+    private nonisolated static func recognizeText(fromCGImages cgImages: [CGImage]) async throws -> String {
         var allPageTexts: [String] = []
 
-        for image in images {
-            guard let cgImage = image.cgImage else { continue }
-
+        for cgImage in cgImages {
             let pageText = try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<String, Error>) in
                 let request = VNRecognizeTextRequest { request, error in
                     if let error = error {
