@@ -134,7 +134,7 @@ if [ -n "$MODEL_CHANGES" ]; then
   echo "  ║    2. Open the CloudKit Dashboard and deploy Dev → Production    ║"
   echo "  ║                                                                  ║"
   echo "  ║  Dashboard: https://icloud.developer.apple.com/dashboard/        ║"
-  echo "  ║  Container: iCloud.com.darrylcauldwell.tabletogether             ║"
+  echo "  ║  Container: iCloud.dev.dreamfold.tabletogether                   ║"
   echo "  ║                                                                  ║"
   echo "  ╚══════════════════════════════════════════════════════════════════╝"
   echo ""
