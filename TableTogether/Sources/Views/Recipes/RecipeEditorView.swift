@@ -502,7 +502,9 @@ struct RecipeEditorView: View {
             }
             existingRecipe.recipeIngredients = NSSet()
 
-            // Add updated ingredients
+            // Add updated ingredients, linking each to an Ingredient master so they
+            // appear in generated grocery lists (mirrors the importers).
+            let resolver = RecipeIngredientResolver(context: viewContext, household: existingRecipe.household)
             for (index, editable) in editableIngredients.enumerated() {
                 let recipeIngredient = RecipeIngredient(
                     context: viewContext,
@@ -513,6 +515,7 @@ struct RecipeEditorView: View {
                     order: index,
                     customName: editable.name
                 )
+                recipeIngredient.ingredient = resolver.resolve(editable.name)
                 existingRecipe.addToRecipeIngredients(recipeIngredient)
             }
         } else {
@@ -531,7 +534,9 @@ struct RecipeEditorView: View {
                 imageData: imageData
             )
 
-            // Add ingredients
+            // Add ingredients, linking each to an Ingredient master so they appear
+            // in generated grocery lists (mirrors the importers).
+            let resolver = RecipeIngredientResolver(context: viewContext, household: households.first)
             for (index, editable) in editableIngredients.enumerated() {
                 let recipeIngredient = RecipeIngredient(
                     context: viewContext,
@@ -542,6 +547,7 @@ struct RecipeEditorView: View {
                     order: index,
                     customName: editable.name
                 )
+                recipeIngredient.ingredient = resolver.resolve(editable.name)
                 newRecipe.addToRecipeIngredients(recipeIngredient)
             }
 

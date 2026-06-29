@@ -402,7 +402,9 @@ struct RecipeImportSheet: View {
             suggestedArchetypes: Array(selectedArchetypes)
         )
 
-        // Add ingredients
+        // Add ingredients, linking each to an Ingredient master so they appear in
+        // generated grocery lists (mirrors the file importers).
+        let resolver = RecipeIngredientResolver(context: viewContext, household: households.first)
         let includedIngredients = editableIngredients.filter { $0.isIncluded }
         for (index, editable) in includedIngredients.enumerated() {
             let recipeIngredient = RecipeIngredient(
@@ -414,6 +416,7 @@ struct RecipeImportSheet: View {
                 order: index,
                 customName: editable.original.name
             )
+            recipeIngredient.ingredient = resolver.resolve(editable.original.name)
             recipe.addToRecipeIngredients(recipeIngredient)
         }
 

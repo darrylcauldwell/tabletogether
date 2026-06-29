@@ -363,6 +363,9 @@ struct CookbookScannerSheet: View {
             imageData: service.selectedPhotoData
         )
 
+        // Link each ingredient to an Ingredient master so they appear in generated
+        // grocery lists (mirrors the file importers).
+        let resolver = RecipeIngredientResolver(context: viewContext, household: households.first)
         let included = editableIngredients.filter { $0.isIncluded }
         for (index, editable) in included.enumerated() {
             let recipeIngredient = RecipeIngredient(
@@ -374,6 +377,7 @@ struct CookbookScannerSheet: View {
                 order: index,
                 customName: editable.original.name
             )
+            recipeIngredient.ingredient = resolver.resolve(editable.original.name)
             recipe.addToRecipeIngredients(recipeIngredient)
         }
 
