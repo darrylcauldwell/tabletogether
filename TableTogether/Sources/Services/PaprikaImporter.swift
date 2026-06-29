@@ -447,12 +447,14 @@ final class PaprikaImporter {
 
     // MARK: - Binary Helpers
 
+    // loadUnaligned, not load: ZIP fields sit at arbitrary byte offsets, so an
+    // aligned load(as:) would trap on a misaligned slice.
     private func readUInt16(from data: Data, at offset: Data.Index) -> UInt16 {
-        data[offset..<offset + 2].withUnsafeBytes { $0.load(as: UInt16.self) }
+        data[offset..<offset + 2].withUnsafeBytes { $0.loadUnaligned(as: UInt16.self) }
     }
 
     private func readUInt32(from data: Data, at offset: Data.Index) -> UInt32 {
-        data[offset..<offset + 4].withUnsafeBytes { $0.load(as: UInt32.self) }
+        data[offset..<offset + 4].withUnsafeBytes { $0.loadUnaligned(as: UInt32.self) }
     }
 
     // MARK: - Text Parsers
