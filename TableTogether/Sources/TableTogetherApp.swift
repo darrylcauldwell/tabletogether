@@ -142,7 +142,18 @@ struct TableTogetherApp: App {
     @MainActor
     @discardableResult
     private func ensureHousehold(context: NSManagedObjectContext) -> Household {
-        let householdRequest = NSFetchRequest<Household>(entityName: "Household")
+        // Scope every fetch here to the PRIVATE store. The shared store holds another
+        // user's household (after accepting an invitation), which has the same
+        // deterministic Household.defaultID. An unscoped fetch would treat it as a
+        // duplicate and reparent/delete its records across stores — catastrophic.
+        let privateStore = persistenceController.privatePersistentStore
+        func scopedRequest<T: NSFetchRequestResult>(_ entity: String) -> NSFetchRequest<T> {
+            let request = NSFetchRequest<T>(entityName: entity)
+            if let privateStore { request.affectedStores = [privateStore] }
+            return request
+        }
+
+        let householdRequest: NSFetchRequest<Household> = scopedRequest("Household")
         let existingHouseholds = context.fetchWithLogging(householdRequest, context: "household check")
 
         let household: Household
@@ -180,31 +191,31 @@ struct TableTogetherApp: App {
         // Link orphaned top-level records to household
         var linked = 0
 
-        for recipe in context.fetchWithLogging(NSFetchRequest<Recipe>(entityName: "Recipe"), context: "orphaned recipes") where recipe.household == nil {
+        for recipe in context.fetchWithLogging(scopedRequest("Recipe") as NSFetchRequest<Recipe>, context: "orphaned recipes") where recipe.household == nil {
             recipe.household = household
             linked += 1
         }
-        for ingredient in context.fetchWithLogging(NSFetchRequest<Ingredient>(entityName: "Ingredient"), context: "orphaned ingredients") where ingredient.household == nil {
+        for ingredient in context.fetchWithLogging(scopedRequest("Ingredient") as NSFetchRequest<Ingredient>, context: "orphaned ingredients") where ingredient.household == nil {
             ingredient.household = household
             linked += 1
         }
-        for weekPlan in context.fetchWithLogging(NSFetchRequest<WeekPlan>(entityName: "WeekPlan"), context: "orphaned week plans") where weekPlan.household == nil {
+        for weekPlan in context.fetchWithLogging(scopedRequest("WeekPlan") as NSFetchRequest<WeekPlan>, context: "orphaned week plans") where weekPlan.household == nil {
             weekPlan.household = household
             linked += 1
         }
-        for user in context.fetchWithLogging(NSFetchRequest<User>(entityName: "User"), context: "orphaned users") where user.household == nil {
+        for user in context.fetchWithLogging(scopedRequest("User") as NSFetchRequest<User>, context: "orphaned users") where user.household == nil {
             user.household = household
             linked += 1
         }
-        for archetype in context.fetchWithLogging(NSFetchRequest<MealArchetype>(entityName: "MealArchetype"), context: "orphaned archetypes") where archetype.household == nil {
+        for archetype in context.fetchWithLogging(scopedRequest("MealArchetype") as NSFetchRequest<MealArchetype>, context: "orphaned archetypes") where archetype.household == nil {
             archetype.household = household
             linked += 1
         }
-        for memory in context.fetchWithLogging(NSFetchRequest<SuggestionMemory>(entityName: "SuggestionMemory"), context: "orphaned suggestion memories") where memory.household == nil {
+        for memory in context.fetchWithLogging(scopedRequest("SuggestionMemory") as NSFetchRequest<SuggestionMemory>, context: "orphaned suggestion memories") where memory.household == nil {
             memory.household = household
             linked += 1
         }
-        for foodItem in context.fetchWithLogging(NSFetchRequest<FoodItem>(entityName: "FoodItem"), context: "orphaned food items") where foodItem.household == nil {
+        for foodItem in context.fetchWithLogging(scopedRequest("FoodItem") as NSFetchRequest<FoodItem>, context: "orphaned food items") where foodItem.household == nil {
             foodItem.household = household
             linked += 1
         }
