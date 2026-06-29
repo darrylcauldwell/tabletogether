@@ -112,6 +112,9 @@ final class PaprikaImporter {
             // Mutable so titles imported earlier in this same file are also deduped against
             // (otherwise two recipes named "Curry" in one export both import). See JSONRecipeImporter.
             var existingTitles = Set(existingRecipes.map { $0.title.lowercased() })
+            // Paprika's stable per-recipe uid is the preferred dedupe key — it survives a
+            // title edit and lets two same-named recipes (distinct uids) both import.
+            var existingUIDs = Set(existingRecipes.compactMap { $0.sourceUID })
 
             // One resolver instance for the whole import — see JSONRecipeImporter
             // for the rationale (prewarm Ingredient master cache once, reuse).
@@ -129,13 +132,23 @@ final class PaprikaImporter {
 
                 progress = "Importing \(index + 1) of \(paprikaRecipes.count)..."
 
-                // Skip duplicates by title
-                if existingTitles.contains(name.lowercased()) {
+                // Dedupe by stable uid when present (an edited title shouldn't re-import,
+                // and two same-named recipes with distinct uids should both import); fall
+                // back to title only when the export carries no uid. Register the key now
+                // so later recipes in this same file dedupe against it.
+                let uid = paprika.uid?.trimmingCharacters(in: .whitespaces)
+                if let uid, !uid.isEmpty {
+                    if existingUIDs.contains(uid) {
+                        skipped += 1
+                        continue
+                    }
+                    existingUIDs.insert(uid)
+                } else if existingTitles.contains(name.lowercased()) {
                     skipped += 1
                     continue
+                } else {
+                    existingTitles.insert(name.lowercased())
                 }
-                // Register now so later recipes in this same file dedupe against it.
-                existingTitles.insert(name.lowercased())
 
                 // Create the Recipe
                 let recipe = buildRecipe(from: paprika, context: context)
@@ -261,6 +274,11 @@ final class PaprikaImporter {
             imageData: imageData,
             isFavorite: isFavorite
         )
+
+        // Preserve Paprika's stable identifier for dedupe on re-import.
+        if let uid = paprika.uid?.trimmingCharacters(in: .whitespaces), !uid.isEmpty {
+            recipe.sourceUID = uid
+        }
 
         return recipe
     }

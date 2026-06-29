@@ -10,6 +10,9 @@ public class Recipe: NSManagedObject {
     @NSManaged public var title: String
     @NSManaged public var summary: String?
     @NSManaged public var sourceURL: URL?
+    /// Stable per-recipe identifier from the import source (e.g. Paprika's `uid`),
+    /// used to dedupe re-imports even when the title was edited.
+    @NSManaged public var sourceUID: String?
     @NSManaged public var cookbook: String?
     @NSManaged public var imageURL: URL?
     @NSManaged public var servings: Int32
