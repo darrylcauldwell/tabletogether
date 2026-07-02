@@ -305,14 +305,25 @@ struct RecipePickerView: View {
         return recipes.filter { $0.title.localizedCaseInsensitiveContains(searchText) }
     }
 
+    private var trimmedSearchText: String {
+        searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
     var body: some View {
         NavigationStack {
             List {
+                // Not everything is a recipe — "a bag of chips" should be one tap,
+                // not a dead end when no recipe matches.
+                if !trimmedSearchText.isEmpty {
+                    Section {
+                        customMealRow(trimmedSearchText)
+                    }
+                }
                 ForEach(filteredRecipes) { recipe in
                     recipeRow(recipe)
                 }
             }
-            .searchable(text: $searchText, prompt: "Search recipes")
+            .searchable(text: $searchText, prompt: "Search recipes or type a meal")
             .navigationTitle("Select Recipe")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
@@ -335,6 +346,20 @@ struct RecipePickerView: View {
             dismiss()
         } label: {
             recipeRowLabel(recipe)
+        }
+    }
+
+    private func customMealRow(_ name: String) -> some View {
+        Button {
+            slot.customMealName = name
+            slot.recipes = NSSet()
+            slot.isSkipped = false
+            slot.modifiedAt = Date()
+            dismiss()
+        } label: {
+            Label("Add \u{201C}\(name)\u{201D} as a meal", systemImage: "plus.circle")
+                .font(AppTypography.body)
+                .foregroundStyle(Theme.Colors.primary)
         }
     }
 
