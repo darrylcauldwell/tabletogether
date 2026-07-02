@@ -122,7 +122,21 @@ struct TableTogetherApp: App {
 
         let existingPlans = context.fetchWithLogging(weekPlanRequest, context: "current week plan check")
 
-        if existingPlans.isEmpty {
+        if let existingPlan = existingPlans.first {
+            // Self-heal: sync deduplication of concurrently-seeded week plans can delete
+            // slots out from under the surviving plan (arbitrary-winner + cascade), leaving
+            // a plan where "Add meal" silently no-ops. Recreate any missing slots — the
+            // deterministic slot IDs make this converge across devices.
+            let healed = existingPlan.createDefaultSlots(context: context, mealTypes: MealType.defaultPlannedMeals)
+            if healed > 0 {
+                do {
+                    try context.save()
+                    AppLogger.app.warning("Healed week plan: recreated \(healed) missing meal slots")
+                } catch {
+                    AppLogger.swiftData.error("Failed to save healed week plan slots", error: error)
+                }
+            }
+        } else {
             // Create current week plan with default slots
             let weekPlan = WeekPlan(context: context, weekStartDate: today)
             weekPlan.createDefaultSlots(context: context, mealTypes: MealType.defaultPlannedMeals)

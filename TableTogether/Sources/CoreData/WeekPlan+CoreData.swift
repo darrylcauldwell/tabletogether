@@ -126,9 +126,16 @@ public class WeekPlan: NSManagedObject {
         slotsArray.first { $0.dayOfWeek == day && $0.mealType == mealType }
     }
 
-    func createDefaultSlots(context: NSManagedObjectContext, mealTypes: [MealType] = MealType.defaultPlannedMeals) {
+    /// Creates the default slot grid for the week. Idempotent: existing slots are kept,
+    /// only missing (day, mealType) combinations are created — so this also serves as a
+    /// self-heal when sync deduplication has deleted slots out from under the plan.
+    /// Returns the number of slots created.
+    @discardableResult
+    func createDefaultSlots(context: NSManagedObjectContext, mealTypes: [MealType] = MealType.defaultPlannedMeals) -> Int {
+        var created = 0
         for day in DayOfWeek.allCases {
             for mealType in mealTypes {
+                guard slot(for: day, mealType: mealType) == nil else { continue }
                 let slotID = MealSlot.deterministicID(
                     weekStartDate: weekStartDate,
                     dayOfWeek: day,
@@ -137,9 +144,13 @@ public class WeekPlan: NSManagedObject {
                 let slot = MealSlot(context: context, id: slotID, dayOfWeek: day, mealType: mealType)
                 slot.weekPlan = self
                 addToSlots(slot)
+                created += 1
             }
         }
-        modifiedAt = Date()
+        if created > 0 {
+            modifiedAt = Date()
+        }
+        return created
     }
 
     func copyFrom(_ otherPlan: WeekPlan, by user: User) {
