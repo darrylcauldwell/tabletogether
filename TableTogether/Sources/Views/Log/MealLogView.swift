@@ -73,6 +73,15 @@ struct MealLogView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 20) {
+                    if let syncError = privateDataManager.syncError {
+                        SyncErrorBanner(
+                            error: syncError,
+                            onDismiss: { privateDataManager.dismissSyncError() },
+                            onRetry: { Task { await privateDataManager.refresh() } }
+                        )
+                        .padding(.horizontal)
+                    }
+
                     // Prominent log button
                     Button {
                         showQuickLogSheet = true

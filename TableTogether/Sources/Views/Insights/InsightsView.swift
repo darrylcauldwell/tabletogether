@@ -45,6 +45,15 @@ struct InsightsView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 20) {
+                    if let syncError = privateDataManager.syncError {
+                        SyncErrorBanner(
+                            error: syncError,
+                            onDismiss: { privateDataManager.dismissSyncError() },
+                            onRetry: { Task { await privateDataManager.refresh() } }
+                        )
+                        .padding(.horizontal)
+                    }
+
                     // Apple Health integration card
                     HealthKitCard(healthService: healthService)
                         .padding(.horizontal)
