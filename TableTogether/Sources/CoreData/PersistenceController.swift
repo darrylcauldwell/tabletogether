@@ -398,14 +398,13 @@ final class PersistenceController {
         }
 
         do {
-            try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+            let container = self.container
+            try await Self.runShareOperation(timeoutSeconds: 60) { completion in
                 container.acceptShareInvitations(from: [metadata], into: sharedStore) { _, error in
-                    if let error {
-                        continuation.resume(throwing: error)
-                    } else {
+                    if error == nil {
                         AppLogger.sharing.info("Accepted household share invitation")
-                        continuation.resume()
                     }
+                    completion(error)
                 }
             }
         } catch {
@@ -463,20 +462,58 @@ final class PersistenceController {
         return shares[object.objectID]
     }
 
-    /// Persists updates to an existing CKShare (called by UICloudSharingController delegate).
+    /// Persists updates to an existing CKShare.
     func persistUpdatedShare(_ share: CKShare) async throws {
         guard let store = privatePersistentStore ?? sharedPersistentStore else {
             throw NSError(domain: "PersistenceController", code: 3,
                           userInfo: [NSLocalizedDescriptionKey: "No persistent store available"])
         }
+        let container = self.container
+        try await Self.runShareOperation { completion in
+            container.persistUpdatedShare(share, in: store) { _, error in completion(error) }
+        }
+    }
 
+    /// Thrown when a CloudKit share operation neither completes nor fails in time —
+    /// e.g. the mirroring delegate failed to initialize, so its completion never fires.
+    struct ShareOperationTimeoutError: LocalizedError {
+        var errorDescription: String? {
+            "iCloud didn't respond. Check your connection and try again."
+        }
+    }
+
+    /// Runs a completion-handler share API off the main actor with a timeout.
+    ///
+    /// Two observed failure modes motivate this: NSPersistentCloudKitContainer's share
+    /// APIs can block their calling thread while Core Data works (a main-actor call
+    /// beachballs the app — see `CloudSharingView.createShare`), and when the mirroring
+    /// delegate never initialized their completion never fires, which would otherwise
+    /// hang the UI behind a spinner forever. The continuation is guarded to resume
+    /// exactly once whether the operation, the timeout, or both eventually fire.
+    nonisolated static func runShareOperation(
+        timeoutSeconds: Double = 30,
+        _ start: @escaping @Sendable (_ completion: @escaping @Sendable ((any Error)?) -> Void) -> Void
+    ) async throws {
+        let resumed = OSAllocatedUnfairLock(initialState: false)
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-            container.persistUpdatedShare(share, in: store) { _, error in
+            let finish: @Sendable ((any Error)?) -> Void = { error in
+                let shouldResume = resumed.withLock { alreadyResumed in
+                    if alreadyResumed { return false }
+                    alreadyResumed = true
+                    return true
+                }
+                guard shouldResume else { return }
                 if let error {
                     continuation.resume(throwing: error)
                 } else {
                     continuation.resume()
                 }
+            }
+            DispatchQueue.global(qos: .userInitiated).async {
+                start(finish)
+            }
+            DispatchQueue.global().asyncAfter(deadline: .now() + timeoutSeconds) {
+                finish(ShareOperationTimeoutError())
             }
         }
     }
@@ -521,14 +558,9 @@ final class PersistenceController {
         guard let zoneID = share.recordID.zoneID as CKRecordZone.ID? else { return }
 
         do {
-            try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-                container.purgeObjectsAndRecordsInZone(with: zoneID, in: store) { _, error in
-                    if let error {
-                        continuation.resume(throwing: error)
-                    } else {
-                        continuation.resume()
-                    }
-                }
+            let container = self.container
+            try await Self.runShareOperation { completion in
+                container.purgeObjectsAndRecordsInZone(with: zoneID, in: store) { _, error in completion(error) }
             }
             PendingInvitationStore.removeLabel(forShareRecordName: share.recordID.recordName)
             existingShare = nil
@@ -575,14 +607,9 @@ final class PersistenceController {
 
         share.removeParticipant(participant)
 
-        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-            container.persistUpdatedShare(share, in: store) { _, error in
-                if let error {
-                    continuation.resume(throwing: error)
-                } else {
-                    continuation.resume()
-                }
-            }
+        let container = self.container
+        try await Self.runShareOperation { completion in
+            container.persistUpdatedShare(share, in: store) { _, error in completion(error) }
         }
 
         // Refresh local share state so the UI updates.

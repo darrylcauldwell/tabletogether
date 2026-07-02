@@ -2,6 +2,7 @@
 import SwiftUI
 import CloudKit
 import CoreData
+import CoreTransferable
 import os
 
 /// Presents the household invitation flow.
@@ -119,6 +120,16 @@ struct CloudSharingView: View {
 private struct PreparedShare {
     let share: CKShare
     let container: CKContainer
+}
+
+/// Lets an existing CKShare be re-sent via ShareLink (used by the household member
+/// detail sheet to resend an invitation).
+extension CKShare: @retroactive Transferable {
+    public nonisolated static var transferRepresentation: some TransferRepresentation {
+        CKShareTransferRepresentation { share in
+            .existing(share, container: CKContainer(identifier: PersistenceController.cloudKitContainerID))
+        }
+    }
 }
 
 /// Calm, glass-styled invitation sheet: send the invite link via the system share

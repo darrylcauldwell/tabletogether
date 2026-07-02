@@ -10,7 +10,6 @@
 		74C047A8E7345501AC73D767 /* FoodItem+CoreData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4854FF7FA6055950A722A02E /* FoodItem+CoreData.swift */; };
 		FB1129F37C7255DEA502727E /* GroceryItem+CoreData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4831EA8B56E55178B5F0CD5A /* GroceryItem+CoreData.swift */; };
 		D31C8CB36ABE52B3B91D92A1 /* Household+CoreData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 781DC90DB6DA5D9AB7D23F26 /* Household+CoreData.swift */; };
-		DEABDF7A6E89583FA0487666 /* Household+Transferable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38D78ABD6FDF57BA8BF781E8 /* Household+Transferable.swift */; };
 		6AACCD2B3A2254678CF63EAA /* Ingredient+CoreData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 744CBB0FAA0E5F73BE00FC34 /* Ingredient+CoreData.swift */; };
 		3D0039AF55A952D8A4A599FA /* MealArchetype+CoreData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6AE7AD09AD5E51219523FC4D /* MealArchetype+CoreData.swift */; };
 		49C14B7200785C8596C7D9A3 /* MealSlot+CoreData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A2E7F13C5C25C7FA5C6DD42 /* MealSlot+CoreData.swift */; };
@@ -60,7 +59,6 @@
 		4854FF7FA6055950A722A02E /* FoodItem+CoreData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "../TableTogether/Sources/CoreData/FoodItem+CoreData.swift"; sourceTree = "<group>"; };
 		4831EA8B56E55178B5F0CD5A /* GroceryItem+CoreData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "../TableTogether/Sources/CoreData/GroceryItem+CoreData.swift"; sourceTree = "<group>"; };
 		781DC90DB6DA5D9AB7D23F26 /* Household+CoreData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "../TableTogether/Sources/CoreData/Household+CoreData.swift"; sourceTree = "<group>"; };
-		38D78ABD6FDF57BA8BF781E8 /* Household+Transferable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "../TableTogether/Sources/CoreData/Household+Transferable.swift"; sourceTree = "<group>"; };
 		744CBB0FAA0E5F73BE00FC34 /* Ingredient+CoreData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "../TableTogether/Sources/CoreData/Ingredient+CoreData.swift"; sourceTree = "<group>"; };
 		6AE7AD09AD5E51219523FC4D /* MealArchetype+CoreData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "../TableTogether/Sources/CoreData/MealArchetype+CoreData.swift"; sourceTree = "<group>"; };
 		9A2E7F13C5C25C7FA5C6DD42 /* MealSlot+CoreData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "../TableTogether/Sources/CoreData/MealSlot+CoreData.swift"; sourceTree = "<group>"; };
@@ -121,7 +119,6 @@
 				4854FF7FA6055950A722A02E /* FoodItem+CoreData.swift */,
 				4831EA8B56E55178B5F0CD5A /* GroceryItem+CoreData.swift */,
 				781DC90DB6DA5D9AB7D23F26 /* Household+CoreData.swift */,
-				38D78ABD6FDF57BA8BF781E8 /* Household+Transferable.swift */,
 				744CBB0FAA0E5F73BE00FC34 /* Ingredient+CoreData.swift */,
 				6AE7AD09AD5E51219523FC4D /* MealArchetype+CoreData.swift */,
 				9A2E7F13C5C25C7FA5C6DD42 /* MealSlot+CoreData.swift */,
@@ -241,7 +238,6 @@
 				74C047A8E7345501AC73D767 /* FoodItem+CoreData.swift in Sources */,
 				FB1129F37C7255DEA502727E /* GroceryItem+CoreData.swift in Sources */,
 				D31C8CB36ABE52B3B91D92A1 /* Household+CoreData.swift in Sources */,
-				DEABDF7A6E89583FA0487666 /* Household+Transferable.swift in Sources */,
 				6AACCD2B3A2254678CF63EAA /* Ingredient+CoreData.swift in Sources */,
 				3D0039AF55A952D8A4A599FA /* MealArchetype+CoreData.swift in Sources */,
 				49C14B7200785C8596C7D9A3 /* MealSlot+CoreData.swift in Sources */,
