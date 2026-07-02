@@ -427,8 +427,11 @@ struct RecipePickerSheet: View {
     /// Show the "use as custom meal" fallback only when the user has typed
     /// something that doesn't match any recipe title — so there's always
     /// one useful thing to do with their input.
+    // Offered whenever the user has typed, not just on zero matches — a recipe
+    // happening to contain the same word ("chips" → Tortilla Chips) must not
+    // hide the option to use the typed text as-is.
     private var showCustomMealFallback: Bool {
-        !trimmedQuery.isEmpty && filteredRecipes.isEmpty
+        !trimmedQuery.isEmpty
     }
 
     var body: some View {
@@ -474,7 +477,7 @@ struct RecipePickerSheet: View {
                             }
                         }
                     } footer: {
-                        Text("No matching recipes — save as a one-off meal name.")
+                        Text("Save as a one-off meal name — no recipe needed.")
                     }
                 }
 
