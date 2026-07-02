@@ -93,9 +93,39 @@ existing single-device data survives upgrade; offline first launch still works.
 `APP_STORE_CONNECT_SETUP.md` lists the tvOS bundle ID as
 `dev.dreamfold.tabletogethertv`; actual is `dev.dreamfold.tabletogether.tv`.
 
+## Change 5 — Share creation off the main actor (found in live testing 2026-07-02)
+
+`CloudSharingView.prepareShare()` called `container.share(_:to:)` from the main
+actor; Core Data blocks the calling thread while exporting the share zone
+(`_PFRequestExecutor wait`), freezing the UI and risking deadlock with the
+main-queue history merge. Fixed: share creation runs `nonisolated` on a
+background context. Verified live: no beachball, share created and reused
+correctly.
+
+## Live sharing test log (2026-07-02 evening)
+
+Verified on real hardware after a full dev-environment clean sheet (CloudKit
+Console zone deletion + Reset All Sync Data on Mac and iPhone):
+- Identity: fresh seed produced exactly one "Me" with the derived per-account ID
+  on the Mac; iPhone converged with no duplicate user. Derivation independently
+  recomputed and matched.
+- Recipes: 226 imported on Mac from canonical `Recipes/recipes.json`, synced to
+  iPhone (required a cold relaunch — dev push lag).
+- Share: created cleanly from Mac after Change 5; single share zone; URL arrived
+  via sync. Cross-member acceptance + private-log separation test PENDING (second
+  household member).
+
 ## Deferred (tracked, not in this spec)
 
 - Tests for dedup / store reset / sharing purge / PrivateDataManager offline paths
 - Versioned Core Data model + migration test before next schema change
 - `Household+Transferable` fatalError on malformed payload
 - In-app prompt for orphaned private-zone recovery (beyond Change 2 banner)
+- Reset All Sync Data leaves the app unseeded until relaunch — bootstrap
+  (identity resolve + ensureUserExists + archetypes) should re-run post-reset
+- Freshly created "Me" row only gets `cloudKitRecordID` annotated on next launch
+- `UICloudSharingController` renders poorly under Mac Catalyst — consider a
+  platform-appropriate share presentation on macOS
+- Audit `removeParticipant` / other CloudKit share calls for the same
+  main-thread blocking pattern fixed in Change 5 (likely cause of the
+  "revoke invite" spin observed on iPhone)
