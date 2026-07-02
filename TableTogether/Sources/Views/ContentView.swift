@@ -16,27 +16,30 @@ struct ContentView: View {
             }
         }
         .task {
+            await UserIdentity.resolveIfNeeded(context: viewContext)
             await ensureUserExists()
         }
     }
 
     @MainActor
     private func ensureUserExists() async {
-        // Skip if the default user already exists (by deterministic ID)
-        if users.contains(where: { $0.id == User.defaultMeID }) {
+        // Per-account ID once CloudKit identity is resolved; provisional otherwise.
+        let meID = UserIdentity.storedID ?? User.defaultMeID
+        if users.contains(where: { $0.id == meID }) {
             return
         }
-        // Migrate legacy random-UUID "Me" users to the deterministic ID
-        if let legacy = users.first(where: { $0.displayName == "Me" }) {
-            legacy.id = User.defaultMeID
-            viewContext.saveWithLogging(context: "migrate legacy Me user to deterministic ID")
+        // Relabel a legacy "Me" row (pre-deterministic-ID installs) — only when it is
+        // the sole user, so another household member's row can never be claimed.
+        if users.count == 1, let legacy = users.first, legacy.displayName == "Me" {
+            legacy.id = meID
+            viewContext.saveWithLogging(context: "migrate legacy Me user to resolved ID")
             return
         }
 
         let household = households.first
         let user = User(
             context: viewContext,
-            id: User.defaultMeID,
+            id: meID,
             displayName: "Me",
             avatarEmoji: "",
             avatarColorHex: "34C759"

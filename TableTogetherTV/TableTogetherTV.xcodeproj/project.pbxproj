@@ -40,6 +40,7 @@
 		B976F518A6505E288D358225 /* AppLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3ADBD49CE1358E5A08BB466 /* AppLogger.swift */; };
 		884B7543FB805D6DB831C4D1 /* PendingInvitationStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21DEA84429595EDB837EE166 /* PendingInvitationStore.swift */; };
 		A4F8CBE7446C54D59FD81B42 /* RecipeIngredientResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7C92C05B494570B80502250 /* RecipeIngredientResolver.swift */; };
+		6D59ABBA15A354D896191779 /* UserIdentity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46FA904076705A65A484A0F4 /* UserIdentity.swift */; };
 		44C01FC9FE82592F92878104 /* AppTypography.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D566145F64C5AC0BD07CAB7 /* AppTypography.swift */; };
 		BA1EF3402A5154919F74B8C3 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5AD1822310295147B4847C80 /* Theme.swift */; };
 		7984C9BEE74258A6849CD7D8 /* TVDemoDataSeeder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FF83528F6585E1EB750689D /* TVDemoDataSeeder.swift */; };
@@ -89,6 +90,7 @@
 		C3ADBD49CE1358E5A08BB466 /* AppLogger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "../TableTogether/Sources/Services/AppLogger.swift"; sourceTree = "<group>"; };
 		21DEA84429595EDB837EE166 /* PendingInvitationStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "../TableTogether/Sources/Services/PendingInvitationStore.swift"; sourceTree = "<group>"; };
 		D7C92C05B494570B80502250 /* RecipeIngredientResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "../TableTogether/Sources/Services/RecipeIngredientResolver.swift"; sourceTree = "<group>"; };
+		46FA904076705A65A484A0F4 /* UserIdentity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "../TableTogether/Sources/Services/UserIdentity.swift"; sourceTree = "<group>"; };
 		1D566145F64C5AC0BD07CAB7 /* AppTypography.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "../TableTogether/Sources/Views/AppTypography.swift"; sourceTree = "<group>"; };
 		5AD1822310295147B4847C80 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "../TableTogether/Sources/Views/Shared/Theme.swift"; sourceTree = "<group>"; };
 		1FF83528F6585E1EB750689D /* TVDemoDataSeeder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/TVDemoDataSeeder.swift"; sourceTree = "<group>"; };
@@ -149,6 +151,7 @@
 				C3ADBD49CE1358E5A08BB466 /* AppLogger.swift */,
 				21DEA84429595EDB837EE166 /* PendingInvitationStore.swift */,
 				D7C92C05B494570B80502250 /* RecipeIngredientResolver.swift */,
+				46FA904076705A65A484A0F4 /* UserIdentity.swift */,
 				1D566145F64C5AC0BD07CAB7 /* AppTypography.swift */,
 				5AD1822310295147B4847C80 /* Theme.swift */,
 				1FF83528F6585E1EB750689D /* TVDemoDataSeeder.swift */,
@@ -268,6 +271,7 @@
 				B976F518A6505E288D358225 /* AppLogger.swift in Sources */,
 				884B7543FB805D6DB831C4D1 /* PendingInvitationStore.swift in Sources */,
 				A4F8CBE7446C54D59FD81B42 /* RecipeIngredientResolver.swift in Sources */,
+				6D59ABBA15A354D896191779 /* UserIdentity.swift in Sources */,
 				44C01FC9FE82592F92878104 /* AppTypography.swift in Sources */,
 				BA1EF3402A5154919F74B8C3 /* Theme.swift in Sources */,
 				7984C9BEE74258A6849CD7D8 /* TVDemoDataSeeder.swift in Sources */,

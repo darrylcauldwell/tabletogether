@@ -59,18 +59,20 @@ public class User: NSManagedObject {
     /// duplicate user records.
     static let defaultMeID = UUID(uuidString: "00000000-0000-0000-0000-000000000002")!
 
-    /// Resolves the local device's user. The on-device "Me" user is seeded with
-    /// `defaultMeID`, so prefer that over an alphabetical `users.first`, which could
-    /// pick another household member after sharing — and, via syncPlannedMeals, seed
-    /// that member's planned meals into this device's private log. Falls back to the
-    /// first user when no "Me" user exists yet.
-    ///
-    /// Note: once a household is shared, every member's "Me" user carries the same
-    /// `defaultMeID`, so this cannot fully disambiguate members; that needs per-device
-    /// unique user IDs (a separate change). This still fixes the common single-device
-    /// and pre-share case where an alphabetically-earlier member was treated as current.
+    /// Resolves the local person's user. Prefers the per-account ID resolved by
+    /// ``UserIdentity`` (derived from the CloudKit user record name, so it is unique
+    /// per household member and identical across one person's devices). Falls back to
+    /// the provisional `defaultMeID` while identity is unresolved (offline first
+    /// launch), then to the first user.
     static func current<S: Sequence>(in users: S) -> User? where S.Element == User {
+        current(in: users, resolvedID: UserIdentity.storedID)
+    }
+
+    static func current<S: Sequence>(in users: S, resolvedID: UUID?) -> User? where S.Element == User {
         let all = Array(users)
+        if let resolvedID, let me = all.first(where: { $0.id == resolvedID }) {
+            return me
+        }
         return all.first(where: { $0.id == User.defaultMeID }) ?? all.first
     }
 
