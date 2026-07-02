@@ -10,6 +10,7 @@
 		74C047A8E7345501AC73D767 /* FoodItem+CoreData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4854FF7FA6055950A722A02E /* FoodItem+CoreData.swift */; };
 		FB1129F37C7255DEA502727E /* GroceryItem+CoreData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4831EA8B56E55178B5F0CD5A /* GroceryItem+CoreData.swift */; };
 		D31C8CB36ABE52B3B91D92A1 /* Household+CoreData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 781DC90DB6DA5D9AB7D23F26 /* Household+CoreData.swift */; };
+		DEABDF7A6E89583FA0487666 /* Household+Transferable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38D78ABD6FDF57BA8BF781E8 /* Household+Transferable.swift */; };
 		6AACCD2B3A2254678CF63EAA /* Ingredient+CoreData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 744CBB0FAA0E5F73BE00FC34 /* Ingredient+CoreData.swift */; };
 		3D0039AF55A952D8A4A599FA /* MealArchetype+CoreData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6AE7AD09AD5E51219523FC4D /* MealArchetype+CoreData.swift */; };
 		49C14B7200785C8596C7D9A3 /* MealSlot+CoreData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A2E7F13C5C25C7FA5C6DD42 /* MealSlot+CoreData.swift */; };
@@ -28,6 +29,7 @@
 		18E3EBFA0E5750228A23DC81 /* SwiftData+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD7884CCD451579797A387F5 /* SwiftData+Extensions.swift */; };
 		9A7432D0FF3E5C3CBDACDF01 /* UUID+Deterministic.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF943120621C59D9B1EEB621 /* UUID+Deterministic.swift */; };
 		59FB46DA0A535C9384DF052D /* View+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC2BAC25825D52038BDD78A0 /* View+Extensions.swift */; };
+		0FEA7C22662E560FA7C4C605 /* CodableFoodItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4FF5812C9E75EF8A53CAFB7 /* CodableFoodItem.swift */; };
 		1C6A249892775CF28E69CFAB /* CodableRecipe.swift in Sources */ = {isa = PBXBuildFile; fileRef = C361465FF43957709B305FFD /* CodableRecipe.swift */; };
 		A59FAFCBB1E3545B9054D1F9 /* CommonPortion.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B918ED5BF15B86A860FD38 /* CommonPortion.swift */; };
 		E50D462E9F0B5EEA94E73761 /* Enums.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53D2E26245AB580DBE1BB1B6 /* Enums.swift */; };
@@ -37,6 +39,8 @@
 		361E9BAA02EB541684945984 /* PrivateMealLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63A12A84798D5D86B22D4DB8 /* PrivateMealLog.swift */; };
 		B976F518A6505E288D358225 /* AppLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3ADBD49CE1358E5A08BB466 /* AppLogger.swift */; };
 		884B7543FB805D6DB831C4D1 /* PendingInvitationStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21DEA84429595EDB837EE166 /* PendingInvitationStore.swift */; };
+		A4F8CBE7446C54D59FD81B42 /* RecipeIngredientResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7C92C05B494570B80502250 /* RecipeIngredientResolver.swift */; };
+		44C01FC9FE82592F92878104 /* AppTypography.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D566145F64C5AC0BD07CAB7 /* AppTypography.swift */; };
 		BA1EF3402A5154919F74B8C3 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5AD1822310295147B4847C80 /* Theme.swift */; };
 		7984C9BEE74258A6849CD7D8 /* TVDemoDataSeeder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FF83528F6585E1EB750689D /* TVDemoDataSeeder.swift */; };
 		83B135E37A5453DCB4688B39 /* TableTogetherTVApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3568B866A23E5C7EAFE6A67C /* TableTogetherTVApp.swift */; };
@@ -55,6 +59,7 @@
 		4854FF7FA6055950A722A02E /* FoodItem+CoreData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "../TableTogether/Sources/CoreData/FoodItem+CoreData.swift"; sourceTree = "<group>"; };
 		4831EA8B56E55178B5F0CD5A /* GroceryItem+CoreData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "../TableTogether/Sources/CoreData/GroceryItem+CoreData.swift"; sourceTree = "<group>"; };
 		781DC90DB6DA5D9AB7D23F26 /* Household+CoreData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "../TableTogether/Sources/CoreData/Household+CoreData.swift"; sourceTree = "<group>"; };
+		38D78ABD6FDF57BA8BF781E8 /* Household+Transferable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "../TableTogether/Sources/CoreData/Household+Transferable.swift"; sourceTree = "<group>"; };
 		744CBB0FAA0E5F73BE00FC34 /* Ingredient+CoreData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "../TableTogether/Sources/CoreData/Ingredient+CoreData.swift"; sourceTree = "<group>"; };
 		6AE7AD09AD5E51219523FC4D /* MealArchetype+CoreData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "../TableTogether/Sources/CoreData/MealArchetype+CoreData.swift"; sourceTree = "<group>"; };
 		9A2E7F13C5C25C7FA5C6DD42 /* MealSlot+CoreData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "../TableTogether/Sources/CoreData/MealSlot+CoreData.swift"; sourceTree = "<group>"; };
@@ -73,6 +78,7 @@
 		BD7884CCD451579797A387F5 /* SwiftData+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "../TableTogether/Sources/Extensions/SwiftData+Extensions.swift"; sourceTree = "<group>"; };
 		DF943120621C59D9B1EEB621 /* UUID+Deterministic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "../TableTogether/Sources/Extensions/UUID+Deterministic.swift"; sourceTree = "<group>"; };
 		AC2BAC25825D52038BDD78A0 /* View+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "../TableTogether/Sources/Extensions/View+Extensions.swift"; sourceTree = "<group>"; };
+		D4FF5812C9E75EF8A53CAFB7 /* CodableFoodItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "../TableTogether/Sources/Models/CodableFoodItem.swift"; sourceTree = "<group>"; };
 		C361465FF43957709B305FFD /* CodableRecipe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "../TableTogether/Sources/Models/CodableRecipe.swift"; sourceTree = "<group>"; };
 		A1B918ED5BF15B86A860FD38 /* CommonPortion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "../TableTogether/Sources/Models/CommonPortion.swift"; sourceTree = "<group>"; };
 		53D2E26245AB580DBE1BB1B6 /* Enums.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "../TableTogether/Sources/Models/Enums.swift"; sourceTree = "<group>"; };
@@ -82,6 +88,8 @@
 		63A12A84798D5D86B22D4DB8 /* PrivateMealLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "../TableTogether/Sources/Models/PrivateMealLog.swift"; sourceTree = "<group>"; };
 		C3ADBD49CE1358E5A08BB466 /* AppLogger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "../TableTogether/Sources/Services/AppLogger.swift"; sourceTree = "<group>"; };
 		21DEA84429595EDB837EE166 /* PendingInvitationStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "../TableTogether/Sources/Services/PendingInvitationStore.swift"; sourceTree = "<group>"; };
+		D7C92C05B494570B80502250 /* RecipeIngredientResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "../TableTogether/Sources/Services/RecipeIngredientResolver.swift"; sourceTree = "<group>"; };
+		1D566145F64C5AC0BD07CAB7 /* AppTypography.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "../TableTogether/Sources/Views/AppTypography.swift"; sourceTree = "<group>"; };
 		5AD1822310295147B4847C80 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "../TableTogether/Sources/Views/Shared/Theme.swift"; sourceTree = "<group>"; };
 		1FF83528F6585E1EB750689D /* TVDemoDataSeeder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/TVDemoDataSeeder.swift"; sourceTree = "<group>"; };
 		3568B866A23E5C7EAFE6A67C /* TableTogetherTVApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/TableTogetherTVApp.swift"; sourceTree = "<group>"; };
@@ -111,6 +119,7 @@
 				4854FF7FA6055950A722A02E /* FoodItem+CoreData.swift */,
 				4831EA8B56E55178B5F0CD5A /* GroceryItem+CoreData.swift */,
 				781DC90DB6DA5D9AB7D23F26 /* Household+CoreData.swift */,
+				38D78ABD6FDF57BA8BF781E8 /* Household+Transferable.swift */,
 				744CBB0FAA0E5F73BE00FC34 /* Ingredient+CoreData.swift */,
 				6AE7AD09AD5E51219523FC4D /* MealArchetype+CoreData.swift */,
 				9A2E7F13C5C25C7FA5C6DD42 /* MealSlot+CoreData.swift */,
@@ -129,6 +138,7 @@
 				BD7884CCD451579797A387F5 /* SwiftData+Extensions.swift */,
 				DF943120621C59D9B1EEB621 /* UUID+Deterministic.swift */,
 				AC2BAC25825D52038BDD78A0 /* View+Extensions.swift */,
+				D4FF5812C9E75EF8A53CAFB7 /* CodableFoodItem.swift */,
 				C361465FF43957709B305FFD /* CodableRecipe.swift */,
 				A1B918ED5BF15B86A860FD38 /* CommonPortion.swift */,
 				53D2E26245AB580DBE1BB1B6 /* Enums.swift */,
@@ -138,6 +148,8 @@
 				63A12A84798D5D86B22D4DB8 /* PrivateMealLog.swift */,
 				C3ADBD49CE1358E5A08BB466 /* AppLogger.swift */,
 				21DEA84429595EDB837EE166 /* PendingInvitationStore.swift */,
+				D7C92C05B494570B80502250 /* RecipeIngredientResolver.swift */,
+				1D566145F64C5AC0BD07CAB7 /* AppTypography.swift */,
 				5AD1822310295147B4847C80 /* Theme.swift */,
 				1FF83528F6585E1EB750689D /* TVDemoDataSeeder.swift */,
 				3568B866A23E5C7EAFE6A67C /* TableTogetherTVApp.swift */,
@@ -226,6 +238,7 @@
 				74C047A8E7345501AC73D767 /* FoodItem+CoreData.swift in Sources */,
 				FB1129F37C7255DEA502727E /* GroceryItem+CoreData.swift in Sources */,
 				D31C8CB36ABE52B3B91D92A1 /* Household+CoreData.swift in Sources */,
+				DEABDF7A6E89583FA0487666 /* Household+Transferable.swift in Sources */,
 				6AACCD2B3A2254678CF63EAA /* Ingredient+CoreData.swift in Sources */,
 				3D0039AF55A952D8A4A599FA /* MealArchetype+CoreData.swift in Sources */,
 				49C14B7200785C8596C7D9A3 /* MealSlot+CoreData.swift in Sources */,
@@ -244,6 +257,8 @@
 				18E3EBFA0E5750228A23DC81 /* SwiftData+Extensions.swift in Sources */,
 				9A7432D0FF3E5C3CBDACDF01 /* UUID+Deterministic.swift in Sources */,
 				59FB46DA0A535C9384DF052D /* View+Extensions.swift in Sources */,
+				0FEA7C22662E560FA7C4C605 /* CodableFoodItem.swift in Sources */,
+				1C6A249892775CF28E69CFAB /* CodableRecipe.swift in Sources */,
 				A59FAFCBB1E3545B9054D1F9 /* CommonPortion.swift in Sources */,
 				E50D462E9F0B5EEA94E73761 /* Enums.swift in Sources */,
 				B95BB43CD1125B2B80B92A48 /* MacroSummary.swift in Sources */,
@@ -252,6 +267,8 @@
 				361E9BAA02EB541684945984 /* PrivateMealLog.swift in Sources */,
 				B976F518A6505E288D358225 /* AppLogger.swift in Sources */,
 				884B7543FB805D6DB831C4D1 /* PendingInvitationStore.swift in Sources */,
+				A4F8CBE7446C54D59FD81B42 /* RecipeIngredientResolver.swift in Sources */,
+				44C01FC9FE82592F92878104 /* AppTypography.swift in Sources */,
 				BA1EF3402A5154919F74B8C3 /* Theme.swift in Sources */,
 				7984C9BEE74258A6849CD7D8 /* TVDemoDataSeeder.swift in Sources */,
 				83B135E37A5453DCB4688B39 /* TableTogetherTVApp.swift in Sources */,
@@ -294,7 +311,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				TVOS_DEPLOYMENT_TARGET = 17.0;
-				MARKETING_VERSION = 1.2;
+				MARKETING_VERSION = 1.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -340,7 +357,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				TVOS_DEPLOYMENT_TARGET = 17.0;
-				MARKETING_VERSION = 1.2;
+				MARKETING_VERSION = 1.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				GENERATE_INFOPLIST_FILE = YES;
