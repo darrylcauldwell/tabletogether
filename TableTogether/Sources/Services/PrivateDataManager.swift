@@ -26,6 +26,9 @@ final class PrivateDataManager {
     private(set) var lastSyncDate: Date?
     private(set) var syncError: SyncError?
 
+    /// Estimates macros for custom-named planned meals seeded into the log.
+    private let mealEstimator = MealEstimatorService()
+
     /// Represents a sync error that can be displayed to the user
     struct SyncError: Identifiable, Equatable {
         let id = UUID()
@@ -389,17 +392,52 @@ final class PrivateDataManager {
                 slotDate = Date()
             }
 
-            let log = PrivateMealLog(
+            let log = Self.plannedLog(
+                for: slot,
+                perPersonServings: perPersonServings,
                 date: slotDate,
-                mealType: slot.mealType,
-                recipeID: slot.recipesArray.first?.id,
-                mealSlotID: slot.id,
-                servingsConsumed: perPersonServings,
-                status: .planned
+                estimator: mealEstimator
             )
 
             await saveMealLog(log)
         }
+    }
+
+    /// Builds the private log entry seeded from a planned meal slot.
+    ///
+    /// Recipe-backed slots reference the recipe by ID and get macros at aggregation
+    /// time. Custom-named slots ("chips") have no recipe to derive nutrition from, so
+    /// the name is carried into the log and macros are prefilled from the local food
+    /// estimator (scaled to this person's servings) — otherwise a planned custom meal
+    /// would silently read as 0 kcal in Insights. Estimates stay editable like any
+    /// quick log.
+    static func plannedLog(
+        for slot: MealSlot,
+        perPersonServings: Double,
+        date: Date,
+        estimator: MealEstimatorService
+    ) -> PrivateMealLog {
+        var log = PrivateMealLog(
+            date: date,
+            mealType: slot.mealType,
+            recipeID: slot.recipesArray.first?.id,
+            mealSlotID: slot.id,
+            servingsConsumed: perPersonServings,
+            status: .planned
+        )
+
+        if log.recipeID == nil, let customName = slot.customMealName, !customName.isEmpty {
+            log.quickLogName = customName
+            if let estimate = estimator.estimate(description: customName) {
+                let macros = estimate.totalMacros
+                log.quickLogCalories = macros.calories.map { Int(($0 * perPersonServings).rounded()) }
+                log.quickLogProtein = macros.protein.map { Int(($0 * perPersonServings).rounded()) }
+                log.quickLogCarbs = macros.carbs.map { Int(($0 * perPersonServings).rounded()) }
+                log.quickLogFat = macros.fat.map { Int(($0 * perPersonServings).rounded()) }
+            }
+        }
+
+        return log
     }
 
     /// Updates the status of a meal log entry and syncs to CloudKit
