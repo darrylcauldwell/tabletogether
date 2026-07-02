@@ -63,17 +63,30 @@ participant's device holds two `User` rows with the same UUID (own + owner's mir
 `PrivateDataManager.syncPlannedMeals` seeds one member's planned meals into another
 member's private log.
 
-Design (detailed before implementation; research first):
-- Each device generates and persists a unique "Me" UUID; stop seeding the
-  well-known constant for new users.
-- Migrate existing devices: relabel the locally-created legacy "Me" row (the one in
-  the private store) to the device UUID; leave mirrored rows alone.
-- `User.current(in:)` resolves by the device UUID only.
-- Meal-slot assignment matching keys on the resolved user object, never a shared
-  constant.
+Design — identity is per Apple ID, derived from CloudKit (research findings:
+`cloudKitRecordID` on User is currently dead/always-nil; private models never
+reference the user; assignments are relationships, so an id rewrite is safe):
+
+- **Identity derivation:** `meID = deterministicUUID(CKContainer.userRecordID
+  .recordName)` (SHA-256 → first 16 bytes, UUID bits set). Same Apple ID on any
+  device computes the same UUID with no coordination — preserving the multi-device
+  convergence `defaultMeID` was introduced for — while different household members
+  get distinct ids. Record name cached in UserDefaults alongside the resolved id.
+- **Provisional state:** offline-first startup keeps seeding `defaultMeID`
+  ("not yet identified"); identity upgrade runs when CloudKit becomes reachable.
+  No behavior regression while offline versus today.
+- **Migration (never guess):** if a User with `meID` exists → done. Else among
+  `defaultMeID` rows: exactly one → rewrite its id to `meID`; several → prefer the
+  single row in the private store (locally created); still ambiguous → create a
+  fresh identified row and leave existing rows untouched (they may belong to other
+  members). Set `cloudKitRecordID = recordName` on the adopted row.
+- **Resolution:** `User.current(in:)` prefers the stored `meID`, falls back to
+  `defaultMeID`, then first.
+- No Core Data model change → no CloudKit schema deploy required.
 
 **Acceptance:** two-device shared household — assignments on device A never appear
-in device B's private log; existing single-device data survives upgrade.
+in device B's private log; same-Apple-ID devices converge on one User row;
+existing single-device data survives upgrade; offline first launch still works.
 
 ## Change 4 — Documentation fix
 
