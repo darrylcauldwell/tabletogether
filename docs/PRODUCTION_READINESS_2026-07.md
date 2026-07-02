@@ -24,7 +24,7 @@ reference the change numbers below.
 | # | Blocker | Resolution |
 |---|---------|------------|
 | 1 | Flaky parser tests (Apple Intelligence nondeterminism) | Change 1 |
-| 2 | Undeployed CloudKit schema (`Recipe.sourceUID`) | Manual: deploy Dev→Production in CloudKit Dashboard, then `scripts/mark-schema-deployed.sh` |
+| 2 | Undeployed CloudKit schema (`Recipe.sourceUID`) | Manual: deploy Dev→Production in CloudKit Dashboard, then `scripts/mark-schema-deployed.sh`. **Before deploying, verify the hand-rolled record types `MealLog` and `PersonalSettings` exist in the dev schema** (they live outside the Core Data model, so the preflight hash gate cannot see them; they are only created by an actual write in dev — discovered 2026-07-02 when a dev-environment schema reset silently removed them and broke private-log fetches) |
 | 3 | Privacy/support/marketing URLs 404 (private repo) | Done 2026-07-02: repo made public; all three URLs verified 200 |
 | 4 | Shared `User.defaultMeID` misattributes private logs | Change 3 |
 
