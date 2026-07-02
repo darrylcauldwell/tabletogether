@@ -11,6 +11,15 @@ import FoundationModels
 @Observable
 final class NaturalLanguageMealParser {
 
+    /// Whether to attempt Apple Intelligence before the regex fallback.
+    /// Tests disable this: on-device model output is nondeterministic and
+    /// varies with model availability, so assertions must pin the regex path.
+    private let enableAppleIntelligence: Bool
+
+    init(enableAppleIntelligence: Bool = true) {
+        self.enableAppleIntelligence = enableAppleIntelligence
+    }
+
     // MARK: - Public API
 
     /// Parses a meal description into individual ingredients.
@@ -26,7 +35,7 @@ final class NaturalLanguageMealParser {
 
         // Try Apple Intelligence first (iOS 26+ / macOS 26+)
         #if canImport(FoundationModels)
-        if #available(iOS 26.0, macOS 26.0, *) {
+        if enableAppleIntelligence, #available(iOS 26.0, macOS 26.0, *) {
             if let aiResult = await parseWithAppleIntelligence(input) {
                 return aiResult
             }

@@ -3,9 +3,10 @@ import Testing
 
 /// Tests for ``NaturalLanguageMealParser``'s regex fallback parsing.
 ///
-/// In the test environment no Apple Intelligence model is available, so
-/// `parse(description:)` falls through to the deterministic regex path. These
-/// tests therefore exercise the regex fallback (`parseWithRegex`).
+/// Apple Intelligence is explicitly disabled via the initializer so
+/// `parse(description:)` always takes the deterministic regex path —
+/// on-device model availability (and its nondeterministic output) must not
+/// influence these assertions.
 ///
 /// The suite is marked `@MainActor` to match the parser's isolation
 /// (`@MainActor @Observable final class`).
@@ -17,7 +18,7 @@ struct NaturalLanguageMealParserTests {
 
     @Test("Splits multi-item input joined by 'and' into separate ingredients")
     func splitsOnAnd() async {
-        let parser = NaturalLanguageMealParser()
+        let parser = NaturalLanguageMealParser(enableAppleIntelligence: false)
         let result = await parser.parse(description: "2 eggs and 200g chicken")
 
         #expect(result.ingredients.count == 2)
@@ -34,7 +35,7 @@ struct NaturalLanguageMealParserTests {
 
     @Test("Splits on commas, plus signs, and 'with'")
     func splitsOnVariedSeparators() async {
-        let parser = NaturalLanguageMealParser()
+        let parser = NaturalLanguageMealParser(enableAppleIntelligence: false)
 
         let comma = await parser.parse(description: "rice, beans")
         #expect(comma.ingredients.count == 2)
@@ -50,7 +51,7 @@ struct NaturalLanguageMealParserTests {
 
     @Test("Parses quantity, recognised unit, and name: '2 cups rice'")
     func parsesQuantityUnitName() async {
-        let parser = NaturalLanguageMealParser()
+        let parser = NaturalLanguageMealParser(enableAppleIntelligence: false)
         let result = await parser.parse(description: "2 cups rice")
 
         #expect(result.ingredients.count == 1)
@@ -63,7 +64,7 @@ struct NaturalLanguageMealParserTests {
 
     @Test("Parses gram unit with multi-word name: '200g chicken breast'")
     func parsesGramsWithMultiWordName() async {
-        let parser = NaturalLanguageMealParser()
+        let parser = NaturalLanguageMealParser(enableAppleIntelligence: false)
         let result = await parser.parse(description: "200g chicken breast")
 
         #expect(result.ingredients.count == 1)
@@ -75,7 +76,7 @@ struct NaturalLanguageMealParserTests {
 
     @Test("Parses fractional quantity: '1/2 cup milk'")
     func parsesFractionalQuantity() async {
-        let parser = NaturalLanguageMealParser()
+        let parser = NaturalLanguageMealParser(enableAppleIntelligence: false)
         let result = await parser.parse(description: "1/2 cup milk")
 
         #expect(result.ingredients.count == 1)
@@ -89,7 +90,7 @@ struct NaturalLanguageMealParserTests {
 
     @Test("Plain food name with no quantity sets name and leaves quantity nil")
     func plainFoodNameNoQuantity() async {
-        let parser = NaturalLanguageMealParser()
+        let parser = NaturalLanguageMealParser(enableAppleIntelligence: false)
         let result = await parser.parse(description: "broccoli")
 
         #expect(result.ingredients.count == 1)
@@ -103,7 +104,7 @@ struct NaturalLanguageMealParserTests {
 
     @Test("Unrecognised unit token becomes part of name: '3 ripe bananas'")
     func unrecognisedUnitFoldsIntoName() async {
-        let parser = NaturalLanguageMealParser()
+        let parser = NaturalLanguageMealParser(enableAppleIntelligence: false)
         let result = await parser.parse(description: "3 ripe bananas")
 
         #expect(result.ingredients.count == 1)
@@ -118,7 +119,7 @@ struct NaturalLanguageMealParserTests {
 
     @Test("Empty string returns no ingredients without crashing")
     func emptyStringDoesNotCrash() async {
-        let parser = NaturalLanguageMealParser()
+        let parser = NaturalLanguageMealParser(enableAppleIntelligence: false)
         let result = await parser.parse(description: "")
         #expect(result.ingredients.isEmpty)
         #expect(result.isAIParsed == false)
@@ -126,14 +127,14 @@ struct NaturalLanguageMealParserTests {
 
     @Test("Whitespace-only string returns no ingredients without crashing")
     func whitespaceOnlyDoesNotCrash() async {
-        let parser = NaturalLanguageMealParser()
+        let parser = NaturalLanguageMealParser(enableAppleIntelligence: false)
         let result = await parser.parse(description: "   \n\t  ")
         #expect(result.ingredients.isEmpty)
     }
 
     @Test("Only-a-number input does not crash and yields a sensible result")
     func onlyANumberDoesNotCrash() async {
-        let parser = NaturalLanguageMealParser()
+        let parser = NaturalLanguageMealParser(enableAppleIntelligence: false)
         let result = await parser.parse(description: "5")
 
         // A bare number has no food name; it should not crash and should
@@ -146,7 +147,7 @@ struct NaturalLanguageMealParserTests {
 
     @Test("Leading and trailing separators do not crash and are dropped")
     func strayLeadingTrailingSeparatorsDoNotCrash() async {
-        let parser = NaturalLanguageMealParser()
+        let parser = NaturalLanguageMealParser(enableAppleIntelligence: false)
         let result = await parser.parse(description: ", rice ,")
 
         // Empty segments produced by the stray commas are filtered out.
@@ -156,7 +157,7 @@ struct NaturalLanguageMealParserTests {
 
     @Test("Repeated separators with empty segments do not crash")
     func repeatedSeparatorsDoNotCrash() async {
-        let parser = NaturalLanguageMealParser()
+        let parser = NaturalLanguageMealParser(enableAppleIntelligence: false)
         let result = await parser.parse(description: "eggs and and bacon")
 
         // The empty middle segment is filtered; two real ingredients remain.
@@ -167,7 +168,7 @@ struct NaturalLanguageMealParserTests {
 
     @Test("Irregular internal spacing does not crash and trims correctly")
     func weirdSpacingDoesNotCrash() async {
-        let parser = NaturalLanguageMealParser()
+        let parser = NaturalLanguageMealParser(enableAppleIntelligence: false)
         let result = await parser.parse(description: "2    cups     rice")
 
         #expect(result.ingredients.count == 1)
@@ -179,7 +180,7 @@ struct NaturalLanguageMealParserTests {
 
     @Test("Unicode and emoji input does not crash and returns a result")
     func unicodeInputDoesNotCrash() async {
-        let parser = NaturalLanguageMealParser()
+        let parser = NaturalLanguageMealParser(enableAppleIntelligence: false)
         let result = await parser.parse(description: "2 cups café crème 🍰")
 
         // The key assertion is that parsing a multi-byte/emoji string over
@@ -190,7 +191,7 @@ struct NaturalLanguageMealParserTests {
 
     @Test("Decimal-only and lone-symbol inputs do not crash")
     func miscEdgeInputsDoNotCrash() async {
-        let parser = NaturalLanguageMealParser()
+        let parser = NaturalLanguageMealParser(enableAppleIntelligence: false)
 
         let decimalOnly = await parser.parse(description: "2.5")
         #expect(decimalOnly.ingredients.count <= 1)
