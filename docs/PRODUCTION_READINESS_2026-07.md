@@ -128,4 +128,11 @@ Console zone deletion + Reset All Sync Data on Mac and iPhone):
   platform-appropriate share presentation on macOS
 - Audit `removeParticipant` / other CloudKit share calls for the same
   main-thread blocking pattern fixed in Change 5 (likely cause of the
-  "revoke invite" spin observed on iPhone)
+  "revoke invite" spin observed on iPhone) — done 2026-07-02 evening: all share
+  operations now run off-main with a timeout
+- Consolidate the two near-duplicate recipe pickers (`MealSlotComponents`
+  "Add Meal" vs `MealSlotEditorSheet` "Select Recipe") — divergent wording and
+  behavior caused a fix to land in the wrong one on 2026-07-02
+- Plan/Log intuition gap: Plan is the shared household surface but is where
+  users instinctively add personal meals; agreed direction is light-touch
+  signage (mark Plan as household/shared, Log as private), not a flow fork
