@@ -76,20 +76,30 @@ struct CloudSharingView: View {
         }
 
         AppLogger.sharing.info("Creating new household share")
-        let householdID = household.objectID
         do {
-            let obj = await container.viewContext.perform {
-                container.viewContext.object(with: householdID)
-            }
-            let (_, share, sharedContainer) = try await container.share([obj], to: nil)
-            share[CKShare.SystemFieldKey.title] = "TableTogether Household" as CKRecordValue
-            share.publicPermission = .none
+            let prepared = try await Self.createShare(container: container, householdID: household.objectID)
             AppLogger.sharing.info("Household share created")
-            preparedShare = PreparedShare(share: share, container: sharedContainer)
+            preparedShare = prepared
         } catch {
             AppLogger.sharing.error("Share preparation failed: \(error.localizedDescription)")
             errorMessage = error.localizedDescription
         }
+    }
+
+    /// Creates and exports the household share off the main actor. `share(_:to:)`
+    /// blocks its calling thread while Core Data exports the zone (an internal
+    /// `_PFRequestExecutor wait`), so invoking it from the main actor beachballs the
+    /// app — and can deadlock if the export needs a main-queue history merge.
+    nonisolated private static func createShare(
+        container: NSPersistentCloudKitContainer,
+        householdID: NSManagedObjectID
+    ) async throws -> PreparedShare {
+        let context = container.newBackgroundContext()
+        let obj = await context.perform { context.object(with: householdID) }
+        let (_, share, sharedContainer) = try await container.share([obj], to: nil)
+        share[CKShare.SystemFieldKey.title] = "TableTogether Household" as CKRecordValue
+        share.publicPermission = .none
+        return PreparedShare(share: share, container: sharedContainer)
     }
 }
 
