@@ -15,7 +15,10 @@ struct WeekPlannerView: View {
     @FetchRequest(sortDescriptors: [SortDescriptor(\.name)]) private var households: FetchedResults<Household>
 
     @State private var currentWeekStart: Date = WeekPlannerView.mondayOfCurrentWeek()
-    @State private var isSuggestionTrayExpanded: Bool = false
+    /// Suggestions are invited, not ambient: hidden by default, toggled from the
+    /// toolbar lightbulb, remembered across launches. The tray's own "Hide"
+    /// writes the same flag, so both controls stay in agreement.
+    @AppStorage("suggestionsTrayVisible") private var suggestionsVisible = false
     @State private var showingRecentChanges: Bool = false
 
     private var currentUser: User? {
@@ -50,13 +53,15 @@ struct WeekPlannerView: View {
                 onMealChosen: handleMealChosen
             )
 
-            Divider()
+            if suggestionsVisible {
+                Divider()
 
-            SuggestionTrayView(
-                isExpanded: $isSuggestionTrayExpanded,
-                familiarRecipes: suggestedFamiliarRecipes,
-                newRecipes: suggestedNewRecipes
-            )
+                SuggestionTrayView(
+                    isExpanded: $suggestionsVisible,
+                    familiarRecipes: suggestedFamiliarRecipes,
+                    newRecipes: suggestedNewRecipes
+                )
+            }
 
             WeekActionsBar(
                 onCopyFromLastWeek: copyFromLastWeek,
@@ -67,6 +72,19 @@ struct WeekPlannerView: View {
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
+        .toolbar {
+            ToolbarItem(placement: .automatic) {
+                Button {
+                    withAnimation(.easeInOut(duration: 0.3)) {
+                        suggestionsVisible.toggle()
+                    }
+                } label: {
+                    Image(systemName: suggestionsVisible ? "lightbulb.fill" : "lightbulb")
+                }
+                .help(suggestionsVisible ? "Hide meal suggestions" : "Show meal suggestions")
+                .accessibilityLabel(suggestionsVisible ? "Hide meal suggestions" : "Show meal suggestions")
+            }
+        }
     }
 
     // MARK: - Computed Properties
