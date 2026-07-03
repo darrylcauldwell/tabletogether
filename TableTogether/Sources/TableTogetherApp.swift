@@ -119,6 +119,53 @@ struct TableTogetherApp: App {
         // docs/SYNC_DEDUP_REDESIGN.md).
 
         cleanupEmptyStructureIfNeeded(context: context)
+        recreateWeekPlanRecordsIfNeeded(context: context)
+    }
+
+    /// One-time repair (2026-07-03): thrash-era dedup tombstoned some devices'
+    /// WeekPlan CKRecords in CloudKit; the surviving local rows still carry the
+    /// dead record identity, so every export fails (NSCocoaErrorDomain 134060)
+    /// and wedges the queue — the same poison class as the household repair in
+    /// d5889c7. Records can't be rehabilitated, so each plan row is recreated
+    /// with the SAME deterministic id but a fresh CKRecord identity. Slots and
+    /// grocery items are re-pointed BEFORE the old row is deleted, so its
+    /// Cascade rule fires on an empty relationship. Same-id plans recreated on
+    /// two devices converge through the dedup engine.
+    @MainActor
+    private func recreateWeekPlanRecordsIfNeeded(context: NSManagedObjectContext) {
+        let recreationKey = "WeekPlanRecordRecreation_v1"
+        guard !UserDefaults.standard.bool(forKey: recreationKey) else { return }
+        guard let privateStore = persistenceController.privatePersistentStore else { return }
+
+        let request = NSFetchRequest<WeekPlan>(entityName: "WeekPlan")
+        request.affectedStores = [privateStore]
+        let plans = context.fetchWithLogging(request, context: "week plan record recreation")
+        guard !plans.isEmpty else {
+            UserDefaults.standard.set(true, forKey: recreationKey)
+            return
+        }
+
+        for old in plans {
+            let fresh = WeekPlan(context: context, id: old.id, weekStartDate: old.weekStartDate, householdNote: old.householdNote)
+            fresh.createdAt = old.createdAt
+            fresh.modifiedAt = old.modifiedAt
+            fresh.household = old.household
+            for slot in old.slotsArray {
+                slot.weekPlan = fresh
+            }
+            for item in old.groceryItemsArray {
+                item.weekPlan = fresh
+            }
+            context.delete(old)
+        }
+
+        do {
+            try context.save()
+            UserDefaults.standard.set(true, forKey: recreationKey)
+            AppLogger.app.warning("Recreated \(plans.count) week plan record(s) with fresh CloudKit identities")
+        } catch {
+            AppLogger.swiftData.error("Failed to save week plan record recreation", error: error)
+        }
     }
 
     /// One-time cleanup (#Change5): builds before the lazy-structure redesign
