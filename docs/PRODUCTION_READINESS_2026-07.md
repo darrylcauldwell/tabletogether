@@ -147,6 +147,14 @@ Console zone deletion + Reset All Sync Data on Mac and iPhone):
   personal data; no cloud LLM), estimates keep the ≈ badge and stay editable,
   devices without Apple Intelligence fall back to the current static table.
   Subsumes the parser-unification item's end state.
+- OPEN CRASH (2026-07-03, TestFlight 1.3 (78), iPhone 13 Pro): first use of
+  Log → describe-a-meal ("mushroom omelette") crashed; NOT reproducible on the
+  second attempt — first-run-only. Prime suspect: first-use warm-up of the
+  Apple Intelligence LanguageModelSession in NaturalLanguageMealParser under a
+  Release build (tests deliberately pin the regex path, so the AI path is
+  untested in Release). Report was submitted via the system dialog and is no
+  longer on-device — retrieve from Xcode Organizer → Crashes / ASC TestFlight
+  feedback and symbolicate against the 2026-07-03 1.3 archive dSYM.
 - ~~Manual sync refresh~~ — SHIPPED 2026-07-03: SyncRefreshButton (toolbar,
   next to settings on all layouts) calls PersistenceController.refreshFromCloud,
   a guarded store remove/re-add + viewContext reset (relaunch-equivalent
