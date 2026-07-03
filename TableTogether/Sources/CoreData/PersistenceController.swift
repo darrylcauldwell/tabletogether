@@ -488,6 +488,13 @@ final class PersistenceController {
         isRefreshingFromCloud = true
         defer { isRefreshingFromCloud = false }
 
+        // Deregister every live object FIRST: coordinator.remove(_:) raises an
+        // Objective-C exception — invisible to Swift catch — when a context
+        // still has objects registered against the store (crashed on first
+        // field use, 2026-07-03). The reset plus remove/re-add all run in one
+        // synchronous main-actor slice, so SwiftUI can't refetch mid-gap.
+        viewContext.reset()
+
         let coordinator = container.persistentStoreCoordinator
         do {
             if let store = privatePersistentStore {
