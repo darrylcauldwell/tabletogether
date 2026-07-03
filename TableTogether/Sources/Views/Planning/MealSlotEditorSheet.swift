@@ -66,7 +66,20 @@ struct MealSlotEditorSheet: View {
                 }
             }
             .sheet(isPresented: $showingRecipePicker) {
-                RecipePickerView(slot: slot)
+                // Shared picker (also used by the week list's Add meal). Apply
+                // the choice to this slot; the editor saves on Done.
+                RecipePickerSheet { choice in
+                    switch choice {
+                    case .recipe(let recipe):
+                        slot.addToRecipes(recipe)
+                        slot.customMealName = nil
+                    case .custom(let name):
+                        slot.customMealName = name
+                        slot.recipes = NSSet()
+                    }
+                    slot.isSkipped = false
+                    slot.modifiedAt = Date()
+                }
             }
         }
     }
@@ -286,116 +299,6 @@ struct MealSlotEditorSheet: View {
 
     private func saveChanges() {
         viewContext.saveWithLogging(context: "meal slot changes")
-    }
-}
-
-// MARK: - Recipe Picker View
-
-struct RecipePickerView: View {
-    @Environment(\.dismiss) private var dismiss
-    @ObservedObject var slot: MealSlot
-
-    @FetchRequest(sortDescriptors: [SortDescriptor(\.title)]) private var recipes: FetchedResults<Recipe>
-    @State private var searchText = ""
-
-    private var filteredRecipes: [Recipe] {
-        if searchText.isEmpty {
-            return Array(recipes)
-        }
-        return recipes.filter { $0.title.localizedCaseInsensitiveContains(searchText) }
-    }
-
-    private var trimmedSearchText: String {
-        searchText.trimmingCharacters(in: .whitespacesAndNewlines)
-    }
-
-    var body: some View {
-        NavigationStack {
-            List {
-                // Not everything is a recipe — "a bag of chips" should be one tap,
-                // not a dead end when no recipe matches.
-                if !trimmedSearchText.isEmpty {
-                    Section {
-                        customMealRow(trimmedSearchText)
-                    }
-                }
-                ForEach(filteredRecipes) { recipe in
-                    recipeRow(recipe)
-                }
-            }
-            .searchable(text: $searchText, prompt: "Search recipes or type a meal")
-            .navigationTitle("Select Recipe")
-            #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
-            #endif
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
-                        dismiss()
-                    }
-                }
-            }
-        }
-    }
-
-    private func recipeRow(_ recipe: Recipe) -> some View {
-        Button {
-            slot.addToRecipes(recipe)
-            slot.customMealName = nil
-            slot.modifiedAt = Date()
-            dismiss()
-        } label: {
-            recipeRowLabel(recipe)
-        }
-    }
-
-    private func customMealRow(_ name: String) -> some View {
-        Button {
-            slot.customMealName = name
-            slot.recipes = NSSet()
-            slot.isSkipped = false
-            slot.modifiedAt = Date()
-            dismiss()
-        } label: {
-            Label("Add \u{201C}\(name)\u{201D} as a meal", systemImage: "plus.circle")
-                .font(AppTypography.body)
-                .foregroundStyle(Theme.Colors.primary)
-        }
-    }
-
-    private func recipeRowLabel(_ recipe: Recipe) -> some View {
-        HStack(spacing: 12) {
-            RecipeImageView(imageData: recipe.imageData, imageURL: recipe.imageURL)
-                .frame(width: 60, height: 60)
-                .clipShape(RoundedRectangle(cornerRadius: 8))
-
-            VStack(alignment: .leading, spacing: 4) {
-                Text(recipe.title)
-                    .font(AppTypography.body)
-                    .foregroundStyle(.primary)
-
-                HStack(spacing: 8) {
-                    if let time = recipe.formattedTotalTime {
-                        Label(time, systemImage: "clock")
-                            .font(AppTypography.caption)
-                            .foregroundStyle(.secondary)
-                    }
-
-                    if recipe.isFavorite {
-                        Image(systemName: "heart.fill")
-                            .font(AppTypography.caption)
-                            .foregroundStyle(.red)
-                    }
-                }
-            }
-
-            Spacer()
-
-            if slot.recipesArray.contains(where: { $0.id == recipe.id }) {
-                Image(systemName: "checkmark")
-                    .foregroundStyle(.green)
-            }
-        }
     }
 }
 
