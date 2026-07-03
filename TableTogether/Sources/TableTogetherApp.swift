@@ -117,6 +117,53 @@ struct TableTogetherApp: App {
         // systemic source of duplicate CKRecords, and the slot self-heal it
         // required fed the cross-device dedup thrash loop (see
         // docs/SYNC_DEDUP_REDESIGN.md).
+
+        cleanupEmptyStructureIfNeeded(context: context)
+    }
+
+    /// One-time cleanup (#Change5): builds before the lazy-structure redesign
+    /// materialized 28 empty slots per week as data. Deletes empty unplanned
+    /// slots and content-free week plans from the private store so empty cells
+    /// exist only as UI. Idempotent across devices — both may delete the same
+    /// records; the deletions converge through sync.
+    @MainActor
+    private func cleanupEmptyStructureIfNeeded(context: NSManagedObjectContext) {
+        let cleanupKey = "EmptyStructureCleanup_v1"
+        guard !UserDefaults.standard.bool(forKey: cleanupKey) else { return }
+        // Never touch the shared store — it holds another household's records.
+        guard let privateStore = persistenceController.privatePersistentStore else { return }
+
+        let slotRequest = NSFetchRequest<MealSlot>(entityName: "MealSlot")
+        slotRequest.affectedStores = [privateStore]
+        var deletedSlots = 0
+        for slot in context.fetchWithLogging(slotRequest, context: "empty-slot cleanup")
+        where slot.isEmpty && (slot.notes?.isEmpty ?? true) && slot.storedComponents.isEmpty {
+            context.delete(slot)
+            deletedSlots += 1
+        }
+
+        let planRequest = NSFetchRequest<WeekPlan>(entityName: "WeekPlan")
+        planRequest.affectedStores = [privateStore]
+        var deletedPlans = 0
+        for plan in context.fetchWithLogging(planRequest, context: "empty-plan cleanup") {
+            let keepsSlots = plan.slotsArray.contains { !$0.isDeleted }
+            let keepsGroceries = plan.groceryItemsArray.contains { !$0.isDeleted }
+            if !keepsSlots && !keepsGroceries && (plan.householdNote?.isEmpty ?? true) {
+                context.delete(plan)
+                deletedPlans += 1
+            }
+        }
+
+        if context.hasChanges {
+            do {
+                try context.save()
+                AppLogger.app.info("Cleanup: removed \(deletedSlots) empty slots, \(deletedPlans) empty week plans")
+            } catch {
+                AppLogger.swiftData.error("Failed to save empty-structure cleanup", error: error)
+                return // leave the flag unset so the cleanup retries next launch
+            }
+        }
+        UserDefaults.standard.set(true, forKey: cleanupKey)
     }
 
     /// Creates a Household if none exists, links all orphaned top-level records to it,
