@@ -491,9 +491,17 @@ final class PersistenceController {
             let request = NSFetchRequest<NSManagedObject>(entityName: entityName)
             request.affectedStores = [privateStore]
             for object in viewContext.fetchWithLogging(request, context: "share zone adoption") {
-                guard let zone = container.recordID(for: object.objectID)?.zoneID,
-                      zone != shareZoneID else { continue }
-                mislocated.append(object)
+                if let zone = container.recordID(for: object.objectID)?.zoneID {
+                    if zone != shareZoneID {
+                        mislocated.append(object)
+                    }
+                } else if (try? container.fetchShares(matching: [object.objectID]))?[object.objectID] == nil {
+                    // recordID(for:) needs the mirroring delegate, which may be
+                    // wedged by the very mixed-zone corruption this repairs —
+                    // fall back to share membership: not covered by the share
+                    // means not in the share zone.
+                    mislocated.append(object)
+                }
             }
         }
         guard !mislocated.isEmpty else { return }
