@@ -54,7 +54,8 @@ struct WeekPlannerView: View {
                 showsPastDays: showsPastDaysOfCurrentWeek,
                 onSlotTapped: handleSlotTapped,
                 onRecipeDropped: handleRecipeDropped,
-                onMealChosen: handleMealChosen
+                onMealChosen: handleMealChosen,
+                onRemoveMeal: handleRemoveMeal
             )
 
             if suggestionsVisible {
@@ -182,6 +183,17 @@ struct WeekPlannerView: View {
         }
         slot.modifiedAt = Date()
         viewContext.saveWithLogging(context: "meal choice")
+    }
+
+    /// Clears a meal added in error and deletes the now-empty slot record, so
+    /// the cell returns to the addable empty state (empty slots aren't data,
+    /// per the lazy-structure design). No-op without a current user.
+    private func handleRemoveMeal(_ slot: MealSlot) {
+        guard let user = currentUser else { return }
+        slot.clear(by: user)
+        slot.weekPlan?.removeFromSlots(slot)
+        viewContext.delete(slot)
+        viewContext.saveWithLogging(context: "remove meal")
     }
 
     private func handleSlotTapped(_ slot: MealSlot) {

@@ -37,6 +37,8 @@ struct WeekListView: View {
     /// Applies the picked meal to (day, mealType) — the owner materializes the
     /// plan and slot on demand and saves.
     let onMealChosen: (DayOfWeek, MealType, MealChoice) -> Void
+    /// Clears a planned meal added in error, returning the cell to empty.
+    let onRemoveMeal: (MealSlot) -> Void
 
     /// The current week defaults to today onward; past/future weeks (and the
     /// revealed state) show the full grid.
@@ -67,7 +69,8 @@ struct WeekListView: View {
                         slots: slotsForDay(day),
                         pickerTarget: $pickerTarget,
                         onSlotTapped: onSlotTapped,
-                        onRecipeDropped: onRecipeDropped
+                        onRecipeDropped: onRecipeDropped,
+                        onRemoveMeal: onRemoveMeal
                     )
                     if index < visibleDays.count - 1 {
                         Divider()
@@ -104,6 +107,7 @@ struct DayRowView: View {
     @Binding var pickerTarget: MealPickerTarget?
     let onSlotTapped: (MealSlot) -> Void
     let onRecipeDropped: (String, MealSlot) -> Void
+    let onRemoveMeal: (MealSlot) -> Void
 
     @State private var showingAddMealMenu = false
 
@@ -140,7 +144,8 @@ struct DayRowView: View {
                     ForEach(populatedSlots, id: \.objectID) { slot in
                         MealSlotListRow(
                             slot: slot,
-                            onRecipeDropped: { recipeId in onRecipeDropped(recipeId, slot) }
+                            onRecipeDropped: { recipeId in onRecipeDropped(recipeId, slot) },
+                            onRemove: { onRemoveMeal(slot) }
                         )
                     }
                 }
@@ -226,9 +231,15 @@ struct DayRowView: View {
 struct MealSlotListRow: View {
     @ObservedObject var slot: MealSlot
     let onRecipeDropped: (String) -> Void
+    let onRemove: () -> Void
 
     @State private var isTargeted: Bool = false
     @State private var showingEditor: Bool = false
+    /// Horizontal drag offset for swipe-to-reveal delete. This view lives in a
+    /// LazyVStack, not a List, so .swipeActions is unavailable — a drag gesture
+    /// reveals a trailing Delete button instead.
+    @State private var swipeOffset: CGFloat = 0
+    private let deleteWidth: CGFloat = 88
 
     /// Display names for the slot, drawn from MealSlotComponents when present
     /// or from the legacy recipes relationship as a fallback.
@@ -256,7 +267,7 @@ struct MealSlotListRow: View {
         return "+ \(extras.prefix(2).joined(separator: ", ")), +\(extras.count - 2) more"
     }
 
-    var body: some View {
+    private var rowContent: some View {
         HStack(alignment: .firstTextBaseline, spacing: 12) {
             Text(slot.mealType.displayName)
                 .font(AppTypography.caption)
@@ -294,7 +305,56 @@ struct MealSlotListRow: View {
         .clipShape(RoundedRectangle(cornerRadius: 8))
         .contentShape(Rectangle())
         .onTapGesture {
-            showingEditor = true
+            if swipeOffset != 0 {
+                withAnimation(.easeOut(duration: 0.2)) { swipeOffset = 0 }
+            } else {
+                showingEditor = true
+            }
+        }
+    }
+
+    private func removeMeal() {
+        withAnimation(.easeOut(duration: 0.2)) { swipeOffset = 0 }
+        onRemove()
+    }
+
+    var body: some View {
+        ZStack(alignment: .trailing) {
+            // Revealed delete action behind the row.
+            Button(role: .destructive, action: removeMeal) {
+                Label("Delete", systemImage: "trash")
+                    .font(AppTypography.caption)
+                    .foregroundStyle(.white)
+                    .frame(width: deleteWidth)
+                    .frame(maxHeight: .infinity)
+                    .background(Color.red)
+            }
+            .buttonStyle(.plain)
+            .clipShape(RoundedRectangle(cornerRadius: 8))
+            .opacity(swipeOffset < 0 ? 1 : 0)
+
+            rowContent
+                .background(Theme.Colors.background)
+                .offset(x: swipeOffset)
+                .simultaneousGesture(
+                    DragGesture(minimumDistance: 12)
+                        .onChanged { value in
+                            // Horizontal-only, left-swipe reveal.
+                            if value.translation.width < 0 && abs(value.translation.width) > abs(value.translation.height) {
+                                swipeOffset = max(value.translation.width, -deleteWidth)
+                            }
+                        }
+                        .onEnded { value in
+                            withAnimation(.easeOut(duration: 0.2)) {
+                                swipeOffset = value.translation.width < -deleteWidth / 2 ? -deleteWidth : 0
+                            }
+                        }
+                )
+        }
+        .contextMenu {
+            Button(role: .destructive, action: onRemove) {
+                Label("Remove Meal", systemImage: "trash")
+            }
         }
         #if os(iOS)
         .dropDestination(for: String.self) { recipeIds, _ in
