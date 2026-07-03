@@ -139,6 +139,14 @@ Console zone deletion + Reset All Sync Data on Mac and iPhone):
 - ~~Planned-meal seeding invisible for unassigned meals~~ — RESOLVED 2026-07-03
   (99cf721): unassigned meals are household meals; they seed for every member
   with servings split across the household, assignment still narrows.
+- Tiered macro estimation (product direction, user 2026-07-03): (1) recipe-backed
+  meals derive macros from recipe ingredients — already works; (2) custom names
+  resolve against local food/ingredient data — exists, pending parser
+  unification; (3) NEW: when nothing local matches, estimate on-device with
+  Apple's FoundationModels framework (iOS 26) — on-device only (nutrition is
+  personal data; no cloud LLM), estimates keep the ≈ badge and stay editable,
+  devices without Apple Intelligence fall back to the current static table.
+  Subsumes the parser-unification item's end state.
 - Manual sync refresh (user request 2026-07-03): CloudKit import lag on iPhone
   required an app relaunch to see a Mac edit. NSPersistentCloudKitContainer has
   NO public fetch-now API (developer.apple.com/forums/thread/125363, TN3164) —
