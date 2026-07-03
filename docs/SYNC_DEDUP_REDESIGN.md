@@ -194,6 +194,22 @@ the existing invitation URL stays valid. Diagnostic recipe (for the future):
 `ANSCKRECORDMETADATA` maps entity rows to record names/zones with
 ZNEEDSUPLOAD flags.
 
+RESOLUTION (2026-07-03, same day): the purge worked — after one relaunch the
+export queue drained, the chips slot uploaded to the share zone, and
+Mac→iPhone sync was confirmed end to end ("chips and gravy" visible on both).
+Two corrections to the repair's original theory: (1) the recreated household
+uploaded to the DEFAULT zone successfully, so the 134060 was the corrupt
+record identity itself (a deleted share-root's record name), not cross-zone
+references, and new records do NOT zone-propagate into the share zone;
+(2) `container.recordID(for:)` returns a default-zone record ID even for
+never-exported objects, so the repair's zone-mismatch criterion re-fired every
+launch and deleted the healthy recreated Household/User. The repair was
+therefore REMOVED after both devices ran it (commit d5889c7 has the code).
+Watch-item for the acceptance test: the household record now lives in the
+default zone, OUTSIDE the zone-wide share — the participant will import the
+content graph but not the Household row; verify her ensureHousehold path
+handles this calmly.
+
 REGRESSION (2026-07-03, first Mac run): adding a custom meal appeared to do
 nothing — the write landed (verified in the store) but the picker sheet became
 undismissable. Cause: #Change2 materialized the slot inside the
