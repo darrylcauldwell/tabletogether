@@ -161,6 +161,9 @@ struct CompactNavigationView: View {
             selectedTab = .plan
             deepLinkMealSlotId?.wrappedValue = nil
         }
+        .onReceive(NotificationCenter.default.publisher(for: .shareAccepted)) { _ in
+            selectedTab = .plan
+        }
     }
 }
 
@@ -235,6 +238,10 @@ struct RegularNavigationView: View {
             selectedSection = .plan
             sidebarMode = .navigation
             deepLinkMealSlotId?.wrappedValue = nil
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .shareAccepted)) { _ in
+            selectedSection = .plan
+            sidebarMode = .navigation
         }
         #if targetEnvironment(macCatalyst)
         .onReceive(NotificationCenter.default.publisher(for: .navigateToSection)) { notification in

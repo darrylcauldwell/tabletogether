@@ -12,4 +12,8 @@ extension Notification.Name {
 
     /// Open the settings sheet
     static let openSettingsRequested = Notification.Name("openSettingsRequested")
+
+    /// A CloudKit share was just accepted — steer to the shared Plan so a new
+    /// member lands on the household week, not their own empty Log.
+    static let shareAccepted = Notification.Name("shareAccepted")
 }

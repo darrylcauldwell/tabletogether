@@ -415,6 +415,10 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             do {
                 try await PersistenceController.shared.acceptShare(metadata: metadata)
                 AppLogger.sharing.info("Accepted CloudKit share invitation")
+                // Land the new member on the shared Plan, not their empty Log.
+                await MainActor.run {
+                    NotificationCenter.default.post(name: .shareAccepted, object: nil)
+                }
             } catch {
                 AppLogger.sharing.error("Failed to accept CloudKit share: \(error.localizedDescription)")
             }

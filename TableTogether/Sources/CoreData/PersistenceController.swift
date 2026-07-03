@@ -447,11 +447,18 @@ final class PersistenceController {
         if let sharedStore = sharedPersistentStore { stores.append(sharedStore) }
         guard !stores.isEmpty else { return }
 
+        // container.fetchShares(in:) does synchronous I/O; running it on the
+        // main actor trips the Thread Performance Checker's hang-risk warning.
+        // Do it on a detached task and hop back to set @MainActor state. The
+        // container and stores aren't Sendable, so transfer them with the same
+        // nonisolated(unsafe) pattern used by history processing — safe here
+        // because fetchShares only reads.
+        let container = self.container
+        nonisolated(unsafe) let unsafeStores = stores
         do {
-            var shares: [CKShare] = []
-            for store in stores {
-                shares.append(contentsOf: try container.fetchShares(in: store))
-            }
+            let shares = try await Task.detached(priority: .userInitiated) {
+                try unsafeStores.flatMap { try container.fetchShares(in: $0) }
+            }.value
 
             if shares.contains(where: { $0.url == nil }) {
                 AppLogger.sharing.fault("Found orphaned share(s) with nil URL — filtering out. Use 'Reset All Sync Data' to clean up.")
