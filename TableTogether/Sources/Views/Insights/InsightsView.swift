@@ -41,6 +41,23 @@ struct InsightsView: View {
         SimpleRecipeLookup(recipes: Array(recipes))
     }
 
+    /// Today's consumed calories, from logged meals.
+    private var todayConsumedCalories: Int {
+        let calendar = Calendar.current
+        return weeklyLogs
+            .filter { $0.status == .consumed && calendar.isDateInToday($0.date) }
+            .compactMap { log -> Int? in
+                if let cal = log.quickLogCalories { return cal }
+                if let recipeID = log.recipeID,
+                   let macros = recipeLookup.macrosPerServing(for: recipeID),
+                   let cal = macros.calories {
+                    return Int(cal * log.servingsConsumed)
+                }
+                return nil
+            }
+            .reduce(0, +)
+    }
+
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -57,6 +74,19 @@ struct InsightsView: View {
                     // Apple Health integration card
                     HealthKitCard(healthService: healthService)
                         .padding(.horizontal)
+
+                    // Energy today: eaten (from logs) alongside burned (from
+                    // Health). Plain figures, no target or net balance — the
+                    // user reads them and draws their own conclusions (spec:
+                    // informational, never evaluative).
+                    if healthService.todayEnergyBurned != nil {
+                        EnergyTodayCard(
+                            eaten: todayConsumedCalories,
+                            active: healthService.todayActiveEnergy,
+                            resting: healthService.todayRestingEnergy
+                        )
+                        .padding(.horizontal)
+                    }
 
                     // Forward-looking: planned macros for the active week
                     WeekPlannedNutritionCard(weekPlan: weekPlans.first)
@@ -139,6 +169,77 @@ struct InsightsView: View {
             .task {
                 await privateDataManager.fetchCurrentWeekLogs()
                 await privateDataManager.fetchSettings()
+                if healthService.isAuthorized {
+                    await healthService.fetchTodayEnergyBurned()
+                }
+            }
+        }
+    }
+}
+
+// MARK: - Energy Today Card
+
+/// Surfaces today's energy eaten (from logs) and burned (from Apple Health)
+/// as plain figures. Deliberately shows no net/deficit and no target — the
+/// spec forbids evaluative nutrition feedback; the numbers stand on their own.
+struct EnergyTodayCard: View {
+    let eaten: Int
+    let active: Double?
+    let resting: Double?
+
+    private var burned: Int? {
+        guard active != nil || resting != nil else { return nil }
+        return Int(((active ?? 0) + (resting ?? 0)).rounded())
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Energy today")
+                .font(AppTypography.headline)
+                .foregroundStyle(Theme.Colors.textPrimary)
+
+            HStack(spacing: 16) {
+                figure(label: "Eaten", value: "\(eaten)", unit: "cal")
+                if let burned {
+                    Divider().frame(height: 40)
+                    figure(label: "Burned", value: "\(burned)", unit: "cal")
+                }
+            }
+
+            if active != nil || resting != nil {
+                Text(burnedBreakdown)
+                    .font(AppTypography.caption)
+                    .foregroundStyle(Theme.Colors.textSecondary)
+            }
+        }
+        .padding()
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(Theme.Colors.cardBackground)
+                .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 2)
+        )
+    }
+
+    private var burnedBreakdown: String {
+        var parts: [String] = []
+        if let active { parts.append("\(Int(active.rounded())) active") }
+        if let resting { parts.append("\(Int(resting.rounded())) resting") }
+        return "From Apple Health · " + parts.joined(separator: " + ")
+    }
+
+    private func figure(label: String, value: String, unit: String) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(label)
+                .font(AppTypography.caption)
+                .foregroundStyle(Theme.Colors.textSecondary)
+            HStack(alignment: .firstTextBaseline, spacing: 3) {
+                Text(value)
+                    .font(AppTypography.title3)
+                    .foregroundStyle(Theme.Colors.textPrimary)
+                Text(unit)
+                    .font(AppTypography.caption)
+                    .foregroundStyle(Theme.Colors.textSecondary)
             }
         }
     }

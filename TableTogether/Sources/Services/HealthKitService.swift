@@ -9,6 +9,7 @@ import SwiftUI
 /// - Height (for BMR/TDEE calculations)
 /// - Biological sex (for BMR calculations)
 /// - Date of birth (for age-based BMR calculations)
+/// - Active + resting energy burned today (surfaced next to energy eaten)
 ///
 /// Writes:
 /// - Dietary energy (calories)
@@ -34,6 +35,18 @@ final class HealthKitService {
     private(set) var latestHeight: Double? // in cm
     private(set) var biologicalSex: HKBiologicalSex?
     private(set) var dateOfBirth: Date?
+
+    /// Today's energy burned, read from HealthKit (active + resting), in kcal.
+    /// Used for a neutral energy-balance readout on the personal Nutrition
+    /// surface — informational, never a target/pass-fail (product spec).
+    private(set) var todayActiveEnergy: Double?
+    private(set) var todayRestingEnergy: Double?
+
+    /// Total energy burned today (active + resting), when either is available.
+    var todayEnergyBurned: Double? {
+        guard todayActiveEnergy != nil || todayRestingEnergy != nil else { return nil }
+        return (todayActiveEnergy ?? 0) + (todayRestingEnergy ?? 0)
+    }
 
     private(set) var isLoading = false
     private(set) var errorMessage: String?
@@ -160,7 +173,9 @@ final class HealthKitService {
             HKQuantityType(.bodyMass),
             HKQuantityType(.height),
             HKCharacteristicType(.biologicalSex),
-            HKCharacteristicType(.dateOfBirth)
+            HKCharacteristicType(.dateOfBirth),
+            HKQuantityType(.activeEnergyBurned),
+            HKQuantityType(.basalEnergyBurned)
         ]
 
         do {
@@ -211,10 +226,40 @@ final class HealthKitService {
         async let weight: () = fetchLatestWeight()
         async let height: () = fetchLatestHeight()
         async let characteristics: () = fetchCharacteristics()
+        async let energy: () = fetchTodayEnergyBurned()
 
-        _ = await (weight, height, characteristics)
+        _ = await (weight, height, characteristics, energy)
 
         isLoading = false
+    }
+
+    /// Sums today's active and resting energy burned, in kcal. Surfaced as-is
+    /// on the Nutrition tab next to energy eaten — no target, no net balance,
+    /// no judgement (product spec: informational, not evaluative).
+    func fetchTodayEnergyBurned() async {
+        async let active = sumEnergyToday(for: HKQuantityType(.activeEnergyBurned))
+        async let resting = sumEnergyToday(for: HKQuantityType(.basalEnergyBurned))
+        todayActiveEnergy = await active
+        todayRestingEnergy = await resting
+    }
+
+    /// Cumulative kcal for a quantity type over today, or nil if unavailable.
+    private func sumEnergyToday(for type: HKQuantityType) async -> Double? {
+        let calendar = Calendar.current
+        let startOfDay = calendar.startOfDay(for: Date())
+        let predicate = HKQuery.predicateForSamples(withStart: startOfDay, end: Date(), options: .strictStartDate)
+
+        return await withCheckedContinuation { continuation in
+            let query = HKStatisticsQuery(
+                quantityType: type,
+                quantitySamplePredicate: predicate,
+                options: .cumulativeSum
+            ) { _, statistics, _ in
+                let kcal = statistics?.sumQuantity()?.doubleValue(for: .kilocalorie())
+                continuation.resume(returning: kcal)
+            }
+            healthStore.execute(query)
+        }
     }
 
     /// Fetch the most recent weight measurement
