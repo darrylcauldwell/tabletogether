@@ -107,3 +107,7 @@ TableTogether-Marketing.md
 # Working plans
 .cookbook-plan.md
 TableTogether.app.dSYM.zip
+
+# CloudKit tokens / credentials (never commit)
+.config/cktool
+*.cktoken
