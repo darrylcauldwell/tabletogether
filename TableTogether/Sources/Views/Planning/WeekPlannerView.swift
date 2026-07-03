@@ -63,10 +63,6 @@ struct WeekPlannerView: View {
                 )
             }
 
-            WeekActionsBar(
-                onCopyFromLastWeek: copyFromLastWeek,
-                onClearWeek: clearWeek
-            )
         }
         .navigationTitle("")
         #if os(iOS)
@@ -83,6 +79,26 @@ struct WeekPlannerView: View {
                 }
                 .help(suggestionsVisible ? "Hide meal suggestions" : "Show meal suggestions")
                 .accessibilityLabel(suggestionsVisible ? "Hide meal suggestions" : "Show meal suggestions")
+            }
+            ToolbarItem(placement: .automatic) {
+                // Week management is occasional — a menu instead of a
+                // permanently visible bottom bar (user request 2026-07-03).
+                Menu {
+                    Button {
+                        copyFromLastWeek()
+                    } label: {
+                        Label("Copy from Last Week", systemImage: "doc.on.doc")
+                    }
+                    Button(role: .destructive) {
+                        clearWeek()
+                    } label: {
+                        Label("Clear Week", systemImage: "trash")
+                    }
+                } label: {
+                    Image(systemName: "ellipsis.circle")
+                }
+                .help("Week actions")
+                .accessibilityLabel("Week actions")
             }
         }
     }
@@ -253,30 +269,6 @@ struct WeekHeaderView: View {
         }
         .padding(.vertical, 12)
         .padding(.horizontal)
-    }
-}
-
-// MARK: - WeekActionsBar
-
-/// Bottom action bar with week management actions
-struct WeekActionsBar: View {
-    let onCopyFromLastWeek: () -> Void
-    let onClearWeek: () -> Void
-
-    var body: some View {
-        HStack(spacing: 16) {
-            Button(action: onCopyFromLastWeek) {
-                Label("Copy from Last Week", systemImage: "doc.on.doc")
-            }
-
-            Spacer()
-
-            Button(role: .destructive, action: onClearWeek) {
-                Label("Clear Week", systemImage: "trash")
-            }
-        }
-        .padding()
-        .background(Color.systemBackground)
     }
 }
 
