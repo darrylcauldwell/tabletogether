@@ -30,6 +30,34 @@ struct MealEstimatorServiceTests {
         #expect((estimate?.totalMacros.calories ?? 0) > 0)
     }
 
+    @Test("Alcoholic drinks estimate calories")
+    func alcoholEstimates() {
+        let estimator = MealEstimatorService()
+        for drink in ["gin and tonic", "red wine", "beer", "prosecco", "wine"] {
+            let estimate = estimator.estimate(description: drink)
+            #expect((estimate?.totalMacros.calories ?? 0) > 0, "\(drink) should estimate calories")
+        }
+    }
+
+    @Test("Compound drink beats bare spirit in matching")
+    func compoundDrinkWins() {
+        let estimate = MealEstimatorService().estimate(description: "gin and tonic")
+        let names = (estimate?.components.map { $0.name.lowercased() }) ?? []
+        #expect(names.contains { $0.contains("gin and tonic") })
+    }
+
+    @Test("Beer strength tiers scale calories by ABV band")
+    func beerStrengthTiers() {
+        let estimator = MealEstimatorService()
+        let light = estimator.estimate(description: "light beer")?.totalMacros.calories ?? 0
+        let lager = estimator.estimate(description: "lager")?.totalMacros.calories ?? 0
+        let ipa = estimator.estimate(description: "IPA")?.totalMacros.calories ?? 0
+        let strong = estimator.estimate(description: "double IPA")?.totalMacros.calories ?? 0
+        #expect(light < lager)
+        #expect(lager < ipa)
+        #expect(ipa < strong)
+    }
+
     @Test("'chips and gravy' estimates both components")
     func chipsAndGravy() {
         let estimate = MealEstimatorService().estimate(description: "chips and gravy")

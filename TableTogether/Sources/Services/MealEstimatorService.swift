@@ -590,6 +590,42 @@ final class MealEstimatorService {
         // Longest-alias-first matching means specific pies still win.
         FoodEntry(name: "Pie", aliases: ["meat pie", "steak pie", "chicken pie", "pork pie", "pie"], defaultQuantity: "1 portion",
                   macros: MacroSummary(calories: 480, protein: 15, carbs: 40, fat: 28)),
+
+        // MARK: Alcoholic drinks
+        // Alcohol contributes calories (~7 kcal/g) that don't map to
+        // protein/fat; beer/wine carry some carbs, spirits none. Estimates are
+        // per typical UK serving. Longest-alias-first matching keeps compound
+        // drinks (e.g. "gin and tonic") ahead of the bare spirit.
+        FoodEntry(name: "Gin and tonic", aliases: ["gin and tonic", "g&t", "gin & tonic"], defaultQuantity: "1 glass",
+                  macros: MacroSummary(calories: 120, protein: 0, carbs: 8, fat: 0)),
+        FoodEntry(name: "Red wine", aliases: ["red wine", "glass of red"], defaultQuantity: "175ml glass",
+                  macros: MacroSummary(calories: 160, protein: 0, carbs: 4, fat: 0)),
+        FoodEntry(name: "White wine", aliases: ["white wine", "glass of white"], defaultQuantity: "175ml glass",
+                  macros: MacroSummary(calories: 150, protein: 0, carbs: 3, fat: 0)),
+        FoodEntry(name: "Rosé wine", aliases: ["rosé wine", "rose wine", "rosé", "rose"], defaultQuantity: "175ml glass",
+                  macros: MacroSummary(calories: 150, protein: 0, carbs: 4, fat: 0)),
+        FoodEntry(name: "Prosecco", aliases: ["prosecco", "champagne", "sparkling wine", "fizz"], defaultQuantity: "125ml glass",
+                  macros: MacroSummary(calories: 90, protein: 0, carbs: 2, fat: 0)),
+        FoodEntry(name: "Wine", aliases: ["wine", "glass of wine"], defaultQuantity: "175ml glass",
+                  macros: MacroSummary(calories: 155, protein: 0, carbs: 4, fat: 0)),
+        // Beer calories scale with ABV, which varies widely (~3–8%). People
+        // rarely type an exact %, so approximate via strength tiers keyed off
+        // the name they'd actually use. Longest-alias-first matching keeps the
+        // specific tiers (e.g. "double ipa", "session") ahead of bare "beer".
+        FoodEntry(name: "Light beer", aliases: ["light beer", "session ipa", "session beer", "low alcohol beer"], defaultQuantity: "1 pint (~3–4%)",
+                  macros: MacroSummary(calories: 140, protein: 1, carbs: 12, fat: 0)),
+        FoodEntry(name: "Lager", aliases: ["lager", "pint of lager"], defaultQuantity: "1 pint (~4–5%)",
+                  macros: MacroSummary(calories: 180, protein: 2, carbs: 14, fat: 0)),
+        FoodEntry(name: "Strong beer", aliases: ["double ipa", "dipa", "imperial stout", "strong ale", "craft beer", "strong beer", "tripel"], defaultQuantity: "1 pint (~7–8%)",
+                  macros: MacroSummary(calories: 300, protein: 2, carbs: 24, fat: 0)),
+        FoodEntry(name: "IPA", aliases: ["ipa", "pale ale"], defaultQuantity: "1 pint (~5–6%)",
+                  macros: MacroSummary(calories: 230, protein: 2, carbs: 18, fat: 0)),
+        FoodEntry(name: "Beer", aliases: ["beer", "pint of beer", "ale", "bitter", "stout", "pint"], defaultQuantity: "1 pint (~4–5%)",
+                  macros: MacroSummary(calories: 200, protein: 2, carbs: 18, fat: 0)),
+        FoodEntry(name: "Cider", aliases: ["cider", "pint of cider"], defaultQuantity: "1 pint",
+                  macros: MacroSummary(calories: 210, protein: 0, carbs: 24, fat: 0)),
+        FoodEntry(name: "Spirit & mixer", aliases: ["vodka and coke", "rum and coke", "spirit and mixer", "vodka", "rum", "whisky", "whiskey", "spirit"], defaultQuantity: "1 measure + mixer",
+                  macros: MacroSummary(calories: 120, protein: 0, carbs: 11, fat: 0)),
     ]
 
 }
