@@ -224,6 +224,22 @@ technically breaching the TV's read-only invariant — acceptable because it is
 convergence maintenance on the owner's own private database, but worth an
 explicit decision if tvOS ever gains participant (shared-store) access.
 
+LATENT DAMAGE ROUND 2 (2026-07-03, reverse-direction soak): the iPhone's
+WeekPlan row carried a CKRecord identity tombstoned by the thrash-era engine —
+re-upload fails with 134060 and wedges its export queue (curry never left the
+device). Its dedup had meanwhile correctly merged the imported Mac plan and
+exported the deletion of the Mac's healthy plan record, leaving CloudKit with
+slots pointing at a deleted plan and the replacement stuck on-device. Fix
+3a4c42b: one-shot recreation of week plan rows with fresh CKRecord identities
+(same deterministic id; slots/grocery re-pointed pre-delete). GENERALIZATION
+for the future: any local row whose record identity was cloud-deleted by the
+old engine is a potential 134060 export wedge — symptom is pending uploads
+stuck across launches with repeated export failures; remedy is always
+re-point + recreate. Watch-item extended: recreated plan records (like the
+household) land in the DEFAULT zone, outside the zone-wide share — before the
+participant acceptance test, decide whether to re-share the graph so
+household/user/week plans move into the share zone.
+
 REGRESSION (2026-07-03, first Mac run): adding a custom meal appeared to do
 nothing — the write landed (verified in the store) but the picker sheet became
 undismissable. Cause: #Change2 materialized the slot inside the
