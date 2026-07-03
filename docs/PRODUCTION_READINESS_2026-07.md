@@ -136,3 +136,13 @@ Console zone deletion + Reset All Sync Data on Mac and iPhone):
 - Plan/Log intuition gap: Plan is the shared household surface but is where
   users instinctively add personal meals; agreed direction is light-touch
   signage (mark Plan as household/shared, Log as private), not a flow fork
+- Manual sync refresh (user request 2026-07-03): CloudKit import lag on iPhone
+  required an app relaunch to see a Mac edit. NSPersistentCloudKitContainer has
+  NO public fetch-now API (developer.apple.com/forums/thread/125363, TN3164) —
+  a refresh control must tear down and re-add the persistent stores, which
+  invalidates all live NSManagedObjects and needs staging (dismiss sheets,
+  quiesce views) to be crash-safe. Proposed shape: pull-to-refresh on the iOS
+  week list + a toolbar refresh button on Mac Catalyst (user suggested next to
+  settings), both calling a guarded PersistenceController.reloadStoresForSync().
+  Note: dev-environment push delivery overstates the production lag — validate
+  on TestFlight before deciding how prominent the affordance needs to be.
