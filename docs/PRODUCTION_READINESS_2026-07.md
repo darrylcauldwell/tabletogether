@@ -139,6 +139,17 @@ Console zone deletion + Reset All Sync Data on Mac and iPhone):
 - ~~Planned-meal seeding invisible for unassigned meals~~ — RESOLVED 2026-07-03
   (99cf721): unassigned meals are household meals; they seed for every member
   with servings split across the household, assignment still narrows.
+- Alcohol units per day/week (user request 2026-07-03): show units consumed
+  (ABV% × ml ÷ 1000) as a neutral figure on the Nutrition tab, like the energy
+  readout — informational, no "over your limit" scolding (spec). Needs an
+  alcoholUnits field on the hand-rolled MealLog CKRecord (dev write + Dev→Prod
+  schema deploy) and the precise alcohol parser wired into whichever log path
+  we standardise on. NOTE: alcohol estimation (incl. precise ABV/volume/qty and
+  the drink database) currently lives in MealEstimatorService, reached only by
+  Manual Entry's Estimate button + planned-meal seeding — NOT the "Describe it"
+  resolver (IngredientResolverService). Fold into the parser-unification item:
+  one estimation engine feeding all log entry paths, then alcohol + units work
+  everywhere consistently.
 - Per-person meal differences → LOG, not Plan (design decision, user 2026-07-03):
   when one person eats differently one night, do NOT split the shared plan cell
   (breaks the one-slot-per-day+meal model and turns the calm shared surface into
