@@ -2,7 +2,8 @@ import SwiftUI
 import CoreData
 
 /// Dedicated meal logging tab.
-/// Shows a prominent "Log a Meal" button, today's meals, and recent days.
+/// Shows today's meals, recent days, and a floating add button (matching
+/// the Recipes tab's pattern).
 ///
 /// All meal log data is personal and stored in CloudKit private database.
 struct MealLogView: View {
@@ -71,58 +72,47 @@ struct MealLogView: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(spacing: 20) {
-                    if let syncError = privateDataManager.syncError {
-                        SyncErrorBanner(
-                            error: syncError,
-                            onDismiss: { privateDataManager.dismissSyncError() },
-                            onRetry: { Task { await privateDataManager.refresh() } }
-                        )
-                        .padding(.horizontal)
-                    }
-
-                    // Prominent log button
-                    Button {
-                        showQuickLogSheet = true
-                    } label: {
-                        HStack(spacing: 10) {
-                            Image(systemName: "plus.circle.fill")
-                                .font(AppTypography.title2)
-                            Text("Log a Meal")
-                                .font(AppTypography.headline)
+            // Same canvas + floating-add pattern as the Recipes tab so the
+            // personal surfaces share the shared surfaces' design language.
+            ZStack(alignment: .bottomTrailing) {
+                ScrollView {
+                    VStack(spacing: 20) {
+                        if let syncError = privateDataManager.syncError {
+                            SyncErrorBanner(
+                                error: syncError,
+                                onDismiss: { privateDataManager.dismissSyncError() },
+                                onRetry: { Task { await privateDataManager.refresh() } }
+                            )
+                            .padding(.horizontal)
                         }
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 14)
-                        .foregroundStyle(.white)
-                        .background(
-                            RoundedRectangle(cornerRadius: 14)
-                                .fill(Theme.Colors.primary)
-                        )
-                    }
-                    .padding(.horizontal)
 
-                    if weeklyLogs.isEmpty {
-                        // Empty state
-                        emptyState
-                            .padding(.horizontal)
-                    } else {
-                        // Today section
-                        todaySection
-                            .padding(.horizontal)
-
-                        // Recent days
-                        if !recentDays.isEmpty {
-                            recentDaysSection
+                        if weeklyLogs.isEmpty {
+                            // Empty state
+                            emptyState
                                 .padding(.horizontal)
-                        }
-                    }
+                        } else {
+                            // Today section
+                            todaySection
+                                .padding(.horizontal)
 
-                    Spacer(minLength: 20)
+                            // Recent days
+                            if !recentDays.isEmpty {
+                                recentDaysSection
+                                    .padding(.horizontal)
+                            }
+                        }
+
+                        Spacer(minLength: 100) // Space for FAB
+                    }
+                    .padding(.vertical)
                 }
-                .padding(.vertical)
+                .background(Color.appBackground)
+
+                FloatingActionButton(action: { showQuickLogSheet = true }, accessibilityLabel: "Log a Meal") {
+                    Image(systemName: "plus")
+                }
+                .padding(20)
             }
-            .background(Theme.Colors.background)
             .navigationTitle("Meal Log")
             .sheet(isPresented: $showQuickLogSheet) {
                 QuickLogSheet()
@@ -286,7 +276,7 @@ struct MealLogView: View {
                 .font(AppTypography.body)
                 .foregroundStyle(Theme.Colors.textSecondary)
 
-            Text("Tap \"Log a Meal\" to record what you eat. Over time, you'll see patterns in the Insights tab.")
+            Text("Tap + to record what you eat. Over time, you'll see patterns in the Nutrition tab.")
                 .font(AppTypography.subheadline)
                 .foregroundStyle(Theme.Colors.textSecondary)
                 .multilineTextAlignment(.center)

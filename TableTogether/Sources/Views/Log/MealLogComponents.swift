@@ -54,28 +54,20 @@ struct PlannedMealRow: View {
                 Spacer()
             }
 
-            HStack(spacing: 12) {
+            // Quiet text affordances, matching the Plan tab's "Add meal" style —
+            // five filled capsule pairs on one screen read as demands.
+            HStack(spacing: 20) {
                 Button(action: onConfirm) {
-                    Text("Confirm")
-                        .font(AppTypography.caption)
-                        .fontWeight(.medium)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 6)
-                        .foregroundStyle(.white)
-                        .background(Theme.Colors.primary)
-                        .clipShape(Capsule())
+                    Label("Confirm", systemImage: "checkmark.circle")
+                        .font(AppTypography.subheadline)
+                        .foregroundStyle(Theme.Colors.primary)
                 }
                 .buttonStyle(.plain)
 
                 Button(action: onSkip) {
                     Text("Skip")
-                        .font(AppTypography.caption)
-                        .fontWeight(.medium)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 6)
+                        .font(AppTypography.subheadline)
                         .foregroundStyle(Theme.Colors.textSecondary)
-                        .background(Color.systemGray6)
-                        .clipShape(Capsule())
                 }
                 .buttonStyle(.plain)
 

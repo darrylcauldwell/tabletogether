@@ -401,7 +401,7 @@ struct HealthKitCard: View {
             HStack(spacing: 10) {
                 Image(systemName: "heart.fill")
                     .font(AppTypography.title2)
-                    .foregroundStyle(.red)
+                    .foregroundStyle(Theme.Colors.primary)
 
                 Text("Apple Health")
                     .font(AppTypography.headline)
@@ -486,7 +486,7 @@ struct HealthKitCard: View {
                         .padding(.vertical, 10)
                         .background(
                             RoundedRectangle(cornerRadius: 10)
-                                .fill(Color.red.opacity(0.9))
+                                .fill(Theme.Colors.primary)
                         )
                     }
                 }
@@ -495,7 +495,7 @@ struct HealthKitCard: View {
             if let error = healthService.errorMessage {
                 Text(error)
                     .font(AppTypography.caption)
-                    .foregroundStyle(.red)
+                    .foregroundStyle(Theme.Colors.textSecondary)
             }
         }
         .padding()
