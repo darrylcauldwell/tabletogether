@@ -147,6 +147,18 @@ Console zone deletion + Reset All Sync Data on Mac and iPhone):
   personal data; no cloud LLM), estimates keep the ≈ badge and stay editable,
   devices without Apple Intelligence fall back to the current static table.
   Subsumes the parser-unification item's end state.
+- SHARE CREATION BLOCKS ON FULL GRAPH MIGRATION (2026-07-03): first share of a
+  seeded library shows "Preparing invitation…" for minutes. container.share()
+  migrates the household's ENTIRE object graph (~1,899 records: 226 recipes +
+  ingredients + components) from the private default zone into the new share
+  zone, and the invite sheet blocks until that export completes. Apple's model:
+  records are created in the default zone; the share zone only exists once you
+  share; there is no API to create the mirrored graph directly in a share zone.
+  MITIGATION to build before GA: create the household share at setup while it is
+  EMPTY, then import recipes — records created after the root is shared join the
+  share zone incrementally, eliminating the one-time migration and the spinner.
+  Also: the invite sheet should not block on the full data export — only the
+  share record + URL are needed to invite.
 - RESOLVED CRASH (2026-07-03, TestFlight 1.3 macOS): launch crash, CloudKit
   assertion "Cannot replace assigned container ID … environment=Sandbox with
   … environment=Production". Cause: the TestFlight (Production) build opened
