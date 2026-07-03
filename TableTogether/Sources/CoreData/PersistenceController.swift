@@ -360,6 +360,12 @@ final class PersistenceController {
             }
         }
         #endif
+
+        // History-insert triggering misses dedup opportunities (app killed
+        // mid-cycle, groups deferred pending export) — sweep once per launch.
+        if !inMemory {
+            sweepDuplicatesAtLaunch()
+        }
     }
 
     // MARK: - Background Context
@@ -696,45 +702,135 @@ final class PersistenceController {
 
     // MARK: - Deduplication
 
+    /// One duplicate group: all rows of an entity sharing the same `id` attribute.
+    private struct DedupGroupKey: Hashable {
+        let entityName: String
+        let id: UUID
+    }
+
+    /// Groups deferred because a candidate had no CKRecord name yet (created
+    /// locally, export pending) — see DeduplicationEngine.Outcome.deferred.
+    /// Accessed ONLY from operations on the serial historyQueue, never elsewhere.
+    @ObservationIgnored
+    nonisolated(unsafe) private var deferredDedupGroups: Set<DedupGroupKey> = []
+
     private nonisolated func deduplicateIfNeeded(transactions: [NSPersistentHistoryTransaction], in context: NSManagedObjectContext, store: NSPersistentStore) {
-        let entityNames = ["Household", "Recipe", "Ingredient", "User", "WeekPlan",
-                           "MealSlot", "MealArchetype", "GroceryItem", "FoodItem",
-                           "RecipeIngredient", "SuggestionMemory"]
+        // Retry previously deferred groups alongside this batch's inserts.
+        var groups = deferredDedupGroups
 
         for transaction in transactions {
             guard let changes = transaction.changes else { continue }
 
             for change in changes where change.changeType == .insert {
                 let entityName = change.changedObjectID.entity.name ?? ""
-                guard entityNames.contains(entityName) else { continue }
+                guard DeduplicationEngine.eligibleEntityNames.contains(entityName) else { continue }
 
                 guard let inserted = try? context.existingObject(with: change.changedObjectID),
                       let insertedUUID = inserted.value(forKey: "id") as? UUID else { continue }
 
-                let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: entityName)
-                fetchRequest.predicate = NSPredicate(format: "id == %@", insertedUUID as CVarArg)
-                // Scope to the originating store: with two stores a same-id row can exist in
-                // both (e.g. the deterministic Household.defaultID). An unscoped fetch could
-                // delete the row in the other store.
-                fetchRequest.affectedStores = [store]
-
-                guard let duplicates = try? context.fetch(fetchRequest), duplicates.count > 1 else { continue }
-
-                let sorted = duplicates.sorted {
-                    $0.objectID.uriRepresentation().absoluteString < $1.objectID.uriRepresentation().absoluteString
-                }
-                for duplicate in sorted.dropFirst() {
-                    context.delete(duplicate)
-                }
+                groups.insert(DedupGroupKey(entityName: entityName, id: insertedUUID))
             }
         }
+
+        deduplicate(groups: groups, in: context, store: store)
+    }
+
+    /// Runs the engine over each group and saves. Must run on historyQueue.
+    private nonisolated func deduplicate(groups: Set<DedupGroupKey>, in context: NSManagedObjectContext, store: NSPersistentStore) {
+        guard !groups.isEmpty else { return }
+
+        var stillDeferred: Set<DedupGroupKey> = []
+        var deletedCount = 0
+
+        for group in groups {
+            let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: group.entityName)
+            fetchRequest.predicate = NSPredicate(format: "id == %@", group.id as CVarArg)
+            // Scope to the originating store: with two stores a same-id row can exist in
+            // both (e.g. the deterministic Household.defaultID). An unscoped fetch could
+            // delete the row in the other store.
+            fetchRequest.affectedStores = [store]
+
+            guard let candidates = try? context.fetch(fetchRequest), candidates.count > 1 else { continue }
+
+            var recordInfo: [NSManagedObjectID: DeduplicationEngine.RecordInfo] = [:]
+            for candidate in candidates {
+                guard let recordID = container.recordID(for: candidate.objectID) else { continue }
+                recordInfo[candidate.objectID] = DeduplicationEngine.RecordInfo(
+                    recordName: recordID.recordName,
+                    zoneKey: "\(recordID.zoneID.ownerName)|\(recordID.zoneID.zoneName)"
+                )
+            }
+
+            switch DeduplicationEngine.deduplicate(candidates: candidates, recordInfo: recordInfo, in: context) {
+            case .merged(let count):
+                deletedCount += count
+            case .deferred:
+                stillDeferred.insert(group)
+                AppLogger.swiftData.info("Dedup deferred for \(group.entityName) — awaiting CKRecord export")
+            case .noDuplicates:
+                break
+            }
+        }
+
+        deferredDedupGroups = stillDeferred
 
         if context.hasChanges {
             do {
                 try context.save()
-                AppLogger.swiftData.info("Deduplicated CloudKit records")
+                AppLogger.swiftData.info("Deduplicated \(deletedCount) CloudKit record(s)")
             } catch {
                 AppLogger.swiftData.error("Failed to save deduplication: \(error.localizedDescription)")
+            }
+        }
+    }
+
+    /// Retries groups deferred while a local record awaited export. Called on
+    /// successful CloudKit export events — the moment deferral can resolve.
+    private nonisolated func retryDeferredDeduplication() {
+        historyQueue.addOperation { [weak self] in
+            guard let self, !self.deferredDedupGroups.isEmpty else { return }
+            guard let store = self.container.persistentStoreCoordinator.persistentStores.first(where: {
+                $0.url?.lastPathComponent == Self.privateStoreFileName
+            }) else { return }
+
+            let context = self.container.newBackgroundContext()
+            context.mergePolicy = NSMergePolicy.mergeByPropertyObjectTrump
+            context.performAndWait {
+                self.deduplicate(groups: self.deferredDedupGroups, in: context, store: store)
+            }
+        }
+    }
+
+    /// One-shot sweep for duplicates that history-insert triggering missed
+    /// (app killed mid-cycle, groups deferred pending export). Called at launch.
+    nonisolated func sweepDuplicatesAtLaunch() {
+        historyQueue.addOperation { [weak self] in
+            guard let self else { return }
+            guard let store = self.container.persistentStoreCoordinator.persistentStores.first(where: {
+                $0.url?.lastPathComponent == Self.privateStoreFileName
+            }) else { return }
+
+            let context = self.container.newBackgroundContext()
+            context.mergePolicy = NSMergePolicy.mergeByPropertyObjectTrump
+            context.performAndWait {
+                var groups: Set<DedupGroupKey> = []
+                for entityName in DeduplicationEngine.eligibleEntityNames {
+                    let request = NSFetchRequest<NSDictionary>(entityName: entityName)
+                    request.resultType = .dictionaryResultType
+                    request.propertiesToFetch = ["id"]
+                    request.affectedStores = [store]
+                    guard let rows = try? context.fetch(request) else { continue }
+
+                    var counts: [UUID: Int] = [:]
+                    for row in rows {
+                        guard let id = row["id"] as? UUID else { continue }
+                        counts[id, default: 0] += 1
+                    }
+                    for (id, count) in counts where count > 1 {
+                        groups.insert(DedupGroupKey(entityName: entityName, id: id))
+                    }
+                }
+                self.deduplicate(groups: groups, in: context, store: store)
             }
         }
     }
@@ -765,6 +861,13 @@ final class PersistenceController {
             AppLogger.sync.error("CloudKit \(eventType) failed for store \(storeID): \(errorMessage)")
         } else if succeeded {
             AppLogger.sync.info("CloudKit \(eventType) succeeded for store \(storeID)")
+        }
+
+        // A completed export is the moment a deferred dedup group can resolve:
+        // the local copy now has a CKRecord name for device-independent winner
+        // selection. No-op when nothing is deferred.
+        if succeeded, event.type == .export {
+            retryDeferredDeduplication()
         }
 
         // Dispatch state mutations to MainActor
