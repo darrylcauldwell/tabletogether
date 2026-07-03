@@ -257,6 +257,24 @@ enum DayOfWeek: Int, Codable, CaseIterable, Hashable, Sendable {
         }
     }
 
+    /// The DayOfWeek for a date (Calendar weekday 1=Sunday mapped to Monday=1).
+    static func day(for date: Date, calendar: Calendar = .current) -> DayOfWeek {
+        let weekday = calendar.component(.weekday, from: date)
+        return DayOfWeek(rawValue: weekday == 1 ? 7 : weekday - 1) ?? .monday
+    }
+
+    static var today: DayOfWeek { day(for: Date()) }
+
+    /// The given day through Sunday — the planning-relevant remainder of a week.
+    static func remaining(from day: DayOfWeek) -> [DayOfWeek] {
+        allCases.filter { $0.rawValue >= day.rawValue }
+    }
+
+    /// Today through Sunday. The current week's default view shows only these
+    /// (user 2026-07-03): days already gone carry no planning value on the
+    /// primary surface. Past/future weeks keep the full grid.
+    static var remainingInCurrentWeek: [DayOfWeek] { remaining(from: today) }
+
     /// Single character abbreviation.
     var initial: String {
         switch self {

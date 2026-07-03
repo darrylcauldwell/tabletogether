@@ -1,4 +1,5 @@
 import Testing
+import Foundation
 @testable import TableTogetherLib
 
 @Suite("MealType Tests")
@@ -64,5 +65,26 @@ struct DayOfWeekTests {
         for day in DayOfWeek.allCases {
             #expect(day.displayName == day.fullName)
         }
+    }
+
+    @Test("day(for:) maps Calendar weekdays to Monday-first days")
+    func dayForDateMapsWeekdays() {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(identifier: "Europe/London")!
+        // 2026-07-03 is a Friday; 2026-07-05 is a Sunday; 2026-06-29 a Monday.
+        let friday = calendar.date(from: DateComponents(year: 2026, month: 7, day: 3))!
+        let sunday = calendar.date(from: DateComponents(year: 2026, month: 7, day: 5))!
+        let monday = calendar.date(from: DateComponents(year: 2026, month: 6, day: 29))!
+
+        #expect(DayOfWeek.day(for: friday, calendar: calendar) == .friday)
+        #expect(DayOfWeek.day(for: sunday, calendar: calendar) == .sunday)
+        #expect(DayOfWeek.day(for: monday, calendar: calendar) == .monday)
+    }
+
+    @Test("remaining(from:) runs from the given day through Sunday")
+    func remainingDaysThroughSunday() {
+        #expect(DayOfWeek.remaining(from: .friday) == [.friday, .saturday, .sunday])
+        #expect(DayOfWeek.remaining(from: .monday) == DayOfWeek.allCases)
+        #expect(DayOfWeek.remaining(from: .sunday) == [.sunday])
     }
 }

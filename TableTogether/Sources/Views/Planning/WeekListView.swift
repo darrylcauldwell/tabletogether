@@ -29,11 +29,28 @@ struct MealPickerTarget: Identifiable {
 struct WeekListView: View {
     let weekPlan: WeekPlan?
     let weekStartDate: Date
+    /// Reveals the current week's already-gone days (set by stepping the week
+    /// navigation backwards from the default remaining-days view).
+    let showsPastDays: Bool
     let onSlotTapped: (MealSlot) -> Void
     let onRecipeDropped: (String, MealSlot) -> Void
     /// Applies the picked meal to (day, mealType) — the owner materializes the
     /// plan and slot on demand and saves.
     let onMealChosen: (DayOfWeek, MealType, MealChoice) -> Void
+
+    /// The current week defaults to today onward; past/future weeks (and the
+    /// revealed state) show the full grid.
+    private var visibleDays: [DayOfWeek] {
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+        let weekStart = calendar.startOfDay(for: weekStartDate)
+        guard !showsPastDays,
+              let weekEnd = calendar.date(byAdding: .day, value: 7, to: weekStart),
+              today >= weekStart, today < weekEnd else {
+            return Array(DayOfWeek.allCases)
+        }
+        return DayOfWeek.remainingInCurrentWeek
+    }
 
     // Sheet state lives at the WeekListView level — outside the LazyVStack —
     // so that row recycling and confirmationDialog dismiss-timing on iOS
@@ -43,7 +60,7 @@ struct WeekListView: View {
     var body: some View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 0) {
-                ForEach(Array(DayOfWeek.allCases.enumerated()), id: \.element) { index, day in
+                ForEach(Array(visibleDays.enumerated()), id: \.element) { index, day in
                     DayRowView(
                         day: day,
                         weekStartDate: weekStartDate,
@@ -52,7 +69,7 @@ struct WeekListView: View {
                         onSlotTapped: onSlotTapped,
                         onRecipeDropped: onRecipeDropped
                     )
-                    if index < DayOfWeek.allCases.count - 1 {
+                    if index < visibleDays.count - 1 {
                         Divider()
                             .padding(.horizontal)
                     }

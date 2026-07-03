@@ -146,8 +146,14 @@ struct WeekView: View {
 
     private var weekPlan: WeekPlan? { weekPlans.first }
 
+    /// The ambient surface shows only today onward (matches the iOS
+    /// current-week default) — days already gone carry no planning value on a
+    /// whiteboard. State-backed so the always-on display advances past
+    /// midnight via the rollover task below.
+    @State private var fromDay: DayOfWeek = .today
+
     private var days: [DayOfWeek] {
-        DayOfWeek.allCases
+        DayOfWeek.remaining(from: fromDay)
     }
 
     var body: some View {
@@ -164,9 +170,12 @@ struct WeekView: View {
             }
         }
         .task {
-            // Repoint the fetch at the new week on a week rollover (always-on display).
+            // Roll the display forward at day and week boundaries (always-on).
             while !Task.isCancelled {
                 try? await Task.sleep(for: .seconds(60))
+                if DayOfWeek.today != fromDay {
+                    fromDay = DayOfWeek.today
+                }
                 let monday = WeekPlan.normalizeToMonday(Date())
                 if monday != loadedWeekStart {
                     loadedWeekStart = monday

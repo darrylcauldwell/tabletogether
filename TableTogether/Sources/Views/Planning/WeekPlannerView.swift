@@ -20,6 +20,9 @@ struct WeekPlannerView: View {
     /// writes the same flag, so both controls stay in agreement.
     @AppStorage("suggestionsTrayVisible") private var suggestionsVisible = false
     @State private var showingRecentChanges: Bool = false
+    /// The current week defaults to remaining days only; the first backward
+    /// step reveals its earlier days, the next one leaves the week.
+    @State private var showsPastDaysOfCurrentWeek = false
 
     private var currentUser: User? {
         User.current(in: users)
@@ -48,6 +51,7 @@ struct WeekPlannerView: View {
             WeekListView(
                 weekPlan: currentWeekPlan,
                 weekStartDate: currentWeekStart,
+                showsPastDays: showsPastDaysOfCurrentWeek,
                 onSlotTapped: handleSlotTapped,
                 onRecipeDropped: handleRecipeDropped,
                 onMealChosen: handleMealChosen
@@ -135,15 +139,29 @@ struct WeekPlannerView: View {
         return calendar.date(byAdding: .day, value: -daysFromMonday, to: today) ?? today
     }
 
+    private var isViewingCurrentWeek: Bool {
+        Calendar.current.isDate(Date(), equalTo: currentWeekStart, toGranularity: .weekOfYear)
+    }
+
     private func navigateToPreviousWeek() {
+        // From the current week's remaining-days default, the first backward
+        // step reveals this week's earlier days; the next one leaves the week.
+        if isViewingCurrentWeek && !showsPastDaysOfCurrentWeek {
+            withAnimation(.easeInOut(duration: 0.2)) {
+                showsPastDaysOfCurrentWeek = true
+            }
+            return
+        }
         if let newDate = Calendar.current.date(byAdding: .weekOfYear, value: -1, to: currentWeekStart) {
             currentWeekStart = newDate
+            showsPastDaysOfCurrentWeek = false
         }
     }
 
     private func navigateToNextWeek() {
         if let newDate = Calendar.current.date(byAdding: .weekOfYear, value: 1, to: currentWeekStart) {
             currentWeekStart = newDate
+            showsPastDaysOfCurrentWeek = false
         }
     }
 
