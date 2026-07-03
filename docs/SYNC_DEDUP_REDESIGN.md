@@ -175,8 +175,14 @@ IMPLEMENTATION STATUS (2026-07-03): Changes 1–5 landed (commits 936b3a4, 9d9c3
 tests; the only failing gate is the pre-existing CloudKit Dashboard schema deploy
 (see PRODUCTION_READINESS_2026-07.md). Simulator verification: fresh launch seeds
 no plans/slots, planner renders the virtual week, offline (no iCloud) path works.
-Change 6 (Mac + iPhone soak, then the acceptance test) awaits the user — both
-devices MUST be updated to this build before either app is relaunched.
+Change 6 COMPLETE (2026-07-03 evening): full soak passed. Owner Mac↔iPhone
+bidirectional sync, tvOS ambient surface, participant join on a second iCloud
+account (full import incl. household root, privacy boundary intact,
+write-back to owner), and the same-cell conflict test (Egg vs Bacon, Monday
+breakfast: LWW converged to the 2-seconds-later write on every device, single
+surviving record, owner-only dedup confirmed). Only the copy-week flow remains
+live-untested (unit-tested). The wife's real join is a repeat of the rehearsed
+participant path.
 
 LATENT DAMAGE FOUND (2026-07-03, first sync attempt): Mac→iPhone sync was dead
 — every export failed with NSCocoaErrorDomain 134060 and one record was
