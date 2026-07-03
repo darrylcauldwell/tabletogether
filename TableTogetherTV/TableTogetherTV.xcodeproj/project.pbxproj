@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		3F68B48B05D15D3D97E8FA99 /* DeduplicationEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 050F62402DF7574CAE13D185 /* DeduplicationEngine.swift */; };
 		74C047A8E7345501AC73D767 /* FoodItem+CoreData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4854FF7FA6055950A722A02E /* FoodItem+CoreData.swift */; };
 		FB1129F37C7255DEA502727E /* GroceryItem+CoreData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4831EA8B56E55178B5F0CD5A /* GroceryItem+CoreData.swift */; };
 		D31C8CB36ABE52B3B91D92A1 /* Household+CoreData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 781DC90DB6DA5D9AB7D23F26 /* Household+CoreData.swift */; };
@@ -56,6 +57,7 @@
 /* Begin PBXFileReference section */
 		089C1665FEEF756F011CA5E2 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		E47DE5E9F0C6D4C911200012 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Assets.xcassets"; sourceTree = SOURCE_ROOT; };
+		050F62402DF7574CAE13D185 /* DeduplicationEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "../TableTogether/Sources/CoreData/DeduplicationEngine.swift"; sourceTree = "<group>"; };
 		4854FF7FA6055950A722A02E /* FoodItem+CoreData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "../TableTogether/Sources/CoreData/FoodItem+CoreData.swift"; sourceTree = "<group>"; };
 		4831EA8B56E55178B5F0CD5A /* GroceryItem+CoreData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "../TableTogether/Sources/CoreData/GroceryItem+CoreData.swift"; sourceTree = "<group>"; };
 		781DC90DB6DA5D9AB7D23F26 /* Household+CoreData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "../TableTogether/Sources/CoreData/Household+CoreData.swift"; sourceTree = "<group>"; };
@@ -116,6 +118,7 @@
 		089C1665FEEF756F011CA5E3 /* TableTogetherTV */ = {
 			isa = PBXGroup;
 			children = (
+				050F62402DF7574CAE13D185 /* DeduplicationEngine.swift */,
 				4854FF7FA6055950A722A02E /* FoodItem+CoreData.swift */,
 				4831EA8B56E55178B5F0CD5A /* GroceryItem+CoreData.swift */,
 				781DC90DB6DA5D9AB7D23F26 /* Household+CoreData.swift */,
@@ -235,6 +238,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3F68B48B05D15D3D97E8FA99 /* DeduplicationEngine.swift in Sources */,
 				74C047A8E7345501AC73D767 /* FoodItem+CoreData.swift in Sources */,
 				FB1129F37C7255DEA502727E /* GroceryItem+CoreData.swift in Sources */,
 				D31C8CB36ABE52B3B91D92A1 /* Household+CoreData.swift in Sources */,

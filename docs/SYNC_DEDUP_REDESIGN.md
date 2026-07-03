@@ -170,6 +170,14 @@ private-store-only scoping.
 
 # Decided design (2026-07-03)
 
+IMPLEMENTATION STATUS (2026-07-03): Changes 1–5 landed (commits 936b3a4, 9d9c3da,
+47512c0, f55d4cb, e4a1b77). Preflight passes on iOS/Catalyst/tvOS with 279 unit
+tests; the only failing gate is the pre-existing CloudKit Dashboard schema deploy
+(see PRODUCTION_READINESS_2026-07.md). Simulator verification: fresh launch seeds
+no plans/slots, planner renders the virtual week, offline (no iCloud) path works.
+Change 6 (Mac + iPhone soak, then the acceptance test) awaits the user — both
+devices MUST be updated to this build before either app is relaunched.
+
 Direction D. Two pillars: a **correct dedup engine** (Apple's sanctioned convergence
 mechanism — non-optional even with lazy creation, because offline concurrent creation
 can always collide) and **lazy structure** (slots and week plans exist only when a
