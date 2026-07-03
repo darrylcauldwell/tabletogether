@@ -36,8 +36,17 @@ final class MealEstimatorService {
 
         var components: [EstimatedComponent] = []
 
+        // 0. Precise alcohol: if the text carries an explicit ABV %, compute
+        // calories from the physics (volume × ABV × ethanol density × 7) rather
+        // than guess from a name — e.g. "4x 440ml 8% DIPA".
+        if let drink = alcoholComponent(from: input) {
+            components = [drink]
+        }
+
         // 1. Try composite meal patterns first
-        components = matchCompositePatterns(input)
+        if components.isEmpty {
+            components = matchCompositePatterns(input)
+        }
 
         // 2. If no composite pattern matched, scan for individual food keywords
         if components.isEmpty {
@@ -54,6 +63,116 @@ final class MealEstimatorService {
             components: components,
             totalMacros: total
         )
+    }
+
+    // MARK: - Precise Alcohol Parsing
+
+    /// Parses an explicit-ABV drink description into a precisely-calculated
+    /// component, or nil if no ABV is present. Handles quantity ("4x", "4 cans"),
+    /// volume ("440ml", "pint", "can", "bottle") and ABV ("8%").
+    ///
+    /// Calories = ethanol calories (volume × ABV × 0.789 g/ml × 7 kcal/g) plus
+    /// residual carbohydrate typical of the drink family. Alcohol contributes
+    /// no protein or fat.
+    func alcoholComponent(from input: String) -> EstimatedComponent? {
+        guard let abv = firstNumber(in: input, pattern: "(\\d+(?:\\.\\d+)?)\\s*%"), abv > 0, abv <= 100 else {
+            return nil
+        }
+
+        // Volume per serving in ml: explicit "Nml", else pint/can/bottle, else
+        // a sensible default by drink family.
+        let isWine = input.contains("wine") || input.contains("prosecco") || input.contains("champagne")
+        let isSpirit = input.contains("spirit") || input.contains("vodka") || input.contains("gin")
+            || input.contains("whisky") || input.contains("whiskey") || input.contains("rum")
+
+        let volumePerServing: Double
+        if let ml = firstNumber(in: input, pattern: "(\\d+(?:\\.\\d+)?)\\s*ml") {
+            volumePerServing = ml
+        } else if let cl = firstNumber(in: input, pattern: "(\\d+(?:\\.\\d+)?)\\s*cl") {
+            volumePerServing = cl * 10
+        } else if input.contains("pint") {
+            volumePerServing = 568
+        } else if input.contains("bottle") {
+            // "Bottle" means different things: a wine bottle is 750ml, a spirit
+            // bottle 700ml (UK/EU), a beer bottle ~330ml.
+            volumePerServing = isWine ? 750 : (isSpirit ? 700 : 330)
+        } else if input.contains("can") {
+            volumePerServing = 440
+        } else if isWine {
+            volumePerServing = 175 // a glass
+        } else {
+            volumePerServing = 440
+        }
+
+        // Quantity: "4x", "x4", "4 cans/bottles/pints/glasses", else 1.
+        let quantity = firstNumber(in: input, pattern: "(\\d+)\\s*x")
+            ?? firstNumber(in: input, pattern: "x\\s*(\\d+)")
+            ?? firstNumber(in: input, pattern: "(\\d+)\\s*(?:cans|bottles|pints|glasses|drinks)")
+            ?? 1
+
+        let totalVolume = volumePerServing * quantity
+        let ethanolGrams = totalVolume * (abv / 100.0) * 0.789
+        let alcoholCalories = ethanolGrams * 7.0
+
+        // Residual (non-alcohol) carbohydrate, g per 100ml, by drink family.
+        let carbsPer100ml: Double
+        if isWine {
+            carbsPer100ml = 2.5
+        } else if input.contains("cider") {
+            carbsPer100ml = 4.0
+        } else if isSpirit {
+            carbsPer100ml = 0.0
+        } else {
+            carbsPer100ml = 3.0 // beer / lager / IPA family
+        }
+        let carbsGrams = totalVolume / 100.0 * carbsPer100ml
+        let totalCalories = alcoholCalories + carbsGrams * 4.0
+
+        let quantityLabel: String
+        let servings = Int(quantity)
+        let volumeLabel = "\(Int(volumePerServing))ml"
+        let abvLabel = abv.truncatingRemainder(dividingBy: 1) == 0 ? "\(Int(abv))%" : "\(abv)%"
+        if servings > 1 {
+            quantityLabel = "\(servings)× \(volumeLabel) · \(abvLabel)"
+        } else {
+            quantityLabel = "\(volumeLabel) · \(abvLabel)"
+        }
+
+        return EstimatedComponent(
+            name: alcoholDisplayName(from: input),
+            quantity: quantityLabel,
+            macros: MacroSummary(
+                calories: totalCalories.rounded(),
+                protein: 0,
+                carbs: carbsGrams.rounded(),
+                fat: 0
+            )
+        )
+    }
+
+    /// A tidy display name for a parsed alcohol entry, from known keywords.
+    private func alcoholDisplayName(from input: String) -> String {
+        let keywords: [(String, String)] = [
+            ("dipa", "Double IPA"), ("double ipa", "Double IPA"), ("ipa", "IPA"),
+            ("pale ale", "Pale Ale"), ("stout", "Stout"), ("lager", "Lager"),
+            ("cider", "Cider"), ("prosecco", "Prosecco"), ("champagne", "Champagne"),
+            ("red wine", "Red wine"), ("white wine", "White wine"), ("wine", "Wine"),
+            ("gin", "Gin"), ("vodka", "Vodka"), ("whisky", "Whisky"),
+            ("whiskey", "Whiskey"), ("rum", "Rum"), ("ale", "Ale"), ("beer", "Beer")
+        ]
+        for (needle, label) in keywords where input.contains(needle) {
+            return label
+        }
+        return "Alcoholic drink"
+    }
+
+    /// First capture-group number matching `pattern` in `input`, or nil.
+    private func firstNumber(in input: String, pattern: String) -> Double? {
+        guard let regex = try? NSRegularExpression(pattern: pattern),
+              let match = regex.firstMatch(in: input, range: NSRange(input.startIndex..., in: input)),
+              match.numberOfRanges > 1,
+              let range = Range(match.range(at: 1), in: input) else { return nil }
+        return Double(input[range])
     }
 
     // MARK: - Composite Pattern Matching

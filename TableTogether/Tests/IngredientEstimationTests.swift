@@ -46,6 +46,40 @@ struct MealEstimatorServiceTests {
         #expect(names.contains { $0.contains("gin and tonic") })
     }
 
+    @Test("Explicit ABV + volume + quantity computes precise alcohol calories")
+    func preciseAlcohol() {
+        let estimate = MealEstimatorService().estimate(description: "4x 440ml 8% DIPA")
+        // Ethanol ≈ 778 kcal + residual carbs (~211) ≈ 990 across 4 cans.
+        let cal = estimate?.totalMacros.calories ?? 0
+        #expect(cal > 900 && cal < 1100, "expected ~990, got \(cal)")
+        #expect(estimate?.components.first?.name == "Double IPA")
+    }
+
+    @Test("Wine ABV changes calories; a bottle is 750ml")
+    func wineBottleAndABV() {
+        let estimator = MealEstimatorService()
+        let light = estimator.estimate(description: "bottle of wine 10%")?.totalMacros.calories ?? 0
+        let strong = estimator.estimate(description: "bottle of wine 14%")?.totalMacros.calories ?? 0
+        #expect(light < strong)
+        // 750ml × 14% × 0.789 × 7 ≈ 580 alcohol + carbs → a full bottle is high.
+        #expect(strong > 500, "a 14% bottle should be substantial, got \(strong)")
+    }
+
+    @Test("Higher ABV yields more calories for the same volume")
+    func abvScalesCalories() {
+        let estimator = MealEstimatorService()
+        let weak = estimator.estimate(description: "440ml 3% beer")?.totalMacros.calories ?? 0
+        let strong = estimator.estimate(description: "440ml 8% beer")?.totalMacros.calories ?? 0
+        #expect(weak < strong)
+    }
+
+    @Test("Drinks without an explicit ABV still fall back to named tiers")
+    func vagueAlcoholFallsBackToTiers() {
+        // No "%": the precise parser must not fire; the named tier handles it.
+        let estimate = MealEstimatorService().estimate(description: "a pint of lager")
+        #expect((estimate?.totalMacros.calories ?? 0) > 0)
+    }
+
     @Test("Beer strength tiers scale calories by ABV band")
     func beerStrengthTiers() {
         let estimator = MealEstimatorService()
