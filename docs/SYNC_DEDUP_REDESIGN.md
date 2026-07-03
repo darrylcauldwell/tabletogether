@@ -210,6 +210,20 @@ default zone, OUTSIDE the zone-wide share — the participant will import the
 content graph but not the Household row; verify her ensureHousehold path
 handles this calmly.
 
+KNOWN WART (2026-07-03, tvOS validation): three "zombie" empty MealSlot records
+live in the dev CloudKit share zone — the Mac's Change 5 cleanup deleted them
+locally while its exports were wedged by the corrupt household, so their cloud
+deletions were lost. Existing devices never re-import them; FRESH devices (the
+Apple TV, and the participant when she joins) import them as empty slots, which
+every UI filters out via isPlanned. No fix shipped: only a device holding them
+locally can delete them, the tvOS app is explicitly read-only against the
+CloudKit store, and the whole dev environment is discarded at production launch
+(production CloudKit starts empty). Related tension noted for later: the shared
+PersistenceController dedup launch sweep DOES write (merge deletions) on tvOS,
+technically breaching the TV's read-only invariant — acceptable because it is
+convergence maintenance on the owner's own private database, but worth an
+explicit decision if tvOS ever gains participant (shared-store) access.
+
 REGRESSION (2026-07-03, first Mac run): adding a custom meal appeared to do
 nothing — the write landed (verified in the store) but the picker sheet became
 undismissable. Cause: #Change2 materialized the slot inside the
