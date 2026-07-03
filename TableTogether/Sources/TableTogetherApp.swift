@@ -121,6 +121,58 @@ struct TableTogetherApp: App {
 
         cleanupEmptyStructureIfNeeded(context: context)
         recreateWeekPlanRecordsIfNeeded(context: context)
+        reattachOrphanedSlots(context: context)
+    }
+
+    /// Self-healing invariant repair (runs every launch; cheap when clean).
+    ///
+    /// A dedup race can orphan slots: when two same-id WeekPlan records merge,
+    /// the loser is deleted — but a slot record that imports LATER still
+    /// references the deleted plan, its relationship can never resolve, and it
+    /// sits invisible with weekPlan == nil (observed 2026-07-03: "Curry"
+    /// present in the store, absent from the week). The slot's deterministic id
+    /// encodes (week, day, meal), so recompute it against known plans and
+    /// re-attach. Empty unmatched orphans are deleted (zombie records);
+    /// content-bearing unmatched orphans are left for a later launch — their
+    /// plan may simply not have imported yet.
+    @MainActor
+    private func reattachOrphanedSlots(context: NSManagedObjectContext) {
+        guard let privateStore = persistenceController.privatePersistentStore else { return }
+
+        let orphanRequest = NSFetchRequest<MealSlot>(entityName: "MealSlot")
+        orphanRequest.predicate = NSPredicate(format: "weekPlan == nil")
+        orphanRequest.affectedStores = [privateStore]
+        let orphans = context.fetchWithLogging(orphanRequest, context: "orphaned slot check")
+        guard !orphans.isEmpty else { return }
+
+        let planRequest = NSFetchRequest<WeekPlan>(entityName: "WeekPlan")
+        planRequest.affectedStores = [privateStore]
+        let plans = context.fetchWithLogging(planRequest, context: "plans for orphan reattachment")
+
+        var reattached = 0
+        var deleted = 0
+        for slot in orphans {
+            if let home = plans.first(where: { plan in
+                slot.id == MealSlot.deterministicID(
+                    weekStartDate: plan.weekStartDate,
+                    dayOfWeek: slot.dayOfWeek,
+                    mealType: slot.mealType)
+            }) {
+                slot.weekPlan = home
+                reattached += 1
+            } else if slot.isEmpty, slot.notes?.isEmpty ?? true, slot.storedComponents.isEmpty {
+                context.delete(slot)
+                deleted += 1
+            }
+        }
+
+        guard context.hasChanges else { return }
+        do {
+            try context.save()
+            AppLogger.app.warning("Orphaned slots: reattached \(reattached), deleted \(deleted) empty")
+        } catch {
+            AppLogger.swiftData.error("Failed to save orphaned slot reattachment", error: error)
+        }
     }
 
     /// One-time repair (2026-07-03): thrash-era dedup tombstoned some devices'
