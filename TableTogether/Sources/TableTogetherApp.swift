@@ -112,43 +112,11 @@ struct TableTogetherApp: App {
             }
         }
 
-        // Check if current week plan exists
-        let today = Date()
-        let weekStart = WeekPlan.normalizeToMonday(today)
-
-        let weekPlanRequest = NSFetchRequest<WeekPlan>(entityName: "WeekPlan")
-        weekPlanRequest.predicate = NSPredicate(format: "weekStartDate == %@", weekStart as NSDate)
-        weekPlanRequest.fetchLimit = 1
-
-        let existingPlans = context.fetchWithLogging(weekPlanRequest, context: "current week plan check")
-
-        if let existingPlan = existingPlans.first {
-            // Self-heal: sync deduplication of concurrently-seeded week plans can delete
-            // slots out from under the surviving plan (arbitrary-winner + cascade), leaving
-            // a plan where "Add meal" silently no-ops. Recreate any missing slots — the
-            // deterministic slot IDs make this converge across devices.
-            let healed = existingPlan.createDefaultSlots(context: context, mealTypes: MealType.defaultPlannedMeals)
-            if healed > 0 {
-                do {
-                    try context.save()
-                    AppLogger.app.warning("Healed week plan: recreated \(healed) missing meal slots")
-                } catch {
-                    AppLogger.swiftData.error("Failed to save healed week plan slots", error: error)
-                }
-            }
-        } else {
-            // Create current week plan with default slots
-            let weekPlan = WeekPlan(context: context, weekStartDate: today)
-            weekPlan.createDefaultSlots(context: context, mealTypes: MealType.defaultPlannedMeals)
-            weekPlan.household = household
-
-            do {
-                try context.save()
-                AppLogger.app.info("Created week plan for \(weekPlan.weekRangeDisplay)")
-            } catch {
-                AppLogger.swiftData.error("Failed to save week plan", error: error)
-            }
-        }
+        // Week plans and meal slots are NOT seeded — they materialize on demand
+        // when a meal is planned (#Change2/#Change4). Concurrent seeding was the
+        // systemic source of duplicate CKRecords, and the slot self-heal it
+        // required fed the cross-device dedup thrash loop (see
+        // docs/SYNC_DEDUP_REDESIGN.md).
     }
 
     /// Creates a Household if none exists, links all orphaned top-level records to it,
