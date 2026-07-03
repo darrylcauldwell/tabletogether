@@ -80,6 +80,8 @@ struct TableTogetherApp: App {
     private func initializeDataIfNeeded() async {
         let context = persistenceController.viewContext
 
+        repairCrossZoneRecords(context: context)
+
         // Ensure a Household exists first — all new records will be linked to it
         let household = ensureHousehold(context: context)
 
@@ -164,6 +166,54 @@ struct TableTogetherApp: App {
             }
         }
         UserDefaults.standard.set(true, forKey: cleanupKey)
+    }
+
+    /// The pre-redesign dedup thrash could leave the Household (and User) pinned
+    /// to a CKRecord in the DEFAULT zone while the entire content graph lives in
+    /// the SHARE zone — the arbitrary-winner engine deleted the copy that was the
+    /// share-zone original and kept a never-exported default-zone copy. CloudKit
+    /// forbids cross-zone relationships, so every export fails
+    /// (NSCocoaErrorDomain 134060) and ALL local changes silently stop syncing.
+    ///
+    /// Records cannot move between zones, so the repair is delete-and-recreate:
+    /// remove the mis-zoned objects (relationships are Nullify — children
+    /// survive); ensureHousehold and ensureUserExists recreate them with the same
+    /// deterministic ids, and zone propagation through their share-zone children
+    /// pins the NEW records to the correct zone. Shares are zone-wide, so the
+    /// recreated household is automatically part of the existing share and the
+    /// invitation URL stays valid. No-ops on healthy stores.
+    @MainActor
+    private func repairCrossZoneRecords(context: NSManagedObjectContext) {
+        guard let privateStore = persistenceController.privatePersistentStore else { return }
+        let container = persistenceController.container
+
+        // The content graph's zone, anchored on any recipe. Stores that never
+        // shared have everything in the default zone and no-op here.
+        let recipeRequest = NSFetchRequest<Recipe>(entityName: "Recipe")
+        recipeRequest.affectedStores = [privateStore]
+        recipeRequest.fetchLimit = 1
+        guard let anchor = context.fetchWithLogging(recipeRequest, context: "zone anchor").first,
+              let contentZone = container.recordID(for: anchor.objectID)?.zoneID else { return }
+
+        var deleted = 0
+        for entityName in ["Household", "User"] {
+            let request = NSFetchRequest<NSManagedObject>(entityName: entityName)
+            request.affectedStores = [privateStore]
+            for object in context.fetchWithLogging(request, context: "cross-zone check") {
+                guard let zone = container.recordID(for: object.objectID)?.zoneID,
+                      zone != contentZone else { continue }
+                context.delete(object)
+                deleted += 1
+            }
+        }
+
+        guard deleted > 0 else { return }
+        do {
+            try context.save()
+            AppLogger.app.warning("Repaired cross-zone sync block: deleted \(deleted) mis-zoned record(s) for recreation in the content zone")
+        } catch {
+            AppLogger.swiftData.error("Failed to save cross-zone repair", error: error)
+        }
     }
 
     /// Creates a Household if none exists, links all orphaned top-level records to it,

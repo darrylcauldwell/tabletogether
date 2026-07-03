@@ -178,6 +178,22 @@ no plans/slots, planner renders the virtual week, offline (no iCloud) path works
 Change 6 (Mac + iPhone soak, then the acceptance test) awaits the user — both
 devices MUST be updated to this build before either app is relaunched.
 
+LATENT DAMAGE FOUND (2026-07-03, first sync attempt): Mac→iPhone sync was dead
+— every export failed with NSCocoaErrorDomain 134060 and one record was
+permanently stuck pending upload. Diagnosis from the store's NSCK metadata
+tables: the Household (and User) CKRecords were pinned to the DEFAULT zone
+while the entire content graph (recipes, ingredients, slots…) lives in the
+SHARE zone; CloudKit forbids cross-zone relationships. Root cause is historic:
+the old arbitrary-winner dedup deleted the household copy that was the
+share-zone original and kept a never-exported default-zone copy. Fix:
+`repairCrossZoneRecords` at bootstrap deletes mis-zoned Household/User rows
+(Nullify — children survive) so the existing ensure* paths recreate them; zone
+propagation pins the new records to the share zone. Shares are zone-wide, so
+the existing invitation URL stays valid. Diagnostic recipe (for the future):
+`ANSCKEVENT` holds sync event history (type 2 = export, ZERRORCODE), and
+`ANSCKRECORDMETADATA` maps entity rows to record names/zones with
+ZNEEDSUPLOAD flags.
+
 REGRESSION (2026-07-03, first Mac run): adding a custom meal appeared to do
 nothing — the write landed (verified in the store) but the picker sheet became
 undismissable. Cause: #Change2 materialized the slot inside the
