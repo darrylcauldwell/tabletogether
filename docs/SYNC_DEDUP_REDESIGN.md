@@ -280,10 +280,13 @@ Consumers (the four "breaks" from the blast-radius audit):
 
 ## Change 3 — Virtual-grid metrics
 
-`planningProgress` and `activeSlotsCount` (`WeekPlan+CoreData.swift:55,64`) switch
-denominator from `slotsArray.count` to the virtual grid:
-`DayOfWeek.allCases.count × MealType.defaultPlannedMeals.count` (28) minus
-materialized `isSkipped` slots. A nil plan renders as 0 progress. All other
+OUTCOME (2026-07-03): implementation found `planningProgress`, `activeSlotsCount`,
+`plannedMealsCount`, and `emptySlots` had NO consumers anywhere (app, tvOS, tests)
+— deleted rather than rewritten, with a source comment requiring any future
+progress metric to use the virtual grid (7 × defaultPlannedMeals) as denominator,
+never `slotsArray.count`. The `DayColumnView` blast-radius item was also dead
+code: `WeekGridView`/`DayByDayView`/`DayTabButton` (replaced by `WeekListView`)
+and their private children `DayColumnView`/`MealSlotView` were deleted. All other
 consumers already filter on `isPlanned`/non-empty (verified in blast-radius audit).
 
 ## Change 4 — Remove seeding & self-heal

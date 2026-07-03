@@ -49,19 +49,11 @@ public class WeekPlan: NSManagedObject {
         return "Week of \(formatter.string(from: weekStartDate))"
     }
 
+    // NOTE: with lazy slots (#Change2/#Change3), slotsArray.count no longer
+    // means "cells in the week" — any future progress metric must use the
+    // virtual grid (DayOfWeek.allCases × MealType.defaultPlannedMeals) as its
+    // denominator, never the materialized slot count.
     var plannedSlots: [MealSlot] { slotsArray.filter { $0.isPlanned } }
-    var emptySlots: [MealSlot] { slotsArray.filter { $0.isEmpty } }
-
-    var planningProgress: Double {
-        let allSlots = slotsArray
-        guard !allSlots.isEmpty else { return 0.0 }
-        let nonSkipped = allSlots.filter { !$0.isSkipped }
-        guard !nonSkipped.isEmpty else { return 1.0 }
-        return Double(plannedSlots.count) / Double(nonSkipped.count)
-    }
-
-    var plannedMealsCount: Int { plannedSlots.count }
-    var activeSlotsCount: Int { slotsArray.filter { !$0.isSkipped }.count }
 
     var isCurrentWeek: Bool {
         Calendar.current.isDate(Date(), equalTo: weekStartDate, toGranularity: .weekOfYear)
