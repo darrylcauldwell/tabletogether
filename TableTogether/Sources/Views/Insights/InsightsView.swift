@@ -41,6 +41,22 @@ struct InsightsView: View {
         SimpleRecipeLookup(recipes: Array(recipes))
     }
 
+    /// UK alcohol units logged today and across the current week (consumed).
+    private var todayAlcoholUnits: Double {
+        let calendar = Calendar.current
+        return weeklyLogs
+            .filter { $0.status == .consumed && calendar.isDateInToday($0.date) }
+            .compactMap { $0.alcoholUnits }
+            .reduce(0, +)
+    }
+
+    private var weekAlcoholUnits: Double {
+        weeklyLogs
+            .filter { $0.status == .consumed }
+            .compactMap { $0.alcoholUnits }
+            .reduce(0, +)
+    }
+
     /// Today's consumed calories, from logged meals.
     private var todayConsumedCalories: Int {
         let calendar = Calendar.current
@@ -86,6 +102,13 @@ struct InsightsView: View {
                             resting: healthService.todayRestingEnergy
                         )
                         .padding(.horizontal)
+                    }
+
+                    // Alcohol units — plain today/this-week figures, shown only
+                    // once any have been logged. No limit line or judgement.
+                    if weekAlcoholUnits > 0 {
+                        AlcoholUnitsCard(today: todayAlcoholUnits, week: weekAlcoholUnits)
+                            .padding(.horizontal)
                     }
 
                     // Forward-looking: planned macros for the active week
@@ -238,6 +261,56 @@ struct EnergyTodayCard: View {
                     .font(AppTypography.title3)
                     .foregroundStyle(Theme.Colors.textPrimary)
                 Text(unit)
+                    .font(AppTypography.caption)
+                    .foregroundStyle(Theme.Colors.textSecondary)
+            }
+        }
+    }
+}
+
+// MARK: - Alcohol Units Card
+
+/// Today's and this-week's alcohol units as plain figures. No guideline line
+/// or pass/fail — purely informational, per the app's no-judgement principle.
+struct AlcoholUnitsCard: View {
+    let today: Double
+    let week: Double
+
+    private func format(_ units: Double) -> String {
+        units == units.rounded() ? "\(Int(units))" : String(format: "%.1f", units)
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Alcohol")
+                .font(AppTypography.headline)
+                .foregroundStyle(Theme.Colors.textPrimary)
+
+            HStack(spacing: 16) {
+                figure(label: "Today", value: format(today))
+                Divider().frame(height: 40)
+                figure(label: "This week", value: format(week))
+            }
+        }
+        .padding()
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(Theme.Colors.cardBackground)
+                .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 2)
+        )
+    }
+
+    private func figure(label: String, value: String) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(label)
+                .font(AppTypography.caption)
+                .foregroundStyle(Theme.Colors.textSecondary)
+            HStack(alignment: .firstTextBaseline, spacing: 3) {
+                Text(value)
+                    .font(AppTypography.title3)
+                    .foregroundStyle(Theme.Colors.textPrimary)
+                Text("units")
                     .font(AppTypography.caption)
                     .foregroundStyle(Theme.Colors.textSecondary)
             }

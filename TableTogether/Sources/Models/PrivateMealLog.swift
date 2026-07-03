@@ -53,6 +53,10 @@ struct PrivateMealLog: Identifiable, Codable {
     /// Manual fat entry for quick logs (grams)
     var quickLogFat: Int?
 
+    /// UK alcohol units for this entry (nil for non-alcohol). Surfaced as a
+    /// neutral daily/weekly figure on the Nutrition tab.
+    var alcoholUnits: Double?
+
     /// Optional notes about the meal
     var notes: String?
 
@@ -123,6 +127,7 @@ struct PrivateMealLog: Identifiable, Codable {
         self.quickLogProtein = nil
         self.quickLogCarbs = nil
         self.quickLogFat = nil
+        self.alcoholUnits = nil
         self.notes = notes
         self.status = status
         self.createdAt = Date()
@@ -138,6 +143,7 @@ struct PrivateMealLog: Identifiable, Codable {
         protein: Int? = nil,
         carbs: Int? = nil,
         fat: Int? = nil,
+        alcoholUnits: Double? = nil,
         notes: String? = nil
     ) {
         self.id = id
@@ -151,6 +157,7 @@ struct PrivateMealLog: Identifiable, Codable {
         self.quickLogProtein = protein
         self.quickLogCarbs = carbs
         self.quickLogFat = fat
+        self.alcoholUnits = alcoholUnits
         self.notes = notes
         self.status = .consumed
         self.createdAt = Date()
@@ -246,6 +253,7 @@ struct PrivateMealLog: Identifiable, Codable {
         self.quickLogProtein = record["quickLogProtein"] as? Int
         self.quickLogCarbs = record["quickLogCarbs"] as? Int
         self.quickLogFat = record["quickLogFat"] as? Int
+        self.alcoholUnits = record["alcoholUnits"] as? Double
         self.notes = record["notes"] as? String
 
         if let statusRaw = record["status"] as? String,
@@ -312,6 +320,12 @@ struct PrivateMealLog: Identifiable, Codable {
             record["quickLogFat"] = fat as CKRecordValue
         } else {
             record["quickLogFat"] = nil
+        }
+
+        if let units = alcoholUnits {
+            record["alcoholUnits"] = units as CKRecordValue
+        } else {
+            record["alcoholUnits"] = nil
         }
 
         if let notes = notes {

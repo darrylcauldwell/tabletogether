@@ -300,7 +300,7 @@ struct QuickLogSheet: View {
     private func logMeal() async {
         let manager = privateDataManager
 
-        let log: PrivateMealLog
+        var log: PrivateMealLog
         var calories: Int?
         var protein: Int?
         var carbs: Int?
@@ -366,6 +366,13 @@ struct QuickLogSheet: View {
             mealName = recipe.title
         } else {
             return
+        }
+
+        // Capture alcohol units from the drink description, if any, so the
+        // Nutrition tab can total units per day/week (informational only).
+        let unitsSource = entryMode == .describeIt ? smartMealDescription : (mealName ?? "")
+        if let units = estimator.alcoholComponent(from: unitsSource.lowercased())?.alcoholUnits, units > 0 {
+            log.alcoholUnits = units
         }
 
         // Save to private CloudKit database
