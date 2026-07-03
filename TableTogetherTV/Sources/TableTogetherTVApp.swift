@@ -75,7 +75,7 @@ struct TableTogetherTVApp: App {
 
 enum TVTab: String, CaseIterable, Identifiable {
     case today = "Today"
-    case thisWeek = "This Week"
+    case thisWeek = "Upcoming"
     case recipes = "Recipes"
     case inspiration = "Inspiration"
 
@@ -132,28 +132,41 @@ struct TVContentView: View {
 // MARK: - Week View
 
 struct WeekView: View {
-    // Live fetch so plan edits from iPhone/iPad appear without relaunching.
+    /// Number of upcoming days shown, starting today — spans week boundaries so
+    /// the remote can scroll right into future weeks ("Upcoming meals").
+    private static let horizonDays = 14
+
+    // Live fetch across the upcoming window so plan edits from iPhone/iPad
+    // appear without relaunching, and future weeks are included.
     @FetchRequest private var weekPlans: FetchedResults<WeekPlan>
-    @State private var loadedWeekStart = WeekPlan.normalizeToMonday(Date())
+    @State private var anchorDay = Calendar.current.startOfDay(for: Date())
 
     init() {
-        let monday = WeekPlan.normalizeToMonday(Date())
         _weekPlans = FetchRequest(
-            sortDescriptors: [],
-            predicate: NSPredicate(format: "weekStartDate == %@", monday as NSDate)
+            sortDescriptors: [NSSortDescriptor(keyPath: \WeekPlan.weekStartDate, ascending: true)],
+            predicate: Self.windowPredicate(from: Date())
         )
     }
 
-    private var weekPlan: WeekPlan? { weekPlans.first }
+    /// Week plans whose week start falls within the upcoming window.
+    private static func windowPredicate(from date: Date) -> NSPredicate {
+        let calendar = Calendar.current
+        let startMonday = WeekPlan.normalizeToMonday(date)
+        let end = calendar.date(byAdding: .day, value: horizonDays + 7, to: startMonday) ?? date
+        return NSPredicate(format: "weekStartDate >= %@ AND weekStartDate < %@", startMonday as NSDate, end as NSDate)
+    }
 
-    /// The ambient surface shows only today onward (matches the iOS
-    /// current-week default) — days already gone carry no planning value on a
-    /// whiteboard. State-backed so the always-on display advances past
-    /// midnight via the rollover task below.
-    @State private var fromDay: DayOfWeek = .today
+    /// The upcoming days, today through today + horizon.
+    private var upcomingDates: [Date] {
+        let calendar = Calendar.current
+        return (0..<Self.horizonDays).compactMap {
+            calendar.date(byAdding: .day, value: $0, to: anchorDay)
+        }
+    }
 
-    private var days: [DayOfWeek] {
-        DayOfWeek.remaining(from: fromDay)
+    private func weekPlan(for date: Date) -> WeekPlan? {
+        let monday = WeekPlan.normalizeToMonday(date)
+        return weekPlans.first { Calendar.current.isDate($0.weekStartDate, inSameDayAs: monday) }
     }
 
     var body: some View {
@@ -162,24 +175,22 @@ struct WeekView: View {
 
             ScrollView(.horizontal, showsIndicators: false) {
                 LazyHStack(spacing: TVTheme.Spacing.lg) {
-                    ForEach(days, id: \.self) { day in
-                        DayColumn(day: day, weekPlan: weekPlan)
+                    ForEach(upcomingDates, id: \.self) { date in
+                        DayColumn(date: date, weekPlan: weekPlan(for: date))
                     }
                 }
                 .tvSafeArea()
             }
         }
         .task {
-            // Roll the display forward at day and week boundaries (always-on).
+            // Roll forward past midnight (always-on display): re-anchor to today
+            // and slide the fetch window so future weeks keep arriving.
             while !Task.isCancelled {
                 try? await Task.sleep(for: .seconds(60))
-                if DayOfWeek.today != fromDay {
-                    fromDay = DayOfWeek.today
-                }
-                let monday = WeekPlan.normalizeToMonday(Date())
-                if monday != loadedWeekStart {
-                    loadedWeekStart = monday
-                    weekPlans.nsPredicate = NSPredicate(format: "weekStartDate == %@", monday as NSDate)
+                let today = Calendar.current.startOfDay(for: Date())
+                if today != anchorDay {
+                    anchorDay = today
+                    weekPlans.nsPredicate = Self.windowPredicate(from: today)
                 }
             }
         }
@@ -189,26 +200,39 @@ struct WeekView: View {
 // MARK: - Day Column
 
 struct DayColumn: View {
-    let day: DayOfWeek
+    let date: Date
     let weekPlan: WeekPlan?
+
+    // Focusable so the Apple TV remote can move across the strip; focus drives
+    // the ScrollView to bring off-screen future days into view.
+    @Environment(\.isFocused) private var isFocused
+    @FocusState private var focused: Bool
+
+    private var day: DayOfWeek { DayOfWeek.day(for: date) }
 
     private var slots: [MealSlot] {
         weekPlan?.slots(for: day) ?? []
     }
 
-    private var isToday: Bool {
-        let weekday = Calendar.current.component(.weekday, from: Date())
-        let adjusted = weekday == 1 ? 7 : weekday - 1
-        return DayOfWeek(rawValue: adjusted) == day
+    private var isToday: Bool { Calendar.current.isDateInToday(date) }
+
+    private var dayNumber: String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "d MMM"
+        return formatter.string(from: date)
     }
 
     var body: some View {
         VStack(alignment: .leading, spacing: TVTheme.Spacing.md) {
             // Day header
             HStack(spacing: TVTheme.Spacing.sm) {
-                Text(day.shortName)
+                Text(isToday ? "Today" : day.shortName)
                     .font(TVTheme.Typography.title2)
                     .foregroundStyle(isToday ? TVTheme.Colors.primary : TVTheme.Colors.textPrimary)
+
+                Text(dayNumber)
+                    .font(TVTheme.Typography.callout)
+                    .foregroundStyle(TVTheme.Colors.textTertiary)
 
                 if isToday {
                     Circle()
@@ -233,8 +257,12 @@ struct DayColumn: View {
         }
         .frame(width: 320)
         .padding(TVTheme.Spacing.lg)
-        .tvGlassBackground(highlighted: isToday)
+        .tvGlassBackground(highlighted: isToday || focused)
         .clipShape(RoundedRectangle(cornerRadius: TVTheme.CornerRadius.large))
+        .scaleEffect(focused ? 1.03 : 1.0)
+        .animation(TVTheme.Animation.focusIn, value: focused)
+        .focusable()
+        .focused($focused)
     }
 }
 
