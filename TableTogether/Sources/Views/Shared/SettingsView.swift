@@ -372,6 +372,16 @@ struct SettingsView: View {
                     privateDataManager: privateDataManager
                 )
             }
+            .task {
+                // Refresh the share so a participant who has joined since launch
+                // appears in the People list without needing an app relaunch.
+                await persistenceController.fetchExistingShare()
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .NSPersistentStoreRemoteChange)) { _ in
+                // A join updates the share record via CloudKit; refetch so the
+                // member list updates live while this screen is open.
+                Task { await persistenceController.fetchExistingShare() }
+            }
             #if os(iOS)
             .sheet(item: $selectedHouseholdMember) { member in
                 HouseholdMemberDetailSheet(member: member) {
