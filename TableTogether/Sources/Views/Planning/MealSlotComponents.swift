@@ -404,9 +404,19 @@ struct UserAvatarView: View {
 /// typing in the top field didn't filter, and the nav-area search field
 /// was easy to miss on Mac Catalyst. A single obvious inline TextField
 /// is what muscle memory expects.
+/// What the user picked in RecipePickerSheet.
+enum MealChoice {
+    case recipe(Recipe)
+    case custom(String)
+}
+
 struct RecipePickerSheet: View {
-    @ObservedObject var slot: MealSlot
-    @Environment(\.managedObjectContext) private var viewContext
+    /// The picker owns no model objects and performs no writes — the caller
+    /// materializes the slot and saves when a choice lands. Creating the slot
+    /// before presentation mutated the context inside the confirmationDialog
+    /// action, which broke the sheet's presentation on Catalyst (undismissable
+    /// "Add Meal" window — the #Change2 regression; see also issue #62).
+    let onChoose: (MealChoice) -> Void
     @Environment(\.dismiss) private var dismiss
 
     @FetchRequest(sortDescriptors: [SortDescriptor(\.title)]) private var recipes: FetchedResults<Recipe>
@@ -463,9 +473,7 @@ struct RecipePickerSheet: View {
                 if showCustomMealFallback {
                     Section {
                         Button {
-                            slot.customMealName = trimmedQuery
-                            slot.modifiedAt = Date()
-                            viewContext.saveWithLogging(context: "custom meal name")
+                            onChoose(.custom(trimmedQuery))
                             dismiss()
                         } label: {
                             HStack {
@@ -489,9 +497,7 @@ struct RecipePickerSheet: View {
                     } else {
                         ForEach(filteredRecipes) { recipe in
                             Button {
-                                slot.addToRecipes(recipe)
-                                slot.modifiedAt = Date()
-                                viewContext.saveWithLogging(context: "recipe selection")
+                                onChoose(.recipe(recipe))
                                 dismiss()
                             } label: {
                                 RecipeRowView(recipe: recipe)

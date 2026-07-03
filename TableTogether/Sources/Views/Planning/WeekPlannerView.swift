@@ -47,8 +47,7 @@ struct WeekPlannerView: View {
                 weekStartDate: currentWeekStart,
                 onSlotTapped: handleSlotTapped,
                 onRecipeDropped: handleRecipeDropped,
-                onAddMeal: materializeSlot,
-                onPickerDismissed: cleanupAfterPicker
+                onMealChosen: handleMealChosen
             )
 
             Divider()
@@ -114,27 +113,23 @@ struct WeekPlannerView: View {
         }
     }
 
-    /// Materializes the plan + slot on demand when the user adds a meal to an
-    /// empty cell. Left unsaved until the picker commits a meal; if the picker
-    /// is canceled, cleanupAfterPicker discards the empty slot again (#Change2).
-    private func materializeSlot(day: DayOfWeek, mealType: MealType) -> MealSlot? {
+    /// Applies a picked meal to (day, mealType): the plan and slot materialize
+    /// here, AFTER the choice lands — never at picker-presentation time, which
+    /// mutated the context inside the confirmationDialog action and broke the
+    /// sheet's presentation on Catalyst (#Change2 regression). A canceled
+    /// picker therefore leaves nothing behind.
+    private func handleMealChosen(day: DayOfWeek, mealType: MealType, choice: MealChoice) {
         let plan = currentWeekPlan ?? WeekPlan.fetchOrCreate(
             for: currentWeekStart, household: households.first, in: viewContext)
-        return plan.fetchOrCreateSlot(day: day, mealType: mealType, in: viewContext)
-    }
-
-    /// A canceled picker leaves behind the slot (and possibly the plan) that
-    /// materializeSlot created — empty cells must not persist as data.
-    private func cleanupAfterPicker(_ slot: MealSlot) {
-        guard !slot.isDeleted, slot.isEmpty else { return }
-        let plan = slot.weekPlan
-        viewContext.delete(slot)
-        if let plan, plan.slotsArray.isEmpty, plan.householdNote == nil, plan.groceryItemsArray.isEmpty {
-            viewContext.delete(plan)
+        let slot = plan.fetchOrCreateSlot(day: day, mealType: mealType, in: viewContext)
+        switch choice {
+        case .recipe(let recipe):
+            slot.addToRecipes(recipe)
+        case .custom(let name):
+            slot.customMealName = name
         }
-        if viewContext.hasChanges {
-            viewContext.saveWithLogging(context: "discard unused slot")
-        }
+        slot.modifiedAt = Date()
+        viewContext.saveWithLogging(context: "meal choice")
     }
 
     private func handleSlotTapped(_ slot: MealSlot) {

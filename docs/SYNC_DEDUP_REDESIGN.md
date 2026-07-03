@@ -178,6 +178,16 @@ no plans/slots, planner renders the virtual week, offline (no iCloud) path works
 Change 6 (Mac + iPhone soak, then the acceptance test) awaits the user — both
 devices MUST be updated to this build before either app is relaunched.
 
+REGRESSION (2026-07-03, first Mac run): adding a custom meal appeared to do
+nothing — the write landed (verified in the store) but the picker sheet became
+undismissable. Cause: #Change2 materialized the slot inside the
+confirmationDialog action; the context mutation re-rendered the planner while
+the dialog→sheet handoff was in flight (the issue-#62 fragility), breaking the
+sheet's presentation on Catalyst. Fix: RecipePickerSheet now takes a MealChoice
+callback and owns no model objects; the picker presents for a plain
+(day, mealType) value and the slot materializes only when a choice lands, so a
+canceled picker leaves nothing behind (the cleanup-on-dismiss hack is gone too).
+
 Direction D. Two pillars: a **correct dedup engine** (Apple's sanctioned convergence
 mechanism — non-optional even with lazy creation, because offline concurrent creation
 can always collide) and **lazy structure** (slots and week plans exist only when a

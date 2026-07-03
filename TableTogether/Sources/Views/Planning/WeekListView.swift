@@ -16,22 +16,29 @@ import CoreData
 // adapted to TableTogether's design system (no red/green semantic colours,
 // sage primary for today, soft card style for populated slot rows).
 
+/// The cell a meal is being picked for. A plain value — presenting the picker
+/// must not touch the model layer; the slot materializes only when a choice
+/// lands (#Change2 regression fix: creating the slot inside the dialog action
+/// re-rendered the planner mid-presentation and broke the sheet on Catalyst).
+struct MealPickerTarget: Identifiable {
+    let day: DayOfWeek
+    let mealType: MealType
+    var id: String { "\(day.rawValue)-\(mealType.rawValue)" }
+}
+
 struct WeekListView: View {
     let weekPlan: WeekPlan?
     let weekStartDate: Date
     let onSlotTapped: (MealSlot) -> Void
     let onRecipeDropped: (String, MealSlot) -> Void
-    /// Materializes the plan + slot for an empty cell the user is adding a
-    /// meal to. Slots exist only when planned into; empty cells are UI (#Change2).
-    let onAddMeal: (DayOfWeek, MealType) -> MealSlot?
-    /// Called when the picker closes so the owner can discard a slot that
-    /// was materialized but never given a meal (canceled picker).
-    let onPickerDismissed: (MealSlot) -> Void
+    /// Applies the picked meal to (day, mealType) — the owner materializes the
+    /// plan and slot on demand and saves.
+    let onMealChosen: (DayOfWeek, MealType, MealChoice) -> Void
 
     // Sheet state lives at the WeekListView level — outside the LazyVStack —
     // so that row recycling and confirmationDialog dismiss-timing on iOS
     // can't cause the picker to oscillate open/close. See issue #62.
-    @State private var slotToPresent: MealSlot?
+    @State private var pickerTarget: MealPickerTarget?
 
     var body: some View {
         ScrollView {
@@ -41,10 +48,9 @@ struct WeekListView: View {
                         day: day,
                         weekStartDate: weekStartDate,
                         slots: slotsForDay(day),
-                        slotToPresent: $slotToPresent,
+                        pickerTarget: $pickerTarget,
                         onSlotTapped: onSlotTapped,
-                        onRecipeDropped: onRecipeDropped,
-                        onAddMeal: onAddMeal
+                        onRecipeDropped: onRecipeDropped
                     )
                     if index < DayOfWeek.allCases.count - 1 {
                         Divider()
@@ -53,9 +59,10 @@ struct WeekListView: View {
                 }
             }
         }
-        .sheet(item: $slotToPresent) { slot in
-            RecipePickerSheet(slot: slot)
-                .onDisappear { onPickerDismissed(slot) }
+        .sheet(item: $pickerTarget) { target in
+            RecipePickerSheet { choice in
+                onMealChosen(target.day, target.mealType, choice)
+            }
         }
     }
 
@@ -77,10 +84,9 @@ struct DayRowView: View {
     let day: DayOfWeek
     let weekStartDate: Date
     let slots: [MealSlot]
-    @Binding var slotToPresent: MealSlot?
+    @Binding var pickerTarget: MealPickerTarget?
     let onSlotTapped: (MealSlot) -> Void
     let onRecipeDropped: (String, MealSlot) -> Void
-    let onAddMeal: (DayOfWeek, MealType) -> MealSlot?
 
     @State private var showingAddMealMenu = false
 
@@ -171,13 +177,9 @@ struct DayRowView: View {
         ) {
             ForEach(MealType.allCases, id: \.self) { mealType in
                 Button(mealTypeButtonLabel(mealType)) {
-                    // Slots materialize on demand — an empty cell has no data
-                    // until a meal is planned into it (#Change2).
-                    if let slot = slots.first(where: { $0.mealType == mealType }) {
-                        slotToPresent = slot
-                    } else {
-                        slotToPresent = onAddMeal(day, mealType)
-                    }
+                    // A plain value — the slot materializes only when a meal
+                    // choice lands, never at presentation time (#Change2).
+                    pickerTarget = MealPickerTarget(day: day, mealType: mealType)
                 }
             }
             Button("Cancel", role: .cancel) {}
