@@ -136,6 +136,13 @@ Console zone deletion + Reset All Sync Data on Mac and iPhone):
 - Plan/Log intuition gap: Plan is the shared household surface but is where
   users instinctively add personal meals; agreed direction is light-touch
   signage (mark Plan as household/shared, Log as private), not a flow fork
+- Planned-meal seeding invisible for unassigned meals (observed 2026-07-03):
+  quick-added meals have no `assignedTo`, so `syncPlannedMeals` seeds nothing
+  and the Log tab reads empty despite a planned day — user had to be told the
+  assignment rule. Calm-fit options: a quiet "Planned today" one-tap-log row in
+  the Log tab for unassigned planned meals, or assign-to-self affordance in the
+  add-meal flow. Do NOT silently auto-assign everyone (spec: no assumptions
+  about who eats what).
 - Manual sync refresh (user request 2026-07-03): CloudKit import lag on iPhone
   required an app relaunch to see a Mac edit. NSPersistentCloudKitContainer has
   NO public fetch-now API (developer.apple.com/forums/thread/125363, TN3164) —
