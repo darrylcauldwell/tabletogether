@@ -82,6 +82,9 @@ struct CompactNavigationView: View {
             NavigationStack {
                 WeekPlannerView()
                     .toolbar {
+                        ToolbarItem(placement: .cancellationAction) {
+                            SyncRefreshButton()
+                        }
                         ToolbarItem(placement: .confirmationAction) {
                             Button {
                                 showSettings = true
@@ -139,6 +142,31 @@ struct CompactNavigationView: View {
             selectedTab = .plan
             deepLinkMealSlotId?.wrappedValue = nil
         }
+    }
+}
+
+// MARK: - Sync Refresh Button
+
+/// Manual CloudKit fetch — reloads the persistent stores, which runs the same
+/// catch-up import as an app relaunch (there is no lighter public API; TN3164).
+/// Quiet chrome next to the settings gear: informational, never demanding.
+struct SyncRefreshButton: View {
+    private var persistence: PersistenceController { .shared }
+
+    var body: some View {
+        Button {
+            Task { await PersistenceController.shared.refreshFromCloud() }
+        } label: {
+            if persistence.isRefreshingFromCloud {
+                ProgressView()
+                    .controlSize(.small)
+            } else {
+                Image(systemName: "arrow.clockwise")
+            }
+        }
+        .disabled(persistence.isRefreshingFromCloud)
+        .help("Check iCloud for changes")
+        .accessibilityLabel("Refresh from iCloud")
     }
 }
 
@@ -278,7 +306,13 @@ struct SidebarView: View {
                     Image(systemName: "gear")
                 }
             }
+            ToolbarItem(placement: .bottomBar) {
+                SyncRefreshButton()
+            }
             #else
+            ToolbarItem(placement: .automatic) {
+                SyncRefreshButton()
+            }
             ToolbarItem(placement: .automatic) {
                 Button {
                     showSettings = true

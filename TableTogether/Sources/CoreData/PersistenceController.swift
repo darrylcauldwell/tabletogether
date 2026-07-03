@@ -48,6 +48,9 @@ final class PersistenceController {
     /// Error from store loading, if any. Observable so UI can show error state.
     private(set) var storeLoadError: String?
 
+    /// True while a manual CloudKit refresh (store reload) is in flight.
+    private(set) var isRefreshingFromCloud = false
+
     @ObservationIgnored
     private(set) lazy var ckContainer = CKContainer(identifier: Self.cloudKitContainerID)
 
@@ -212,6 +215,10 @@ final class PersistenceController {
         let queue = OperationQueue()
         queue.maxConcurrentOperationCount = 1
         queue.name = "PersistenceController.historyQueue"
+        // Main-actor code awaits work funneled through this queue (dedup,
+        // token persistence); default/utility QoS trips Xcode's priority-
+        // inversion hang-risk warning when the main thread waits on it.
+        queue.qualityOfService = .userInitiated
         return queue
     }()
 
@@ -466,6 +473,56 @@ final class PersistenceController {
     func fetchShare(for object: NSManagedObject) throws -> CKShare? {
         let shares = try container.fetchShares(matching: [object.objectID])
         return shares[object.objectID]
+    }
+
+    /// Relaunch-equivalent CloudKit refresh: removes and re-adds both persistent
+    /// stores so the mirroring delegate re-initializes and runs the same
+    /// catch-up import a fresh launch performs. NSPersistentCloudKitContainer
+    /// has no public fetch-now API (TN3164; forums thread 125363) — store
+    /// reload is the only sanctioned lever. Push-delivery lag repeatedly forced
+    /// full app relaunches during the 2026-07-03 sync soak; this is that
+    /// relaunch behind a button. The viewContext reset invalidates in-flight
+    /// object references, so the UI may blink; user-initiated only.
+    func refreshFromCloud() async {
+        guard !isRefreshingFromCloud, !syncRecoveryInProgress else { return }
+        isRefreshingFromCloud = true
+        defer { isRefreshingFromCloud = false }
+
+        let coordinator = container.persistentStoreCoordinator
+        do {
+            if let store = privatePersistentStore {
+                try coordinator.remove(store)
+                privatePersistentStore = nil
+            }
+            if let store = sharedPersistentStore {
+                try coordinator.remove(store)
+                sharedPersistentStore = nil
+            }
+        } catch {
+            AppLogger.sync.error("Manual refresh: failed to remove stores: \(error.localizedDescription)")
+            return
+        }
+
+        // Synchronous for SQLite stores — stores are ready when this returns.
+        container.loadPersistentStores { [weak self] description, error in
+            guard let self else { return }
+            if let error {
+                AppLogger.sync.error("Manual refresh: failed to reload store: \(error.localizedDescription)")
+                self.storeLoadError = error.localizedDescription
+                return
+            }
+            if let url = description.url,
+               let store = self.container.persistentStoreCoordinator.persistentStore(for: url) {
+                if description.cloudKitContainerOptions?.databaseScope == .shared {
+                    self.sharedPersistentStore = store
+                } else {
+                    self.privatePersistentStore = store
+                }
+            }
+        }
+
+        viewContext.reset()
+        AppLogger.sync.info("Manual refresh: reloaded persistent stores; catch-up import scheduled")
     }
 
     /// Moves mis-zoned Household/User records into the existing share's zone.

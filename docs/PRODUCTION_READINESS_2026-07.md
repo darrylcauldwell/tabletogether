@@ -147,13 +147,12 @@ Console zone deletion + Reset All Sync Data on Mac and iPhone):
   personal data; no cloud LLM), estimates keep the ≈ badge and stay editable,
   devices without Apple Intelligence fall back to the current static table.
   Subsumes the parser-unification item's end state.
-- Manual sync refresh (user request 2026-07-03): CloudKit import lag on iPhone
-  required an app relaunch to see a Mac edit. NSPersistentCloudKitContainer has
-  NO public fetch-now API (developer.apple.com/forums/thread/125363, TN3164) —
-  a refresh control must tear down and re-add the persistent stores, which
-  invalidates all live NSManagedObjects and needs staging (dismiss sheets,
-  quiesce views) to be crash-safe. Proposed shape: pull-to-refresh on the iOS
-  week list + a toolbar refresh button on Mac Catalyst (user suggested next to
-  settings), both calling a guarded PersistenceController.reloadStoresForSync().
-  Note: dev-environment push delivery overstates the production lag — validate
-  on TestFlight before deciding how prominent the affordance needs to be.
+- ~~Manual sync refresh~~ — SHIPPED 2026-07-03: SyncRefreshButton (toolbar,
+  next to settings on all layouts) calls PersistenceController.refreshFromCloud,
+  a guarded store remove/re-add + viewContext reset (relaunch-equivalent
+  catch-up import; no lighter public API exists per TN3164). Known limitation:
+  the context reset can blink open UI holding object references — acceptable
+  for a user-initiated action; revisit if it bites during the acceptance test.
+- Xcode Thread Performance Checker flags `fetchShares` called synchronously on
+  the main actor (hang risk, pre-existing). historyQueue QoS raised to
+  userInitiated 2026-07-03; moving fetchShares off-main remains open.
