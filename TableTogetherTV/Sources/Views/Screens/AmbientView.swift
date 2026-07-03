@@ -300,6 +300,16 @@ struct InspirationModeView: View {
         return recipes[currentRecipeIndex % recipes.count]
     }
 
+    @ViewBuilder private func recipeImage(for recipe: Recipe) -> some View {
+        if let imageData = recipe.imageData, let uiImage = UIImage(data: imageData) {
+            Image(uiImage: uiImage).resizable().aspectRatio(contentMode: .fill)
+        } else if let url = recipe.imageURL {
+            CachedRemoteImage(url: url) { Color.black }
+        } else {
+            Color.black
+        }
+    }
+
     var body: some View {
         ZStack {
             // Background
@@ -309,21 +319,16 @@ struct InspirationModeView: View {
                 VStack {
                     Spacer()
 
-                    // Recipe image (if available)
-                    if let imageData = recipe.imageData,
-                       let uiImage = UIImage(data: imageData) {
-                        Image(uiImage: uiImage)
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
-                            .frame(maxWidth: .infinity, maxHeight: .infinity)
-                            .overlay(
-                                LinearGradient(
-                                    colors: [.clear, .black.opacity(0.7)],
-                                    startPoint: .top,
-                                    endPoint: .bottom
-                                )
+                    // Recipe image — imageData fast-path, else cached remote load.
+                    recipeImage(for: recipe)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .overlay(
+                            LinearGradient(
+                                colors: [.clear, .black.opacity(0.7)],
+                                startPoint: .top,
+                                endPoint: .bottom
                             )
-                    }
+                        )
 
                     Spacer()
 

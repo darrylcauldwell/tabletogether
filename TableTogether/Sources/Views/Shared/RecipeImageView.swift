@@ -4,10 +4,11 @@ import SwiftUI
 ///
 /// 1. Local `imageData` (user-taken photo, in-app capture, demo data) — preferred
 ///    because it works offline and is already on disk.
-/// 2. Remote `imageURL` (curated library thumbnails from #44) — fetched lazily via
-///    SwiftUI's `AsyncImage`, which uses the system `URLCache` so each image only
-///    hits the network once per app launch (and is reused thereafter from disk
-///    cache).
+/// 2. Remote `imageURL` (curated library thumbnails from #44) — fetched via
+///    `RecipeImageLoader`, which downsamples to a display size and caches the
+///    result in memory so scrolling never re-downloads or re-decodes the
+///    full-resolution source (replaced AsyncImage, which did both and caused
+///    recipe-view lag).
 /// 3. A neutral placeholder icon — shown while the URL is loading, when both
 ///    sources are nil, or when an `AsyncImage` fetch fails.
 ///
@@ -27,23 +28,12 @@ struct RecipeImageView: View {
                 .resizable()
                 .aspectRatio(contentMode: contentMode)
         } else if let imageURL {
-            AsyncImage(url: imageURL, transaction: Transaction(animation: .default)) { phase in
-                switch phase {
-                case .success(let image):
-                    image
-                        .resizable()
-                        .aspectRatio(contentMode: contentMode)
-                case .empty:
-                    placeholder
-                        .overlay {
-                            ProgressView()
-                                .controlSize(.small)
-                        }
-                case .failure:
-                    placeholder
-                @unknown default:
-                    placeholder
-                }
+            CachedRemoteImage(url: imageURL, contentMode: contentMode) {
+                placeholder
+                    .overlay {
+                        ProgressView()
+                            .controlSize(.small)
+                    }
             }
         } else {
             placeholder

@@ -42,6 +42,7 @@
 		A4F8CBE7446C54D59FD81B42 /* RecipeIngredientResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7C92C05B494570B80502250 /* RecipeIngredientResolver.swift */; };
 		6D59ABBA15A354D896191779 /* UserIdentity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46FA904076705A65A484A0F4 /* UserIdentity.swift */; };
 		44C01FC9FE82592F92878104 /* AppTypography.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D566145F64C5AC0BD07CAB7 /* AppTypography.swift */; };
+		2B4714EF39275022A8F30263 /* RecipeImageLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = D25EA1D9B8B35956BF32A473 /* RecipeImageLoader.swift */; };
 		BA1EF3402A5154919F74B8C3 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5AD1822310295147B4847C80 /* Theme.swift */; };
 		7984C9BEE74258A6849CD7D8 /* TVDemoDataSeeder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FF83528F6585E1EB750689D /* TVDemoDataSeeder.swift */; };
 		83B135E37A5453DCB4688B39 /* TableTogetherTVApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3568B866A23E5C7EAFE6A67C /* TableTogetherTVApp.swift */; };
@@ -92,6 +93,7 @@
 		D7C92C05B494570B80502250 /* RecipeIngredientResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "../TableTogether/Sources/Services/RecipeIngredientResolver.swift"; sourceTree = "<group>"; };
 		46FA904076705A65A484A0F4 /* UserIdentity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "../TableTogether/Sources/Services/UserIdentity.swift"; sourceTree = "<group>"; };
 		1D566145F64C5AC0BD07CAB7 /* AppTypography.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "../TableTogether/Sources/Views/AppTypography.swift"; sourceTree = "<group>"; };
+		D25EA1D9B8B35956BF32A473 /* RecipeImageLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "../TableTogether/Sources/Views/Shared/RecipeImageLoader.swift"; sourceTree = "<group>"; };
 		5AD1822310295147B4847C80 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "../TableTogether/Sources/Views/Shared/Theme.swift"; sourceTree = "<group>"; };
 		1FF83528F6585E1EB750689D /* TVDemoDataSeeder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/TVDemoDataSeeder.swift"; sourceTree = "<group>"; };
 		3568B866A23E5C7EAFE6A67C /* TableTogetherTVApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/TableTogetherTVApp.swift"; sourceTree = "<group>"; };
@@ -153,6 +155,7 @@
 				D7C92C05B494570B80502250 /* RecipeIngredientResolver.swift */,
 				46FA904076705A65A484A0F4 /* UserIdentity.swift */,
 				1D566145F64C5AC0BD07CAB7 /* AppTypography.swift */,
+				D25EA1D9B8B35956BF32A473 /* RecipeImageLoader.swift */,
 				5AD1822310295147B4847C80 /* Theme.swift */,
 				1FF83528F6585E1EB750689D /* TVDemoDataSeeder.swift */,
 				3568B866A23E5C7EAFE6A67C /* TableTogetherTVApp.swift */,
@@ -273,6 +276,7 @@
 				A4F8CBE7446C54D59FD81B42 /* RecipeIngredientResolver.swift in Sources */,
 				6D59ABBA15A354D896191779 /* UserIdentity.swift in Sources */,
 				44C01FC9FE82592F92878104 /* AppTypography.swift in Sources */,
+				2B4714EF39275022A8F30263 /* RecipeImageLoader.swift in Sources */,
 				BA1EF3402A5154919F74B8C3 /* Theme.swift in Sources */,
 				7984C9BEE74258A6849CD7D8 /* TVDemoDataSeeder.swift in Sources */,
 				83B135E37A5453DCB4688B39 /* TableTogetherTVApp.swift in Sources */,

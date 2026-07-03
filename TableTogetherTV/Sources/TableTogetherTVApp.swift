@@ -292,28 +292,31 @@ struct RecipeCard: View {
 
     @Environment(\.isFocused) private var isFocused
 
+    @ViewBuilder private var recipeThumbnail: some View {
+        let placeholder = Rectangle()
+            .fill(TVTheme.Colors.glassBackground)
+            .overlay(
+                Image(systemName: "photo")
+                    .font(.system(size: 48))
+                    .foregroundStyle(TVTheme.Colors.textTertiary)
+            )
+        if let imageData = recipe.imageData, let uiImage = UIImage(data: imageData) {
+            Image(uiImage: uiImage).resizable()
+        } else if let url = recipe.imageURL {
+            CachedRemoteImage(url: url) { placeholder }
+        } else {
+            placeholder
+        }
+    }
+
     var body: some View {
         Button(action: onSelect) {
             VStack(alignment: .leading, spacing: TVTheme.Spacing.md) {
-                // Recipe image
-                if let imageData = recipe.imageData,
-                   let uiImage = UIImage(data: imageData) {
-                    Image(uiImage: uiImage)
-                        .resizable()
-                        .aspectRatio(16/9, contentMode: .fill)
-                        .frame(height: 200)
-                        .clipped()
-                } else {
-                    Rectangle()
-                        .fill(TVTheme.Colors.glassBackground)
-                        .aspectRatio(16/9, contentMode: .fill)
-                        .frame(height: 200)
-                        .overlay(
-                            Image(systemName: "photo")
-                                .font(.system(size: 48))
-                                .foregroundStyle(TVTheme.Colors.textTertiary)
-                        )
-                }
+                // Recipe image — imageData fast-path, else cached remote load.
+                recipeThumbnail
+                    .aspectRatio(16/9, contentMode: .fill)
+                    .frame(height: 200)
+                    .clipped()
 
                 // Recipe info
                 VStack(alignment: .leading, spacing: TVTheme.Spacing.sm) {
