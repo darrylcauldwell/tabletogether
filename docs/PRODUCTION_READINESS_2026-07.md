@@ -139,6 +139,16 @@ Console zone deletion + Reset All Sync Data on Mac and iPhone):
 - ~~Planned-meal seeding invisible for unassigned meals~~ — RESOLVED 2026-07-03
   (99cf721): unassigned meals are household meals; they seed for every member
   with servings split across the household, assignment still narrows.
+- Per-person meal differences → LOG, not Plan (design decision, user 2026-07-03):
+  when one person eats differently one night, do NOT split the shared plan cell
+  (breaks the one-slot-per-day+meal model and turns the calm shared surface into
+  per-person tracking — against "food is shared, bodies are not"). The shared
+  Plan stays the common intention; the individual records their variant in their
+  private Log. ENABLER to build: make the Log date-navigable (back/forward by
+  day, add/edit any date) so a known future difference can be pre-recorded and
+  past gaps backfilled — today the Log only seeds today/yesterday. Data model
+  already stores a per-entry date and saveMealLog accepts any date; work is Log
+  UI (date header + chevrons) + QuickLogSheet targeting the selected day.
 - Tiered macro estimation (product direction, user 2026-07-03): (1) recipe-backed
   meals derive macros from recipe ingredients — already works; (2) custom names
   resolve against local food/ingredient data — exists, pending parser
