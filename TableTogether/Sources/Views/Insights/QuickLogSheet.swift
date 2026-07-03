@@ -49,7 +49,9 @@ struct QuickLogSheet: View {
         User.current(in: users)
     }
 
-    /// Today's planned meals where the current user is assigned
+    /// Today's planned meals for this user. Unassigned meals are household
+    /// meals and count for everyone; assignment narrows the list (matches
+    /// PrivateDataManager.seedingShare).
     private var todaysPlannedMeals: [(slot: MealSlot, recipe: Recipe)] {
         guard let user = currentUser else { return [] }
         let calendar = Calendar.current
@@ -58,7 +60,8 @@ struct QuickLogSheet: View {
         var results: [(slot: MealSlot, recipe: Recipe)] = []
         for slot in mealSlots {
             guard slot.isPlanned,
-                  slot.assignedToArray.contains(where: { $0.id == user.id }),
+                  slot.assignedToArray.isEmpty
+                    || slot.assignedToArray.contains(where: { $0.id == user.id }),
                   let weekPlan = slot.weekPlan else { continue }
 
             let slotDate = weekPlan.date(for: slot.dayOfWeek)

@@ -89,4 +89,54 @@ struct PlannedLogSeedingTests {
         #expect(log.quickLogCalories == nil)
         #expect(log.servingsConsumed == 1.5)
     }
+
+    // MARK: - seedingShare (who a planned meal seeds for)
+
+    @Test func unassignedMealSeedsForEveryoneSplitAcrossHousehold() {
+        let context = makeContext()
+        let me = User(context: context, displayName: "Me")
+        let slot = MealSlot(context: context, dayOfWeek: .friday, mealType: .dinner, servingsPlanned: 2)
+        slot.customMealName = "pie"
+
+        let share = PrivateDataManager.seedingShare(of: slot, for: me, householdSize: 2)
+
+        #expect(share == 1.0)
+    }
+
+    @Test func unassignedMealFallsBackToFullServingsForSoloHousehold() {
+        let context = makeContext()
+        let me = User(context: context, displayName: "Me")
+        let slot = MealSlot(context: context, dayOfWeek: .friday, mealType: .dinner, servingsPlanned: 2)
+        slot.customMealName = "pie"
+
+        // householdSize 0 must not divide by zero — treat as a household of one.
+        #expect(PrivateDataManager.seedingShare(of: slot, for: me, householdSize: 0) == 2.0)
+        #expect(PrivateDataManager.seedingShare(of: slot, for: me, householdSize: 1) == 2.0)
+    }
+
+    @Test func assignedMealSeedsOnlyForAssigneesSplitBetweenThem() {
+        let context = makeContext()
+        let me = User(context: context, displayName: "Me")
+        let partner = User(context: context, displayName: "Partner")
+        let slot = MealSlot(context: context, dayOfWeek: .friday, mealType: .dinner, servingsPlanned: 4)
+        slot.customMealName = "pie"
+        slot.addToAssignedTo(me)
+        slot.addToAssignedTo(partner)
+
+        #expect(PrivateDataManager.seedingShare(of: slot, for: me, householdSize: 2) == 2.0)
+
+        let outsider = User(context: context, displayName: "Guest")
+        #expect(PrivateDataManager.seedingShare(of: slot, for: outsider, householdSize: 3) == nil)
+    }
+
+    @Test func unplannedOrSkippedSlotNeverSeeds() {
+        let context = makeContext()
+        let me = User(context: context, displayName: "Me")
+        let empty = MealSlot(context: context, dayOfWeek: .friday, mealType: .dinner)
+        #expect(PrivateDataManager.seedingShare(of: empty, for: me, householdSize: 2) == nil)
+
+        let skipped = MealSlot(context: context, dayOfWeek: .friday, mealType: .lunch, isSkipped: true)
+        skipped.customMealName = "pie"
+        #expect(PrivateDataManager.seedingShare(of: skipped, for: me, householdSize: 2) == nil)
+    }
 }

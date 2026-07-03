@@ -356,34 +356,27 @@ final class PrivateDataManager {
 
     /// Auto-populates meal logs from planned meal slots for the current user.
     /// Called when the meal log view appears or app becomes active.
-    /// Creates `.planned` log entries for assigned slots that don't yet have a log.
+    /// Creates `.planned` log entries for eligible slots that don't yet have a log.
     func syncPlannedMeals(slots: [MealSlot], currentUser: User) async {
         let calendar = Calendar.current
         let today = calendar.startOfDay(for: Date())
         let yesterday = calendar.date(byAdding: .day, value: -1, to: today) ?? today
+        let householdSize = currentUser.household?.usersArray.count ?? 1
 
-        // Filter to slots from today and yesterday where current user is assigned
+        // Slots from today and yesterday only.
         let relevantSlots = slots.filter { slot in
-            guard slot.isPlanned,
-                  slot.assignedToArray.contains(where: { $0.id == currentUser.id }) else {
-                return false
-            }
-
-            // Check if slot's weekPlan contains today or yesterday
             guard let weekPlan = slot.weekPlan else { return false }
-            let slotDate = weekPlan.date(for: slot.dayOfWeek)
-            let slotDay = calendar.startOfDay(for: slotDate)
+            let slotDay = calendar.startOfDay(for: weekPlan.date(for: slot.dayOfWeek))
             return slotDay == today || slotDay == yesterday
         }
 
         for slot in relevantSlots {
+            guard let perPersonServings = Self.seedingShare(
+                of: slot, for: currentUser, householdSize: householdSize) else { continue }
+
             // Check if a log already exists for this slot
             let alreadyLogged = mealLogs.contains { $0.mealSlotID == slot.id }
             guard !alreadyLogged else { continue }
-
-            // Calculate per-person servings
-            let assignedCount = max(slot.assignedToArray.count, 1)
-            let perPersonServings = Double(slot.servingsPlanned) / Double(assignedCount)
 
             let slotDate: Date
             if let weekPlan = slot.weekPlan {
@@ -401,6 +394,22 @@ final class PrivateDataManager {
 
             await saveMealLog(log)
         }
+    }
+
+    /// Whether a planned slot seeds into a user's log, and that person's share of
+    /// its servings. An UNASSIGNED meal is a household meal (product decision
+    /// 2026-07-03): it seeds for every member by default, splitting servings
+    /// across the household, so planned meals appear in the log without a hidden
+    /// assignment prerequisite. Explicit assignment narrows both who seeds and
+    /// the split. Returns nil when the slot shouldn't seed for `user`.
+    static func seedingShare(of slot: MealSlot, for user: User, householdSize: Int) -> Double? {
+        guard slot.isPlanned else { return nil }
+        let assigned = slot.assignedToArray
+        if assigned.isEmpty {
+            return Double(slot.servingsPlanned) / Double(max(householdSize, 1))
+        }
+        guard assigned.contains(where: { $0.id == user.id }) else { return nil }
+        return Double(slot.servingsPlanned) / Double(assigned.count)
     }
 
     /// Builds the private log entry seeded from a planned meal slot.
