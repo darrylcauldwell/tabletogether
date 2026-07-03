@@ -70,7 +70,7 @@ struct CompactNavigationView: View {
         case "recipes": return .recipes
         case "grocery": return .grocery
         case "log": return .log
-        case "insights": return .insights
+        case "insights": return .log // Nutrition is pushed from Log
         default: return .plan
         }
     }()
@@ -101,6 +101,15 @@ struct CompactNavigationView: View {
 
             NavigationStack {
                 RecipeLibraryView()
+                    .toolbar {
+                        ToolbarItem(placement: .confirmationAction) {
+                            Button {
+                                showSettings = true
+                            } label: {
+                                Image(systemName: "gear")
+                            }
+                        }
+                    }
             }
             .tabItem {
                 Label("Recipes", systemImage: "book")
@@ -109,6 +118,15 @@ struct CompactNavigationView: View {
 
             NavigationStack {
                 ShoppingContainerView()
+                    .toolbar {
+                        ToolbarItem(placement: .confirmationAction) {
+                            Button {
+                                showSettings = true
+                            } label: {
+                                Image(systemName: "gear")
+                            }
+                        }
+                    }
             }
             .tabItem {
                 Label("Shopping", systemImage: "cart")
@@ -117,19 +135,20 @@ struct CompactNavigationView: View {
 
             NavigationStack {
                 MealLogView()
+                    .toolbar {
+                        ToolbarItem(placement: .confirmationAction) {
+                            Button {
+                                showSettings = true
+                            } label: {
+                                Image(systemName: "gear")
+                            }
+                        }
+                    }
             }
             .tabItem {
                 Label("Log", systemImage: "square.and.pencil")
             }
             .tag(Tab.log)
-
-            NavigationStack {
-                InsightsView()
-            }
-            .tabItem {
-                Label("Nutrition", systemImage: "chart.line.uptrend.xyaxis")
-            }
-            .tag(Tab.insights)
         }
         .tint(Theme.Colors.primary)
         .sheet(isPresented: $showSettings) {
@@ -188,7 +207,7 @@ struct RegularNavigationView: View {
         case "pantryCheck": return .pantryCheck
         case "grocery": return .grocery
         case "log": return .log
-        case "insights": return .insights
+        case "insights": return .log // Nutrition is pushed from Log
         default: return .plan
         }
     }()
@@ -287,9 +306,6 @@ struct SidebarView: View {
                     Section("Personal") {
                         Label("Meal Log", systemImage: "square.and.pencil")
                             .tag(SidebarSection.log)
-
-                        Label("Nutrition", systemImage: "chart.line.uptrend.xyaxis")
-                            .tag(SidebarSection.insights)
                     }
                 }
                 #if os(iOS)
@@ -374,7 +390,6 @@ enum Tab: Hashable {
     case recipes
     case grocery
     case log
-    case insights
 }
 
 enum SidebarSection: Hashable {

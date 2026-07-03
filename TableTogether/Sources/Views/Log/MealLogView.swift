@@ -16,6 +16,9 @@ struct MealLogView: View {
     @State private var logToEdit: PrivateMealLog?
     @State private var logToDelete: PrivateMealLog?
     @State private var showDeleteConfirmation = false
+    /// Nutrition is the spec's voluntary drill-down layer, pushed from here
+    /// rather than holding a tab of its own. Screenshot mode deep-opens it.
+    @State private var showInsights = TableTogetherApp.screenshotScreen == "insights"
 
     private var currentUser: User? {
         User.current(in: users)
@@ -114,6 +117,20 @@ struct MealLogView: View {
                 .padding(20)
             }
             .navigationTitle("Meal Log")
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        showInsights = true
+                    } label: {
+                        Image(systemName: "chart.line.uptrend.xyaxis")
+                    }
+                    .help("Nutrition")
+                    .accessibilityLabel("Nutrition")
+                }
+            }
+            .navigationDestination(isPresented: $showInsights) {
+                InsightsView()
+            }
             .sheet(isPresented: $showQuickLogSheet) {
                 QuickLogSheet()
             }
