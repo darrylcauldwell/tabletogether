@@ -6,6 +6,7 @@ import CoreData
 /// Row for an auto-populated planned meal that hasn't been confirmed yet
 struct PlannedMealRow: View {
     let log: PrivateMealLog
+    let calories: Int?
     let recipeLookup: RecipeMacroLookup
     let onConfirm: () -> Void
     let onSkip: () -> Void
@@ -43,7 +44,9 @@ struct PlannedMealRow: View {
                         .foregroundStyle(Theme.Colors.textPrimary)
                         .lineLimit(1)
 
-                    Text("From plan")
+                    // Estimates are informational, never judging — the ≈ keeps
+                    // the provisional nature visible.
+                    Text(calories.map { "From plan · ≈\($0) cal" } ?? "From plan")
                         .font(AppTypography.caption2)
                         .foregroundStyle(Theme.Colors.textSecondary)
                 }

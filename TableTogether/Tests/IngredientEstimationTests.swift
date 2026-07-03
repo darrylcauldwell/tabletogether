@@ -23,6 +23,22 @@ struct MealEstimatorServiceTests {
         #expect((estimate?.totalMacros.calories ?? 0) > 0)
     }
 
+
+    @Test("Bare 'pie' gets a modest generic estimate instead of nothing")
+    func genericPieEstimates() {
+        let estimate = MealEstimatorService().estimate(description: "pie")
+        #expect((estimate?.totalMacros.calories ?? 0) > 0)
+    }
+
+    @Test("'chips and gravy' estimates both components")
+    func chipsAndGravy() {
+        let estimate = MealEstimatorService().estimate(description: "chips and gravy")
+        let names = (estimate?.components.map { $0.name.lowercased() }) ?? []
+        #expect(names.contains { $0.contains("chips") })
+        #expect(names.contains { $0.contains("gravy") })
+        #expect((estimate?.totalMacros.calories ?? 0) > 0)
+    }
+
     @Test("'egg on toast' includes eggs")
     func eggOnToast() {
         let estimate = MealEstimatorService().estimate(description: "egg on toast")

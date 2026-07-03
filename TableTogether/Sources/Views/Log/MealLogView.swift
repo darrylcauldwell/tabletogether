@@ -175,6 +175,7 @@ struct MealLogView: View {
                         ForEach(todayPlannedLogs, id: \.id) { log in
                             PlannedMealRow(
                                 log: log,
+                                calories: caloriesFor(log),
                                 recipeLookup: recipeLookup,
                                 onConfirm: {
                                     Task {

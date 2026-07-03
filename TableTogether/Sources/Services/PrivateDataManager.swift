@@ -374,9 +374,24 @@ final class PrivateDataManager {
             guard let perPersonServings = Self.seedingShare(
                 of: slot, for: currentUser, householdSize: householdSize) else { continue }
 
-            // Check if a log already exists for this slot
-            let alreadyLogged = mealLogs.contains { $0.mealSlotID == slot.id }
-            guard !alreadyLogged else { continue }
+            // Already seeded: planned entries are provisional, so retry the
+            // estimator on ones that couldn't be estimated when seeded —
+            // estimator improvements reach existing logs without re-seeding.
+            if let existing = mealLogs.first(where: { $0.mealSlotID == slot.id }) {
+                if existing.status == .planned, existing.recipeID == nil,
+                   existing.quickLogCalories == nil, let name = existing.quickLogName,
+                   let estimate = mealEstimator.estimate(description: name) {
+                    var updated = existing
+                    let macros = estimate.totalMacros
+                    let servings = existing.servingsConsumed
+                    updated.quickLogCalories = macros.calories.map { Int(($0 * servings).rounded()) }
+                    updated.quickLogProtein = macros.protein.map { Int(($0 * servings).rounded()) }
+                    updated.quickLogCarbs = macros.carbs.map { Int(($0 * servings).rounded()) }
+                    updated.quickLogFat = macros.fat.map { Int(($0 * servings).rounded()) }
+                    await saveMealLog(updated)
+                }
+                continue
+            }
 
             let slotDate: Date
             if let weekPlan = slot.weekPlan {

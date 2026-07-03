@@ -585,6 +585,11 @@ final class MealEstimatorService {
                   macros: MacroSummary(calories: 450, protein: 18, carbs: 45, fat: 22)),
         FoodEntry(name: "Shepherd's pie", aliases: ["shepherd's pie", "shepherds pie", "cottage pie"], defaultQuantity: "1 portion",
                   macros: MacroSummary(calories: 400, protein: 22, carbs: 35, fat: 20)),
+        // Generic pastry pie — bare "pie" is ambiguous, so this is a modest
+        // middle-ground estimate (same spirit as the generic sandwich filling).
+        // Longest-alias-first matching means specific pies still win.
+        FoodEntry(name: "Pie", aliases: ["meat pie", "steak pie", "chicken pie", "pork pie", "pie"], defaultQuantity: "1 portion",
+                  macros: MacroSummary(calories: 480, protein: 15, carbs: 40, fat: 28)),
     ]
 
 }
