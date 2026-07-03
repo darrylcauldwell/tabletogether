@@ -224,6 +224,20 @@ technically breaching the TV's read-only invariant — acceptable because it is
 convergence maintenance on the owner's own private database, but worth an
 explicit decision if tvOS ever gains participant (shared-store) access.
 
+CORRECTED DIAGNOSIS (2026-07-03, from the device console): 134060 is
+NSCoreDataError — the exporter's own check, verbatim: "Object graph corruption
+detected. Objects related to <MealSlot> are assigned to multiple zones:
+{share zone, default zone}". The export wedges were NOT CloudKit tombstone
+rejections: Household/User recreated in the DEFAULT zone + content in the
+SHARE zone means any slot referencing both (assignedTo/modifiedBy) poisons its
+whole export batch. The Mac only ever exported cleanly during windows when its
+user row was missing. DEFINITIVE FIX 426a259: adoptRecordsIntoShareZone() —
+container.share(_:to:) moves mis-zoned Household/User into the share zone on
+owner devices at bootstrap (idempotent), restoring a single-zone graph and
+resolving the participant watch-item below. LESSON: cross-zone references are
+tolerated only until a single batch spans the zones; keep the entire shared
+graph in ONE zone.
+
 LATENT DAMAGE ROUND 2 (2026-07-03, reverse-direction soak): the iPhone's
 WeekPlan row carried a CKRecord identity tombstoned by the thrash-era engine —
 re-upload fails with 134060 and wedges its export queue (curry never left the
