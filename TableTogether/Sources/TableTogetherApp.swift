@@ -48,6 +48,7 @@ struct TableTogetherApp: App {
                         await demoManager.enableDemoData()
                     } else {
                         await persistenceController.fetchExistingShare()
+                        await persistenceController.adoptRecordsIntoShareZone()
                     }
                 }
                 .onOpenURL { url in

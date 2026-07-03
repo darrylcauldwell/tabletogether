@@ -468,6 +468,44 @@ final class PersistenceController {
         return shares[object.objectID]
     }
 
+    /// Moves mis-zoned Household/User records into the existing share's zone.
+    ///
+    /// The 2026-07-03 thrash repairs recreated Household and User with
+    /// DEFAULT-zone CKRecords while all content lives in the zone-wide share. A
+    /// MealSlot referencing both a default-zone User (assignedTo/modifiedBy) and
+    /// share-zone content makes the exporter reject its batch — "Object graph
+    /// corruption detected … assigned to multiple zones" (NSCoreDataError
+    /// 134060) — wedging the ENTIRE export queue. `share(_:to:)` is the
+    /// sanctioned way to move records between zones; a single-zone graph also
+    /// gives participants the household root the product spec expects.
+    /// Idempotent: no-ops when everything is already in the share zone, when no
+    /// share exists, or on participant devices.
+    func adoptRecordsIntoShareZone() async {
+        guard let share = existingShare,
+              share.currentUserParticipant?.role == .owner,
+              let privateStore = privatePersistentStore else { return }
+        let shareZoneID = share.recordID.zoneID
+
+        var mislocated: [NSManagedObject] = []
+        for entityName in ["Household", "User"] {
+            let request = NSFetchRequest<NSManagedObject>(entityName: entityName)
+            request.affectedStores = [privateStore]
+            for object in viewContext.fetchWithLogging(request, context: "share zone adoption") {
+                guard let zone = container.recordID(for: object.objectID)?.zoneID,
+                      zone != shareZoneID else { continue }
+                mislocated.append(object)
+            }
+        }
+        guard !mislocated.isEmpty else { return }
+
+        do {
+            _ = try await container.share(mislocated, to: share)
+            AppLogger.sharing.info("Moved \(mislocated.count) record(s) into the share zone for a single-zone graph")
+        } catch {
+            AppLogger.sharing.error("Failed to move records into the share zone: \(error.localizedDescription)")
+        }
+    }
+
     /// Persists updates to an existing CKShare.
     func persistUpdatedShare(_ share: CKShare) async throws {
         guard let store = privatePersistentStore ?? sharedPersistentStore else {
