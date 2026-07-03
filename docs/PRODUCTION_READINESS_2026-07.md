@@ -147,6 +147,13 @@ Console zone deletion + Reset All Sync Data on Mac and iPhone):
   personal data; no cloud LLM), estimates keep the ≈ badge and stay editable,
   devices without Apple Intelligence fall back to the current static table.
   Subsumes the parser-unification item's end state.
+- PARTICIPANT LIST DOESN'T AUTO-REFRESH ON JOIN (2026-07-03): householdMembers
+  is derived from existingShare.participants, and existingShare is only
+  refreshed by fetchExistingShare (app launch / after a share action). When a
+  participant accepts, the owner's other devices keep showing the stale share
+  until relaunched (or the manual refresh button runs). Fix: refetch the share
+  on a CloudKit remote-change/share-update notification, or at least when the
+  People screen appears, so a join surfaces without a relaunch.
 - SHARE CREATION BLOCKS ON FULL GRAPH MIGRATION (2026-07-03): first share of a
   seeded library shows "Preparing invitation…" for minutes. container.share()
   migrates the household's ENTIRE object graph (~1,899 records: 226 recipes +
