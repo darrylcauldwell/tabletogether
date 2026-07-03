@@ -1149,6 +1149,13 @@ final class PersistenceController {
         syncRecoveryInProgress = true
         AppLogger.sync.warning("Resetting ALL sync data — will re-download from CloudKit")
 
+        // Deregister every live object FIRST. coordinator.remove(_:) raises an
+        // Objective-C exception (uncatchable in Swift) if a context still has
+        // objects registered against the store — and a live SwiftUI
+        // @FetchRequest faulting a row mid-teardown aborts the app (crash
+        // 2026-07-03). Same guard as refreshFromCloud.
+        viewContext.reset()
+
         let coordinator = container.persistentStoreCoordinator
 
         // Remove all stores
