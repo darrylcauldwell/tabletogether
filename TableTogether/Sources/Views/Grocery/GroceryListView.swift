@@ -131,9 +131,6 @@ struct GroceryListView: View {
             }
         }
         .navigationTitle("Shopping List")
-        #if os(iOS)
-        .navigationBarTitleDisplayMode(.inline)
-        #endif
         .toolbar {
             #if os(iOS)
             ToolbarItem(placement: .topBarTrailing) {
