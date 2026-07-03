@@ -153,6 +153,10 @@ Console zone deletion + Reset All Sync Data on Mac and iPhone):
   catch-up import; no lighter public API exists per TN3164). Known limitation:
   the context reset can blink open UI holding object references — acceptable
   for a user-initiated action; revisit if it bites during the acceptance test.
+- Share acceptance lands the participant on whatever tab was last open (Meal
+  Log, observed 2026-07-03) instead of steering to the Plan tab like meal deep
+  links do — add a Plan redirect in the userDidAcceptCloudKitShareWith path so
+  a new member's first impression is the shared week, not their empty log.
 - Xcode Thread Performance Checker flags `fetchShares` called synchronously on
   the main actor (hang risk, pre-existing). historyQueue QoS raised to
   userInitiated 2026-07-03; moving fetchShares off-main remains open.
