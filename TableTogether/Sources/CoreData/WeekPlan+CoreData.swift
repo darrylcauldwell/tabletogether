@@ -126,6 +126,39 @@ public class WeekPlan: NSManagedObject {
         slotsArray.first { $0.dayOfWeek == day && $0.mealType == mealType }
     }
 
+    // MARK: - Lazy Structure (#Change2)
+
+    /// Fetches the plan covering `weekStartDate`, creating an empty (slotless)
+    /// plan if none exists. Slots materialize individually when meals are
+    /// planned into them — empty cells are UI affordances, not data.
+    static func fetchOrCreate(for weekStartDate: Date, household: Household?, in context: NSManagedObjectContext) -> WeekPlan {
+        let normalized = normalizeToMonday(weekStartDate)
+        let request = NSFetchRequest<WeekPlan>(entityName: "WeekPlan")
+        request.predicate = NSPredicate(format: "weekStartDate == %@", normalized as NSDate)
+        request.fetchLimit = 1
+        if let existing = (try? context.fetch(request))?.first {
+            return existing
+        }
+        let plan = WeekPlan(context: context, weekStartDate: normalized)
+        plan.household = household
+        return plan
+    }
+
+    /// Returns the slot for (day, mealType), creating it on demand with its
+    /// deterministic id — concurrent creation of the same cell on two devices
+    /// converges to one duplicate group that the dedup engine collapses.
+    func fetchOrCreateSlot(day: DayOfWeek, mealType: MealType, in context: NSManagedObjectContext) -> MealSlot {
+        if let existing = slot(for: day, mealType: mealType) {
+            return existing
+        }
+        let slotID = MealSlot.deterministicID(weekStartDate: weekStartDate, dayOfWeek: day, mealType: mealType)
+        let newSlot = MealSlot(context: context, id: slotID, dayOfWeek: day, mealType: mealType)
+        newSlot.weekPlan = self
+        addToSlots(newSlot)
+        modifiedAt = Date()
+        return newSlot
+    }
+
     /// Creates the default slot grid for the week. Idempotent: existing slots are kept,
     /// only missing (day, mealType) combinations are created — so this also serves as a
     /// self-heal when sync deduplication has deleted slots out from under the plan.
@@ -154,21 +187,24 @@ public class WeekPlan: NSManagedObject {
     }
 
     func copyFrom(_ otherPlan: WeekPlan, by user: User) {
-        for otherSlot in otherPlan.slotsArray {
-            if let matchingSlot = slot(for: otherSlot.dayOfWeek, mealType: otherSlot.mealType) {
-                if !otherSlot.recipesArray.isEmpty {
-                    matchingSlot.recipes = otherSlot.recipes
-                    matchingSlot.customMealName = nil
-                    matchingSlot.isSkipped = false
-                    matchingSlot.modifiedAt = Date()
-                    matchingSlot.modifiedBy = user
-                } else if let customName = otherSlot.customMealName {
-                    matchingSlot.setCustomMeal(customName, by: user)
-                }
-                matchingSlot.servingsPlanned = otherSlot.servingsPlanned
-                matchingSlot.archetype = otherSlot.archetype
-                copyComponents(from: otherSlot, to: matchingSlot)
+        guard let context = managedObjectContext else { return }
+        // Only content-bearing slots are copied; destination slots materialize
+        // on demand instead of silently dropping when absent (#Change2). Skip
+        // flags are week-specific and not carried over.
+        for otherSlot in otherPlan.slotsArray where otherSlot.isPlanned {
+            let matchingSlot = fetchOrCreateSlot(day: otherSlot.dayOfWeek, mealType: otherSlot.mealType, in: context)
+            if !otherSlot.recipesArray.isEmpty {
+                matchingSlot.recipes = otherSlot.recipes
+                matchingSlot.customMealName = nil
+                matchingSlot.isSkipped = false
+                matchingSlot.modifiedAt = Date()
+                matchingSlot.modifiedBy = user
+            } else if let customName = otherSlot.customMealName {
+                matchingSlot.setCustomMeal(customName, by: user)
             }
+            matchingSlot.servingsPlanned = otherSlot.servingsPlanned
+            matchingSlot.archetype = otherSlot.archetype
+            copyComponents(from: otherSlot, to: matchingSlot)
         }
         modifiedAt = Date()
     }

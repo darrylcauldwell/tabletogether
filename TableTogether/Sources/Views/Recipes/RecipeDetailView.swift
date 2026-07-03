@@ -462,8 +462,8 @@ struct InstructionStepView: View {
 // MARK: - Add to Plan Sheet
 
 /// Lets the user add a recipe to a meal slot directly from the recipe detail
-/// view. Picks an existing WeekPlan, day of week, and meal type, then either
-/// finds the matching slot or creates one and adds the recipe to it.
+/// view. Picks a week, day of week, and meal type; the plan and slot
+/// materialize on demand when the recipe is added (#Change2).
 struct AddToPlanSheet: View {
     let recipe: Recipe
     let servings: Int
@@ -479,10 +479,43 @@ struct AddToPlanSheet: View {
         sortDescriptors: [SortDescriptor(\.displayName)]
     ) private var users: FetchedResults<User>
 
-    @State private var selectedWeekPlan: WeekPlan?
+    @FetchRequest(
+        sortDescriptors: [SortDescriptor(\.name)]
+    ) private var households: FetchedResults<Household>
+
+    @State private var selectedWeekStart: Date = WeekPlan.normalizeToMonday(Date())
     @State private var selectedDay: DayOfWeek = Self.defaultDay()
     @State private var selectedMealType: MealType = .dinner
     @State private var errorMessage: String?
+
+    /// This week and next are always offered; weeks that already have a plan
+    /// are offered too so existing future plans stay reachable.
+    private var weekOptions: [Date] {
+        let thisWeek = WeekPlan.normalizeToMonday(Date())
+        var options: Set<Date> = [thisWeek]
+        if let nextWeek = Calendar.current.date(byAdding: .weekOfYear, value: 1, to: thisWeek) {
+            options.insert(WeekPlan.normalizeToMonday(nextWeek))
+        }
+        for plan in weekPlans {
+            options.insert(plan.weekStartDate)
+        }
+        return options.sorted()
+    }
+
+    private func weekLabel(for date: Date) -> String {
+        let calendar = Calendar.current
+        let thisWeek = WeekPlan.normalizeToMonday(Date())
+        if calendar.isDate(date, inSameDayAs: thisWeek) {
+            return "This Week"
+        }
+        if let nextWeek = calendar.date(byAdding: .weekOfYear, value: 1, to: thisWeek),
+           calendar.isDate(date, inSameDayAs: nextWeek) {
+            return "Next Week"
+        }
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MMM d"
+        return "Week of \(formatter.string(from: date))"
+    }
 
     var body: some View {
         NavigationStack {
@@ -499,19 +532,13 @@ struct AddToPlanSheet: View {
                 }
 
                 Section("Week") {
-                    if weekPlans.isEmpty {
-                        Text("No active week plans yet. Create one in the planner first.")
-                            .font(AppTypography.callout)
-                            .foregroundStyle(Theme.Colors.textSecondary)
-                    } else {
-                        Picker("Week", selection: $selectedWeekPlan) {
-                            ForEach(weekPlans, id: \.id) { plan in
-                                Text(plan.shortWeekDisplay)
-                                    .tag(plan as WeekPlan?)
-                            }
+                    Picker("Week", selection: $selectedWeekStart) {
+                        ForEach(weekOptions, id: \.self) { weekStart in
+                            Text(weekLabel(for: weekStart))
+                                .tag(weekStart)
                         }
-                        .pickerStyle(.menu)
                     }
+                    .pickerStyle(.menu)
                 }
 
                 Section("Day") {
@@ -549,42 +576,23 @@ struct AddToPlanSheet: View {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Add", action: addToPlan)
                         .fontWeight(.semibold)
-                        .disabled(selectedWeekPlan == nil)
                 }
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
                 }
             }
-            .onAppear {
-                if selectedWeekPlan == nil {
-                    selectedWeekPlan = weekPlans.first
-                }
-            }
         }
     }
 
-    /// Find an existing slot for the chosen (week, day, meal) combination — or
-    /// create one if none exists — then add the recipe to it. Designed so that
-    /// adding the same recipe to a slot that already contains other recipes
-    /// appends rather than replaces.
+    /// Materialize the plan and slot for the chosen (week, day, meal) on demand
+    /// — deterministic ids make concurrent creation on two devices converge —
+    /// then add the recipe. Adding to a slot that already contains other
+    /// recipes appends rather than replaces.
     private func addToPlan() {
-        guard let weekPlan = selectedWeekPlan else {
-            errorMessage = "Please choose a week plan."
-            return
-        }
-
-        let slot: MealSlot
-        if let existing = weekPlan.slot(for: selectedDay, mealType: selectedMealType) {
-            slot = existing
-        } else {
-            let newSlot = MealSlot(
-                context: viewContext,
-                dayOfWeek: selectedDay,
-                mealType: selectedMealType
-            )
-            newSlot.weekPlan = weekPlan
-            slot = newSlot
-        }
+        let weekPlan = WeekPlan.fetchOrCreate(
+            for: selectedWeekStart, household: households.first, in: viewContext)
+        let slot = weekPlan.fetchOrCreateSlot(
+            day: selectedDay, mealType: selectedMealType, in: viewContext)
 
         if let user = users.first {
             slot.addRecipe(recipe, by: user)

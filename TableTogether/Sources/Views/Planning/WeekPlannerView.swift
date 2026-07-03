@@ -46,7 +46,9 @@ struct WeekPlannerView: View {
                 weekPlan: currentWeekPlan,
                 weekStartDate: currentWeekStart,
                 onSlotTapped: handleSlotTapped,
-                onRecipeDropped: handleRecipeDropped
+                onRecipeDropped: handleRecipeDropped,
+                onAddMeal: materializeSlot,
+                onPickerDismissed: cleanupAfterPicker
             )
 
             Divider()
@@ -66,9 +68,6 @@ struct WeekPlannerView: View {
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
-        .onAppear {
-            ensureWeekPlanExists()
-        }
     }
 
     // MARK: - Computed Properties
@@ -106,30 +105,36 @@ struct WeekPlannerView: View {
     private func navigateToPreviousWeek() {
         if let newDate = Calendar.current.date(byAdding: .weekOfYear, value: -1, to: currentWeekStart) {
             currentWeekStart = newDate
-            ensureWeekPlanExists()
         }
     }
 
     private func navigateToNextWeek() {
         if let newDate = Calendar.current.date(byAdding: .weekOfYear, value: 1, to: currentWeekStart) {
             currentWeekStart = newDate
-            ensureWeekPlanExists()
         }
     }
 
-    private func ensureWeekPlanExists() {
-        guard currentWeekPlan == nil else { return }
+    /// Materializes the plan + slot on demand when the user adds a meal to an
+    /// empty cell. Left unsaved until the picker commits a meal; if the picker
+    /// is canceled, cleanupAfterPicker discards the empty slot again (#Change2).
+    private func materializeSlot(day: DayOfWeek, mealType: MealType) -> MealSlot? {
+        let plan = currentWeekPlan ?? WeekPlan.fetchOrCreate(
+            for: currentWeekStart, household: households.first, in: viewContext)
+        return plan.fetchOrCreateSlot(day: day, mealType: mealType, in: viewContext)
+    }
 
-        let newPlan = WeekPlan(
-            context: viewContext,
-            weekStartDate: currentWeekStart,
-            householdNote: nil
-        )
-
-        // Use the shared helper which generates deterministic slot IDs
-        newPlan.createDefaultSlots(context: viewContext)
-        newPlan.household = households.first
-        viewContext.saveWithLogging(context: "new week plan")
+    /// A canceled picker leaves behind the slot (and possibly the plan) that
+    /// materializeSlot created — empty cells must not persist as data.
+    private func cleanupAfterPicker(_ slot: MealSlot) {
+        guard !slot.isDeleted, slot.isEmpty else { return }
+        let plan = slot.weekPlan
+        viewContext.delete(slot)
+        if let plan, plan.slotsArray.isEmpty, plan.householdNote == nil, plan.groceryItemsArray.isEmpty {
+            viewContext.delete(plan)
+        }
+        if viewContext.hasChanges {
+            viewContext.saveWithLogging(context: "discard unused slot")
+        }
     }
 
     private func handleSlotTapped(_ slot: MealSlot) {
@@ -151,11 +156,13 @@ struct WeekPlannerView: View {
     private func copyFromLastWeek() {
         guard let previousWeekStart = Calendar.current.date(byAdding: .weekOfYear, value: -1, to: currentWeekStart),
               let previousPlan = weekPlans.first(where: { Calendar.current.isDate($0.weekStartDate, inSameDayAs: previousWeekStart) }),
-              let currentPlan = currentWeekPlan,
               let user = currentUser else { return }
 
-        // Route through the model mutator so plate components are carried over and
-        // modifiedBy is set, instead of inlining a recipes-only copy.
+        // The destination plan materializes on demand (#Change2). Route through
+        // the model mutator so plate components are carried over and modifiedBy
+        // is set, instead of inlining a recipes-only copy.
+        let currentPlan = currentWeekPlan ?? WeekPlan.fetchOrCreate(
+            for: currentWeekStart, household: households.first, in: viewContext)
         currentPlan.copyFrom(previousPlan, by: user)
         viewContext.saveWithLogging(context: "copy from last week")
     }

@@ -21,6 +21,12 @@ struct WeekListView: View {
     let weekStartDate: Date
     let onSlotTapped: (MealSlot) -> Void
     let onRecipeDropped: (String, MealSlot) -> Void
+    /// Materializes the plan + slot for an empty cell the user is adding a
+    /// meal to. Slots exist only when planned into; empty cells are UI (#Change2).
+    let onAddMeal: (DayOfWeek, MealType) -> MealSlot?
+    /// Called when the picker closes so the owner can discard a slot that
+    /// was materialized but never given a meal (canceled picker).
+    let onPickerDismissed: (MealSlot) -> Void
 
     // Sheet state lives at the WeekListView level — outside the LazyVStack —
     // so that row recycling and confirmationDialog dismiss-timing on iOS
@@ -37,7 +43,8 @@ struct WeekListView: View {
                         slots: slotsForDay(day),
                         slotToPresent: $slotToPresent,
                         onSlotTapped: onSlotTapped,
-                        onRecipeDropped: onRecipeDropped
+                        onRecipeDropped: onRecipeDropped,
+                        onAddMeal: onAddMeal
                     )
                     if index < DayOfWeek.allCases.count - 1 {
                         Divider()
@@ -48,6 +55,7 @@ struct WeekListView: View {
         }
         .sheet(item: $slotToPresent) { slot in
             RecipePickerSheet(slot: slot)
+                .onDisappear { onPickerDismissed(slot) }
         }
     }
 
@@ -72,6 +80,7 @@ struct DayRowView: View {
     @Binding var slotToPresent: MealSlot?
     let onSlotTapped: (MealSlot) -> Void
     let onRecipeDropped: (String, MealSlot) -> Void
+    let onAddMeal: (DayOfWeek, MealType) -> MealSlot?
 
     @State private var showingAddMealMenu = false
 
@@ -162,8 +171,13 @@ struct DayRowView: View {
         ) {
             ForEach(MealType.allCases, id: \.self) { mealType in
                 Button(mealTypeButtonLabel(mealType)) {
-                    guard let slot = slots.first(where: { $0.mealType == mealType }) else { return }
-                    slotToPresent = slot
+                    // Slots materialize on demand — an empty cell has no data
+                    // until a meal is planned into it (#Change2).
+                    if let slot = slots.first(where: { $0.mealType == mealType }) {
+                        slotToPresent = slot
+                    } else {
+                        slotToPresent = onAddMeal(day, mealType)
+                    }
                 }
             }
             Button("Cancel", role: .cancel) {}
