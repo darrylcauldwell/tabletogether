@@ -182,7 +182,10 @@ Console zone deletion + Reset All Sync Data on Mac and iPhone):
   zone, and the invite sheet blocks until that export completes. Apple's model:
   records are created in the default zone; the share zone only exists once you
   share; there is no API to create the mirrored graph directly in a share zone.
-  MITIGATION to build before GA: create the household share at setup while it is
+  MITIGATION (NOT YET BUILT — needs hardware validation, 2026-07-04: auto-
+  sharing every household at setup is a sync-topology change unverifiable in
+  the simulator; defer until testable on a device with a 2nd iCloud account):
+  create the household share at setup while it is
   EMPTY, then import recipes — records created after the root is shared join the
   share zone incrementally, eliminating the one-time migration and the spinner.
   Also: the invite sheet should not block on the full data export — only the
