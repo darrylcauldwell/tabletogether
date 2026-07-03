@@ -147,6 +147,14 @@ Console zone deletion + Reset All Sync Data on Mac and iPhone):
   personal data; no cloud LLM), estimates keep the ≈ badge and stay editable,
   devices without Apple Intelligence fall back to the current static table.
   Subsumes the parser-unification item's end state.
+- RESOLVED CRASH (2026-07-03, TestFlight 1.3 macOS): launch crash, CloudKit
+  assertion "Cannot replace assigned container ID … environment=Sandbox with
+  … environment=Production". Cause: the TestFlight (Production) build opened
+  the container previously used by Debug builds, whose store metadata is bound
+  to the Sandbox environment. Fix: clear
+  ~/Library/Containers/dev.dreamfold.tabletogether when switching between
+  Debug and TestFlight builds on the same Mac — one environment per container.
+  Only affects dev machines; fresh installs never hit it.
 - OPEN CRASH (2026-07-03, TestFlight 1.3 (78), iPhone 13 Pro): first use of
   Log → describe-a-meal ("mushroom omelette") crashed; NOT reproducible on the
   second attempt — first-run-only. Prime suspect: first-use warm-up of the
