@@ -361,13 +361,21 @@ final class PrivateDataManager {
         let calendar = Calendar.current
         let today = calendar.startOfDay(for: Date())
         let yesterday = calendar.date(byAdding: .day, value: -1, to: today) ?? today
+        await seedPlannedMeals(slots: slots, currentUser: currentUser, forDays: [yesterday, today])
+    }
+
+    /// Seeds `.planned` log entries for the given days (used by the date-navigable
+    /// Log so a selected past/future day shows its planned meals to confirm or
+    /// override). Idempotent: existing entries for a slot are left untouched.
+    func seedPlannedMeals(slots: [MealSlot], currentUser: User, forDays days: [Date]) async {
+        let calendar = Calendar.current
+        let targetDays = Set(days.map { calendar.startOfDay(for: $0) })
         let householdSize = currentUser.household?.usersArray.count ?? 1
 
-        // Slots from today and yesterday only.
         let relevantSlots = slots.filter { slot in
             guard let weekPlan = slot.weekPlan else { return false }
             let slotDay = calendar.startOfDay(for: weekPlan.date(for: slot.dayOfWeek))
-            return slotDay == today || slotDay == yesterday
+            return targetDays.contains(slotDay)
         }
 
         for slot in relevantSlots {

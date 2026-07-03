@@ -14,6 +14,10 @@ enum LogEntryMode: Hashable {
 /// Note: Meal logs are stored in CloudKit private database, never shared.
 /// If connected to Apple Health, nutrition data is also written to HealthKit.
 struct QuickLogSheet: View {
+    /// The day this entry is logged against. Defaults to today; the Log tab
+    /// passes its selected date so past/future days can be filled in.
+    var logDate: Date = Date()
+
     @Environment(\.managedObjectContext) private var viewContext
     @Environment(PrivateDataManager.self) private var privateDataManager
     @Environment(\.dismiss) private var dismiss
@@ -311,6 +315,7 @@ struct QuickLogSheet: View {
             let logName = "\(displayName) (Quick Estimate)"
 
             log = PrivateMealLog(
+                date: logDate,
                 mealType: selectedMealType,
                 quickLogName: logName,
                 calories: totalMacros.calories.map { Int($0.rounded()) },
@@ -327,6 +332,7 @@ struct QuickLogSheet: View {
         } else if entryMode == .manualEntry {
             // Use quick log initializer for manual entry
             log = PrivateMealLog(
+                date: logDate,
                 mealType: selectedMealType,
                 quickLogName: manualMealName,
                 calories: Int(manualCalories),
@@ -344,6 +350,7 @@ struct QuickLogSheet: View {
         } else if entryMode == .fromRecipes, let recipe = selectedRecipe {
             // Use standard initializer for recipe-based log
             log = PrivateMealLog(
+                date: logDate,
                 mealType: selectedMealType,
                 recipeID: recipe.id,
                 servingsConsumed: servingsConsumed
@@ -372,7 +379,7 @@ struct QuickLogSheet: View {
                     protein: protein,
                     carbs: carbs,
                     fat: fat,
-                    date: Date(),
+                    date: logDate,
                     mealName: mealName
                 )
             } catch {

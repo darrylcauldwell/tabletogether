@@ -1,9 +1,9 @@
 import SwiftUI
 import CoreData
 
-/// Dedicated meal logging tab.
-/// Shows today's meals, recent days, and a floating add button (matching
-/// the Recipes tab's pattern).
+/// Dedicated meal logging tab — a per-day view with back/forward date
+/// navigation, so personal differences and past gaps can be recorded against
+/// any day. Floating add button matches the Recipes tab.
 ///
 /// All meal log data is personal and stored in CloudKit private database.
 struct MealLogView: View {
@@ -16,6 +16,9 @@ struct MealLogView: View {
     @State private var logToEdit: PrivateMealLog?
     @State private var logToDelete: PrivateMealLog?
     @State private var showDeleteConfirmation = false
+    /// The day being viewed/edited. Chevrons step it; personal differences and
+    /// backfilled gaps are recorded against whichever day is selected.
+    @State private var selectedDate = Calendar.current.startOfDay(for: Date())
     /// Nutrition is the spec's voluntary drill-down layer, pushed from here
     /// rather than holding a tab of its own. Screenshot mode deep-opens it.
     @State private var showInsights = TableTogetherApp.screenshotScreen == "insights"
@@ -32,45 +35,38 @@ struct MealLogView: View {
         SimpleRecipeLookup(recipes: Array(recipes))
     }
 
-    private var todayLogs: [PrivateMealLog] {
+    /// Logs for the selected day.
+    private var dayLogs: [PrivateMealLog] {
         let calendar = Calendar.current
-        let today = calendar.startOfDay(for: Date())
         return weeklyLogs
-            .filter { calendar.startOfDay(for: $0.date) == today }
+            .filter { calendar.isDate($0.date, inSameDayAs: selectedDate) }
             .sorted { mealTypeOrder($0.mealType) < mealTypeOrder($1.mealType) }
     }
 
-    /// Today's planned meals (auto-populated, not yet confirmed)
-    private var todayPlannedLogs: [PrivateMealLog] {
-        todayLogs.filter { $0.status == .planned }
+    private var dayPlannedLogs: [PrivateMealLog] { dayLogs.filter { $0.status == .planned } }
+    private var dayConsumedLogs: [PrivateMealLog] { dayLogs.filter { $0.status == .consumed } }
+    private var daySkippedLogs: [PrivateMealLog] { dayLogs.filter { $0.status == .skipped } }
+
+    private var isViewingToday: Bool {
+        Calendar.current.isDateInToday(selectedDate)
     }
 
-    /// Today's consumed meals
-    private var todayConsumedLogs: [PrivateMealLog] {
-        todayLogs.filter { $0.status == .consumed }
-    }
-
-    /// Today's skipped meals
-    private var todaySkippedLogs: [PrivateMealLog] {
-        todayLogs.filter { $0.status == .skipped }
-    }
-
-    private var recentDays: [(date: Date, logs: [PrivateMealLog])] {
+    /// Header label for the selected day: "Today"/"Yesterday"/"Tomorrow" or a date.
+    private var dateLabel: String {
         let calendar = Calendar.current
-        let today = calendar.startOfDay(for: Date())
+        if calendar.isDateInToday(selectedDate) { return "Today" }
+        if calendar.isDateInYesterday(selectedDate) { return "Yesterday" }
+        if calendar.isDateInTomorrow(selectedDate) { return "Tomorrow" }
+        let formatter = DateFormatter()
+        formatter.setLocalizedDateFormatFromTemplate("EEEE d MMM")
+        return formatter.string(from: selectedDate)
+    }
 
-        var grouped: [Date: [PrivateMealLog]] = [:]
-        for log in weeklyLogs {
-            let day = calendar.startOfDay(for: log.date)
-            if day < today {
-                grouped[day, default: []].append(log)
-            }
+    private func stepDay(_ delta: Int) {
+        let calendar = Calendar.current
+        if let newDate = calendar.date(byAdding: .day, value: delta, to: selectedDate) {
+            selectedDate = calendar.startOfDay(for: newDate)
         }
-
-        return grouped.keys
-            .sorted(by: >)
-            .prefix(6)
-            .map { (date: $0, logs: grouped[$0] ?? []) }
     }
 
     var body: some View {
@@ -89,21 +85,11 @@ struct MealLogView: View {
                             .padding(.horizontal)
                         }
 
-                        if weeklyLogs.isEmpty {
-                            // Empty state
-                            emptyState
-                                .padding(.horizontal)
-                        } else {
-                            // Today section
-                            todaySection
-                                .padding(.horizontal)
+                        dateNavigationHeader
+                            .padding(.horizontal)
 
-                            // Recent days
-                            if !recentDays.isEmpty {
-                                recentDaysSection
-                                    .padding(.horizontal)
-                            }
-                        }
+                        daySection
+                            .padding(.horizontal)
 
                         Spacer(minLength: 100) // Space for FAB
                     }
@@ -132,7 +118,7 @@ struct MealLogView: View {
                 InsightsView()
             }
             .sheet(isPresented: $showQuickLogSheet) {
-                QuickLogSheet()
+                QuickLogSheet(logDate: selectedDate)
             }
             .sheet(item: $logToEdit) { log in
                 MealLogEditorSheet(log: log, privateDataManager: privateDataManager)
@@ -153,33 +139,81 @@ struct MealLogView: View {
                 Text("This meal log entry will be permanently removed.")
             }
             .task {
-                await privateDataManager.fetchCurrentWeekLogs()
-                // Auto-populate from plan
-                if let user = currentUser {
-                    await privateDataManager.syncPlannedMeals(slots: Array(mealSlots), currentUser: user)
-                }
+                // Load a broad window so day-to-day navigation is instant.
+                let calendar = Calendar.current
+                let start = calendar.date(byAdding: .day, value: -35, to: Date()) ?? Date()
+                let end = calendar.date(byAdding: .day, value: 14, to: Date()) ?? Date()
+                await privateDataManager.fetchMealLogs(from: start, to: end)
+                await seedSelectedDay()
+            }
+            .task(id: selectedDate) {
+                await seedSelectedDay()
             }
         }
     }
 
+    /// Seeds the selected day's planned meals so navigating to it shows the
+    /// plan to confirm or override.
+    private func seedSelectedDay() async {
+        guard let user = currentUser else { return }
+        await privateDataManager.seedPlannedMeals(
+            slots: Array(mealSlots), currentUser: user, forDays: [selectedDate])
+    }
+
+    // MARK: - Date Navigation Header
+
+    private var dateNavigationHeader: some View {
+        HStack {
+            Button { stepDay(-1) } label: {
+                Image(systemName: "chevron.left")
+                    .font(AppTypography.headline)
+                    .foregroundStyle(Theme.Colors.primary)
+            }
+            .buttonStyle(.plain)
+
+            Spacer()
+
+            VStack(spacing: 2) {
+                Text(dateLabel)
+                    .font(AppTypography.headline)
+                    .foregroundStyle(Theme.Colors.textPrimary)
+                if !isViewingToday {
+                    Button("Jump to today") {
+                        withAnimation { selectedDate = Calendar.current.startOfDay(for: Date()) }
+                    }
+                    .font(AppTypography.caption)
+                    .buttonStyle(.plain)
+                    .foregroundStyle(Theme.Colors.primary)
+                }
+            }
+
+            Spacer()
+
+            Button { stepDay(1) } label: {
+                Image(systemName: "chevron.right")
+                    .font(AppTypography.headline)
+                    .foregroundStyle(Theme.Colors.primary)
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(.vertical, 4)
+    }
+
     // MARK: - Today Section
 
-    private var todaySection: some View {
+    private var daySection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Today")
-                .font(AppTypography.headline)
-                .foregroundStyle(Theme.Colors.textPrimary)
-
-            if todayLogs.isEmpty {
-                Text("No meals logged yet today.")
+            if dayLogs.isEmpty {
+                Text(isViewingToday ? "No meals logged yet today." : "No meals logged for this day.")
                     .font(AppTypography.subheadline)
                     .foregroundStyle(Theme.Colors.textSecondary)
-                    .padding(.vertical, 8)
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .padding(.vertical, 24)
             } else {
                 VStack(spacing: 8) {
                     // Planned meals (from plan, not yet confirmed)
-                    if !todayPlannedLogs.isEmpty {
-                        ForEach(todayPlannedLogs, id: \.id) { log in
+                    if !dayPlannedLogs.isEmpty {
+                        ForEach(dayPlannedLogs, id: \.id) { log in
                             PlannedMealRow(
                                 log: log,
                                 calories: caloriesFor(log),
@@ -199,7 +233,7 @@ struct MealLogView: View {
                     }
 
                     // Consumed meals
-                    ForEach(todayConsumedLogs, id: \.id) { log in
+                    ForEach(dayConsumedLogs, id: \.id) { log in
                         MealLogRow(
                             log: log,
                             calories: caloriesFor(log),
@@ -222,8 +256,8 @@ struct MealLogView: View {
                     }
 
                     // Skipped meals
-                    if !todaySkippedLogs.isEmpty {
-                        ForEach(todaySkippedLogs, id: \.id) { log in
+                    if !daySkippedLogs.isEmpty {
+                        ForEach(daySkippedLogs, id: \.id) { log in
                             SkippedMealLogRow(log: log, recipeLookup: recipeLookup)
                                 .contextMenu {
                                     Button {
@@ -251,7 +285,7 @@ struct MealLogView: View {
                     Divider()
                         .background(Theme.Colors.textSecondary.opacity(0.3))
 
-                    DayTotalsRow(totals: todayTotals)
+                    DayTotalsRow(totals: dayTotals)
                 }
                 .padding()
                 .background(
@@ -263,59 +297,16 @@ struct MealLogView: View {
         }
     }
 
-    // MARK: - Recent Days Section
-
-    private var recentDaysSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Recent Days")
-                .font(AppTypography.headline)
-                .foregroundStyle(Theme.Colors.textPrimary)
-
-            ForEach(recentDays, id: \.date) { day in
-                DayDetailCard(
-                    date: day.date,
-                    mealLogs: day.logs,
-                    recipeLookup: recipeLookup
-                )
-            }
-        }
-    }
-
-    // MARK: - Empty State
-
-    private var emptyState: some View {
-        VStack(spacing: 16) {
-            Image(systemName: "square.and.pencil")
-                .font(AppTypography.fixed(48))
-                .foregroundStyle(Theme.Colors.textSecondary.opacity(0.5))
-
-            Text("Your meal log is empty.")
-                .font(AppTypography.body)
-                .foregroundStyle(Theme.Colors.textSecondary)
-
-            Text("Tap + to record what you eat. Over time, you'll see patterns in the Nutrition tab.")
-                .font(AppTypography.subheadline)
-                .foregroundStyle(Theme.Colors.textSecondary)
-                .multilineTextAlignment(.center)
-        }
-        .padding(32)
-        .frame(maxWidth: .infinity)
-        .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(Theme.Colors.cardBackground)
-        )
-    }
-
     // MARK: - Helpers
 
-    private var todayTotals: DayTotals {
+    private var dayTotals: DayTotals {
         var calories = 0
         var protein = 0
         var carbs = 0
         var fat = 0
 
         // Only count consumed meals in day totals
-        for log in todayConsumedLogs {
+        for log in dayConsumedLogs {
             calories += caloriesFor(log) ?? 0
             protein += proteinFor(log) ?? 0
             carbs += carbsFor(log) ?? 0
