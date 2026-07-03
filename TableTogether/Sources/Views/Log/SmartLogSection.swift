@@ -260,16 +260,16 @@ struct SmartLogSection: View {
         isParsing = true
         selectedIngredientId = nil
 
-        let result = await parser.parse(description: mealDescription)
-        let resolved = await resolver.resolve(
-            ingredients: result.ingredients,
+        let outcome = await resolver.resolveMeal(
+            description: mealDescription,
+            parser: parser,
             context: viewContext,
             household: household
         )
 
         withAnimation(.easeInOut(duration: 0.3)) {
-            resolvedIngredients = resolved
-            isSmartEstimate = result.isAIParsed || !resolved.isEmpty
+            resolvedIngredients = outcome.ingredients
+            isSmartEstimate = outcome.isEstimate
         }
 
         isParsing = false

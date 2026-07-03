@@ -17,6 +17,52 @@ final class IngredientResolverService {
 
     // MARK: - Public API
 
+    /// Unified entry point for a free-text meal description. Tries the curated
+    /// MealEstimatorService on the WHOLE string first — this catches precise
+    /// alcohol ("4x 440ml 8% DIPA") and known composite dishes that the
+    /// ingredient splitter would otherwise break apart — and falls back to the
+    /// natural-language parse + per-ingredient resolve for arbitrary ingredient
+    /// lists. One engine feeds every log path (see docs: estimator unification).
+    func resolveMeal(
+        description: String,
+        parser: NaturalLanguageMealParser,
+        context: NSManagedObjectContext,
+        household: Household?
+    ) async -> (ingredients: [ResolvedIngredient], isEstimate: Bool) {
+        // Whole-string estimator: only short-circuit when it recognises the
+        // input as a single alcoholic drink with an explicit ABV, or a known
+        // composite/drink that maps cleanly — never for arbitrary ingredient
+        // lists, which the NL + USDA path resolves far better.
+        let trimmed = description.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
+        if let alcohol = estimator.alcoholComponent(from: trimmed) {
+            return ([resolvedIngredient(from: alcohol, originalText: description)], true)
+        }
+
+        let result = await parser.parse(description: description)
+        let resolved = await resolve(ingredients: result.ingredients, context: context, household: household)
+        return (resolved, result.isAIParsed || !resolved.isEmpty)
+    }
+
+    /// Bridges a MealEstimatorService component into a ResolvedIngredient so the
+    /// describe-it UI renders estimator results uniformly.
+    private func resolvedIngredient(from component: EstimatedComponent, originalText: String) -> ResolvedIngredient {
+        let parsed = MealParsedIngredient(
+            name: component.name,
+            quantity: nil,
+            unit: nil,
+            confidence: .medium,
+            originalText: originalText
+        )
+        return ResolvedIngredient(
+            parsed: parsed,
+            foodItem: nil,
+            quantityInGrams: nil,
+            macros: component.macros,
+            alternates: [],
+            source: .fallback
+        )
+    }
+
     /// Resolves an array of parsed ingredients into resolved ingredients with macros.
     func resolve(
         ingredients: [MealParsedIngredient],

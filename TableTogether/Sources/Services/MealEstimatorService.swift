@@ -8,6 +8,8 @@ struct EstimatedComponent: Identifiable {
     let name: String
     let quantity: String
     let macros: MacroSummary
+    /// UK alcohol units for this component (0 for food/soft drinks).
+    var alcoholUnits: Double = 0
 }
 
 // MARK: - Meal Estimate
@@ -17,6 +19,11 @@ struct MealEstimate {
     let originalDescription: String
     let components: [EstimatedComponent]
     let totalMacros: MacroSummary
+
+    /// Total UK alcohol units across components.
+    var totalAlcoholUnits: Double {
+        components.reduce(0) { $0 + $1.alcoholUnits }
+    }
 }
 
 // MARK: - Meal Estimator Service
@@ -138,6 +145,9 @@ final class MealEstimatorService {
             quantityLabel = "\(volumeLabel) · \(abvLabel)"
         }
 
+        // UK units: (ABV% × volume_ml) ÷ 1000, across all servings.
+        let units = (abv * totalVolume) / 1000.0
+
         return EstimatedComponent(
             name: alcoholDisplayName(from: input),
             quantity: quantityLabel,
@@ -146,7 +156,8 @@ final class MealEstimatorService {
                 protein: 0,
                 carbs: carbsGrams.rounded(),
                 fat: 0
-            )
+            ),
+            alcoholUnits: units
         )
     }
 
