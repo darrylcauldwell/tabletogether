@@ -207,4 +207,91 @@ struct MealSlotComponentTests {
         }
         #expect(abs((macros.calories ?? 0) - 400) < 0.01)
     }
+
+    // MARK: - Stage 1: reconciling plateItems
+
+    /// Builds a recipe whose per-serving calories are known.
+    private func makeRecipe(in context: NSManagedObjectContext, title: String, servings: Int, chickenGrams: Double) -> Recipe {
+        let recipe = Recipe(context: context, title: title, servings: Int(servings))
+        let chicken = makeIngredient(in: context, name: "chicken-\(title)", cal: 200, protein: 30, carbs: 0, fat: 8)
+        let ri = RecipeIngredient(context: context, quantity: chickenGrams, unit: .gram, customName: "chicken")
+        ri.ingredient = chicken
+        recipe.addIngredient(ri)
+        return recipe
+    }
+
+    @Test("plateItems: a recipe read via legacy relationship and via a component give identical macros")
+    func legacyAndComponentEquivalence() {
+        let context = makeContext()
+        let recipe = makeRecipe(in: context, title: "Equiv Curry", servings: 4, chickenGrams: 400)
+
+        let legacySlot = makeSlot(in: context, servingsPlanned: 2)
+        legacySlot.addToRecipes(recipe)
+
+        let componentSlot = makeSlot(in: context, servingsPlanned: 2)
+        _ = MealSlotComponent(context: context, slot: componentSlot, recipe: recipe, portionScale: 1.0)
+
+        #expect(legacySlot.plateItems.count == 1)
+        #expect(componentSlot.plateItems.count == 1)
+        #expect(abs((legacySlot.plannedMacros?.calories ?? 0) - (componentSlot.plannedMacros?.calories ?? -1)) < 0.01)
+    }
+
+    @Test("plateItems unions un-migrated legacy recipes with components (no drop)")
+    func plateItemsUnionsLegacyRecipes() {
+        let context = makeContext()
+        let slot = makeSlot(in: context, servingsPlanned: 1)
+        let dhal = makeRecipe(in: context, title: "Dhal", servings: 4, chickenGrams: 400)   // 200 cal/serving
+        let curry = makeRecipe(in: context, title: "Curry", servings: 4, chickenGrams: 400) // 200 cal/serving
+
+        // Dhal as a component, Curry only in the legacy relationship (a merge/old-client case).
+        _ = MealSlotComponent(context: context, slot: slot, recipe: dhal, portionScale: 1.0)
+        slot.addToRecipes(curry)
+
+        // Both must appear — union, not either/or.
+        #expect(slot.plateItems.count == 2)
+        #expect(abs((slot.plannedMacros?.calories ?? 0) - 400) < 0.01)
+    }
+
+    @Test("plateItems does not re-add a legacy recipe already represented by a component (no double-count)")
+    func plateItemsNoDoubleCountAcrossRepresentations() {
+        let context = makeContext()
+        let slot = makeSlot(in: context, servingsPlanned: 1)
+        let recipe = makeRecipe(in: context, title: "Both", servings: 4, chickenGrams: 400) // 200 cal/serving
+
+        // Same recipe present in BOTH stores (the copy-week duplication case).
+        _ = MealSlotComponent(context: context, slot: slot, recipe: recipe, portionScale: 1.0)
+        slot.addToRecipes(recipe)
+
+        #expect(slot.plateItems.count == 1)
+        #expect(abs((slot.plannedMacros?.calories ?? 0) - 200) < 0.01)
+    }
+
+    @Test("plateItems dedupes duplicate component rows for the same entity (CloudKit dup safety)")
+    func plateItemsDedupesDuplicateComponents() {
+        let context = makeContext()
+        let slot = makeSlot(in: context, servingsPlanned: 1)
+        let recipe = makeRecipe(in: context, title: "Dup", servings: 4, chickenGrams: 400) // 200 cal/serving
+
+        // Two component rows for the same recipe — as two devices' concurrent
+        // migrate-on-touch would produce (MealSlotComponent is dedup-excluded).
+        _ = MealSlotComponent(context: context, slot: slot, recipe: recipe, portionScale: 1.0, order: 0)
+        _ = MealSlotComponent(context: context, slot: slot, recipe: recipe, portionScale: 1.0, order: 1)
+
+        #expect(slot.storedComponents.count == 2)   // both rows persist...
+        #expect(slot.plateItems.count == 1)          // ...but reads collapse them
+        #expect(abs((slot.plannedMacros?.calories ?? 0) - 200) < 0.01) // not 400
+    }
+
+    @Test("isPlanned / isEmpty / displayTitle reflect component-only slots")
+    func gatekeepersReadPlate() {
+        let context = makeContext()
+        let slot = makeSlot(in: context, servingsPlanned: 1)
+        let recipe = makeRecipe(in: context, title: "Component Only", servings: 4, chickenGrams: 400)
+        _ = MealSlotComponent(context: context, slot: slot, recipe: recipe, portionScale: 1.0)
+
+        #expect(slot.recipesArray.isEmpty)       // nothing in the legacy relationship
+        #expect(slot.isPlanned)                  // but the slot is planned via components
+        #expect(!slot.isEmpty)
+        #expect(slot.displayTitle == "Component Only")
+    }
 }

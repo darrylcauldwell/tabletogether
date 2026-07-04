@@ -68,52 +68,11 @@ public class MealSlotComponent: NSManagedObject {
 
     /// Macros contributed by this component for ONE serving of the parent meal
     /// slot (the slot's `servingsPlanned` multiplier is applied later, in
-    /// `MealSlot.plannedMacros`).
-    ///
-    /// Returns `nil` if there is no usable macro data — e.g. an ingredient with
-    /// no calorie data, or a foodItem with no quantity. The aggregator skips
-    /// nil contributions.
+    /// `MealSlot.plannedMacros`). Delegates to `PlateItem` so plate-item macro
+    /// math has exactly one implementation, shared by stored components and
+    /// legacy-recipe synthesis.
     var macrosForOneSlotServing: MacroSummary? {
-        switch kind {
-        case .recipe:
-            guard let recipe, let perServing = recipe.macrosPerServing else { return nil }
-            // portionScale = 1.0 means one full serving of the recipe per slot serving
-            return MacroSummary(
-                calories: perServing.calories.map { $0 * portionScale },
-                protein:  perServing.protein.map  { $0 * portionScale },
-                carbs:    perServing.carbs.map    { $0 * portionScale },
-                fat:      perServing.fat.map      { $0 * portionScale }
-            )
-
-        case .ingredient:
-            guard let ingredient,
-                  let cal = ingredient.caloriesPer100g?.doubleValue
-            else { return nil }
-            let grams = gramsForCurrentQuantity()
-            guard grams > 0 else { return nil }
-            let factor = grams / 100.0
-            return MacroSummary(
-                calories: cal * factor,
-                protein:  (ingredient.proteinPer100g?.doubleValue).map { $0 * factor },
-                carbs:    (ingredient.carbsPer100g?.doubleValue).map   { $0 * factor },
-                fat:      (ingredient.fatPer100g?.doubleValue).map     { $0 * factor }
-            )
-
-        case .foodItem:
-            guard let foodItem else { return nil }
-            let grams = gramsForCurrentQuantity()
-            guard grams > 0 else { return nil }
-            let factor = grams / 100.0
-            return MacroSummary(
-                calories: foodItem.caloriesPer100g * factor,
-                protein:  foodItem.proteinPer100g * factor,
-                carbs:    foodItem.carbsPer100g * factor,
-                fat:      foodItem.fatPer100g * factor
-            )
-
-        case .empty:
-            return nil
-        }
+        PlateItem(component: self)?.macrosForOneSlotServing
     }
 
     /// Convert this component's quantity into grams for ingredient / foodItem
