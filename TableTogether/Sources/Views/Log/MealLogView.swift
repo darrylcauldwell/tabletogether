@@ -253,6 +253,10 @@ struct MealLogView: View {
                                 Label("Delete", systemImage: "trash")
                             }
                         }
+                        .swipeToDelete {
+                            logToDelete = log
+                            showDeleteConfirmation = true
+                        }
                     }
 
                     // Skipped meals
@@ -278,6 +282,10 @@ struct MealLogView: View {
                                     } label: {
                                         Label("Delete", systemImage: "trash")
                                     }
+                                }
+                                .swipeToDelete {
+                                    logToDelete = log
+                                    showDeleteConfirmation = true
                                 }
                         }
                     }
