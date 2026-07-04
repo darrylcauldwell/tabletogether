@@ -89,37 +89,21 @@ struct SlotContentView: View {
     let isTargeted: Bool
     let onTapped: () -> Void
 
-    /// Resolved display names for the slot, drawn from MealSlotComponents
-    /// when present (the new path from #45) or from the legacy recipes
-    /// relationship as a fallback. Empty if the slot has neither.
+    /// Resolved display names for the slot, from the reconciled plate (components
+    /// unioned with un-migrated legacy recipes).
     private var resolvedNames: [String] {
-        let stored = slot.storedComponents
-        if !stored.isEmpty {
-            return stored.map(\.displayName)
-        }
-        return slot.recipesArray.map(\.title)
+        slot.plateItems.map(\.displayName)
     }
 
-    /// Recipe used for the thumbnail image — prefers the first stored
-    /// component's recipe if any, otherwise the first legacy recipe.
+    /// Recipe used for the thumbnail image — first recipe on the reconciled plate.
     private var thumbnailRecipe: Recipe? {
-        if let firstStoredRecipe = slot.storedComponents.compactMap(\.recipe).first {
-            return firstStoredRecipe
-        }
-        return slot.recipesArray.first
+        slot.plateRecipes.first
     }
 
-    /// Total cook+prep time across all recipe components, in minutes.
+    /// Total cook+prep time across all recipe items on the plate, in minutes.
     /// Ingredients and foodItems don't have times, so they're skipped.
     private var totalTimeMinutes: Int? {
-        let stored = slot.storedComponents
-        let recipes: [Recipe]
-        if !stored.isEmpty {
-            recipes = stored.compactMap(\.recipe)
-        } else {
-            recipes = slot.recipesArray
-        }
-        let total = recipes.compactMap(\.totalTimeMinutes).reduce(0, +)
+        let total = slot.plateRecipes.compactMap(\.totalTimeMinutes).reduce(0, +)
         return total > 0 ? total : nil
     }
 

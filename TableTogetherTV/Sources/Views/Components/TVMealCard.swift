@@ -58,7 +58,7 @@ struct TVMealCard: View {
                             .lineLimit(2)
 
                         // Recipe info row
-                        if let recipe = mealSlot.recipesArray.first {
+                        if let recipe = mealSlot.plateRecipes.first {
                             HStack(spacing: TVTheme.Spacing.md) {
                                 if let totalTime = recipe.totalTimeMinutes {
                                     TVTimeChip(minutes: totalTime)
@@ -183,7 +183,7 @@ struct TVMealRow: View {
             Spacer()
 
             // Time indicator
-            if let recipe = mealSlot.recipesArray.first, let time = recipe.totalTimeMinutes {
+            if let recipe = mealSlot.plateRecipes.first, let time = recipe.totalTimeMinutes {
                 Text("\(time) min")
                     .font(TVTheme.Typography.callout)
                     .foregroundStyle(TVTheme.Colors.textSecondary)

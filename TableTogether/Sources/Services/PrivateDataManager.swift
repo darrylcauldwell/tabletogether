@@ -435,30 +435,69 @@ final class PrivateDataManager {
         return Double(slot.servingsPlanned) / Double(assigned.count)
     }
 
-    /// Builds the private log entry seeded from a planned meal slot.
+    /// Builds the private log entry seeded from a planned meal slot, reading the
+    /// reconciled `plateItems` (never `recipesArray`, which is empty once a slot
+    /// has been migrated to components — that would seed a phantom 0-kcal entry).
     ///
-    /// Recipe-backed slots reference the recipe by ID and get macros at aggregation
-    /// time. Custom-named slots ("chips") have no recipe to derive nutrition from, so
-    /// the name is carried into the log and macros are prefilled from the local food
-    /// estimator (scaled to this person's servings) — otherwise a planned custom meal
-    /// would silently read as 0 kcal in Insights. Estimates stay editable like any
-    /// quick log.
+    /// - A single recipe item → reference it by `recipeID`; Insights derives
+    ///   macros from the recipe × servingsConsumed (unchanged fast-path).
+    /// - A multi-item plate (main + sides) OR any non-recipe item → seed a quick
+    ///   log: `recipeID = nil`, name joined from the plate, and per-person macros
+    ///   = Σ `macrosForOneSlotServing` × `perPersonServings`. NOT `plannedMacros`,
+    ///   which already multiplies by `servingsPlanned` (the whole-plate total) and
+    ///   would 2–4× the person's Insights. `recipeID = nil` keeps the recipe and
+    ///   quick-log branches mutually exclusive.
+    /// - No plate items but a custom name ("chips") → estimator-prefilled quick log.
     static func plannedLog(
         for slot: MealSlot,
         perPersonServings: Double,
         date: Date,
         estimator: MealEstimatorService
     ) -> PrivateMealLog {
+        let items = slot.plateItems
+
+        // Single recipe → recipeID fast-path.
+        if items.count == 1, let only = items.first, only.kind == .recipe, let recipeID = only.recipe?.id {
+            return PrivateMealLog(
+                date: date,
+                mealType: slot.mealType,
+                recipeID: recipeID,
+                mealSlotID: slot.id,
+                servingsConsumed: perPersonServings,
+                status: .planned
+            )
+        }
+
         var log = PrivateMealLog(
             date: date,
             mealType: slot.mealType,
-            recipeID: slot.recipesArray.first?.id,
+            recipeID: nil,
             mealSlotID: slot.id,
             servingsConsumed: perPersonServings,
             status: .planned
         )
 
-        if log.recipeID == nil, let customName = slot.customMealName, !customName.isEmpty {
+        if !items.isEmpty {
+            // Multi-item or non-recipe plate: name + aggregated per-person macros.
+            log.quickLogName = items.map(\.displayName).joined(separator: " + ")
+            var cal = 0.0, prot = 0.0, carb = 0.0, fat = 0.0, hasMacros = false
+            for item in items {
+                if let m = item.macrosForOneSlotServing {
+                    hasMacros = true
+                    cal += m.calories ?? 0
+                    prot += m.protein ?? 0
+                    carb += m.carbs ?? 0
+                    fat += m.fat ?? 0
+                }
+            }
+            if hasMacros {
+                log.quickLogCalories = cal > 0 ? Int((cal * perPersonServings).rounded()) : nil
+                log.quickLogProtein = prot > 0 ? Int((prot * perPersonServings).rounded()) : nil
+                log.quickLogCarbs = carb > 0 ? Int((carb * perPersonServings).rounded()) : nil
+                log.quickLogFat = fat > 0 ? Int((fat * perPersonServings).rounded()) : nil
+            }
+        } else if let customName = slot.customMealName, !customName.isEmpty {
+            // No plate items — a custom-named meal ("chips").
             log.quickLogName = customName
             if let estimate = estimator.estimate(description: customName) {
                 let macros = estimate.totalMacros

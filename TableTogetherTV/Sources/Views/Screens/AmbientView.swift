@@ -125,7 +125,7 @@ struct AmbientView: View {
                 .tvSafeArea()
             }
             .navigationDestination(isPresented: $showingRecipeView) {
-                if let slot = selectedSlot, let recipe = slot.recipesArray.first {
+                if let slot = selectedSlot, let recipe = slot.plateRecipes.first {
                     RecipeView(recipe: recipe, mealSlot: slot)
                 }
             }
@@ -208,7 +208,7 @@ struct AmbientView: View {
                 ) {
                     ForEach(todaySlots.sorted { $0.mealType.sortOrder < $1.mealType.sortOrder }) { slot in
                         TVMealCard(mealSlot: slot) {
-                            if !slot.recipesArray.isEmpty {
+                            if !slot.plateRecipes.isEmpty {
                                 selectedSlot = slot
                                 showingRecipeView = true
                             }

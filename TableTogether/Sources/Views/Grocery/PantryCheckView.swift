@@ -135,7 +135,7 @@ struct PantryCheckView: View {
     /// Whether any relevant week plans have recipes planned
     private var hasPlannedRecipes: Bool {
         relevantWeekPlans.contains { plan in
-            plan.slotsArray.contains { !$0.recipesArray.isEmpty }
+            plan.slotsArray.contains { $0.isPlanned }
         }
     }
 
@@ -398,7 +398,7 @@ struct PantryCheckView: View {
         var generated = false
         for plan in relevantWeekPlans {
             let hasDerivedItems = plan.groceryItemsArray.contains { !$0.isManuallyAdded }
-            let hasRecipes = plan.slotsArray.contains { !$0.recipesArray.isEmpty }
+            let hasRecipes = plan.slotsArray.contains { $0.isPlanned }
             if !hasDerivedItems && hasRecipes {
                 plan.generateGroceryList(context: viewContext)
                 generated = true

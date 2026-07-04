@@ -428,7 +428,7 @@ final class CalendarService {
     private func buildEventNotes(for slot: MealSlot) -> String {
         var notes: [String] = []
 
-        for recipe in slot.recipesArray {
+        for recipe in slot.plateRecipes {
             notes.append("Recipe: \(recipe.title)")
 
             var timeInfo: [String] = []
@@ -496,9 +496,9 @@ final class CalendarService {
     /// Calculate event duration based on meal type and recipe time.
     private func calculateDuration(for slot: MealSlot) -> Int {
         // Sum total time across all recipes
-        if !slot.recipesArray.isEmpty {
+        if !slot.plateRecipes.isEmpty {
             var totalTime = 0
-            for recipe in slot.recipesArray {
+            for recipe in slot.plateRecipes {
                 totalTime += (recipe.prepTimeMinutesOptional ?? 0) + (recipe.cookTimeMinutesOptional ?? 0)
             }
             if totalTime > 0 {
@@ -519,7 +519,7 @@ final class CalendarService {
     private func calculateContentHash(for slot: MealSlot) -> Int {
         var hasher = Hasher()
         hasher.combine(slot.displayTitle)
-        for recipe in slot.recipesArray {
+        for recipe in slot.plateRecipes {
             hasher.combine(recipe.id)
         }
         hasher.combine(slot.notes)

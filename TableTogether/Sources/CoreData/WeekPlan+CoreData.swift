@@ -60,7 +60,7 @@ public class WeekPlan: NSManagedObject {
     }
 
     var uniqueRecipes: [Recipe] {
-        Array(Set(slotsArray.flatMap { $0.recipesArray }))
+        Array(Set(slotsArray.flatMap { $0.plateRecipes }))
     }
 
     // MARK: - Methods
@@ -251,11 +251,12 @@ public class WeekPlan: NSManagedObject {
 
         var needed: [Key: (ingredient: Ingredient?, name: String?, quantity: Double, unit: MeasurementUnit, slots: [MealSlot])] = [:]
         for slot in plannedSlots {
-            for recipe in slot.recipesArray {
+            for item in slot.plateItems where item.kind == .recipe {
+                guard let recipe = item.recipe else { continue }
                 for ri in recipe.recipeIngredientsArray {
                     guard let id = identity(forIngredient: ri.ingredient, name: ri.customName) else { continue }
                     let key = Key(identity: id, unit: ri.unit)
-                    let scaled = ri.scaledQuantity(originalServings: Int(recipe.servings), newServings: Int(slot.servingsPlanned))
+                    let scaled = ri.scaledQuantity(originalServings: Int(recipe.servings), newServings: Int(slot.servingsPlanned)) * item.portionScale
                     if var entry = needed[key] {
                         entry.quantity += scaled
                         entry.slots.append(slot)

@@ -290,8 +290,8 @@ struct GroceryItemRow: View {
                         Text(slotDescription(slot))
                             .font(AppTypography.subheadline)
 
-                        if !slot.recipesArray.isEmpty {
-                            Text(slot.recipesArray.map(\.title).joined(separator: ", "))
+                        if !slot.plateRecipes.isEmpty {
+                            Text(slot.plateRecipes.map(\.title).joined(separator: ", "))
                                 .font(AppTypography.caption)
                                 .foregroundStyle(.secondary)
                         } else if let customName = slot.customMealName {

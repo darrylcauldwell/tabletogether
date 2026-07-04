@@ -71,7 +71,7 @@ struct QuickLogSheet: View {
             let slotDate = weekPlan.date(for: slot.dayOfWeek)
             guard calendar.startOfDay(for: slotDate) == today else { continue }
 
-            for recipe in slot.recipesArray {
+            for recipe in slot.plateRecipes {
                 results.append((slot: slot, recipe: recipe))
             }
         }

@@ -241,14 +241,10 @@ struct MealSlotListRow: View {
     @State private var swipeOffset: CGFloat = 0
     private let deleteWidth: CGFloat = 88
 
-    /// Display names for the slot, drawn from MealSlotComponents when present
-    /// or from the legacy recipes relationship as a fallback.
+    /// Display names for the slot, from the reconciled plate (components unioned
+    /// with un-migrated legacy recipes).
     private var resolvedNames: [String] {
-        let stored = slot.storedComponents
-        if !stored.isEmpty {
-            return stored.map(\.displayName)
-        }
-        return slot.recipesArray.map(\.title)
+        slot.plateItems.map(\.displayName)
     }
 
     private var primaryLine: String {

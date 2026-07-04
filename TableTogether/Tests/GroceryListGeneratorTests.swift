@@ -191,4 +191,51 @@ struct GroceryListGeneratorTests {
         #expect(!items.contains { $0.ingredient === onion })
         #expect(!items.contains { $0.ingredient === salt })
     }
+
+    // MARK: - Stage 2: component/legacy grocery equivalence
+
+    @Test("A recipe planned as a component gives the same grocery line as the legacy relationship")
+    func componentAndLegacyGroceryEquivalence() throws {
+        let (context, household) = makeContext()
+        let rice = makeIngredient("rice", in: context, household: household)
+        let recipe = makeRecipe("Rice bowl", servings: 2, ingredient: rice, quantity: 100, unit: .gram, in: context, household: household)
+
+        // Legacy slot: recipe via the relationship.
+        let legacyPlan = makeWeekPlan(in: context, household: household)
+        makeSlot(day: .monday, mealType: .dinner, servingsPlanned: 6, recipes: [recipe], in: context, weekPlan: legacyPlan)
+
+        // Component slot: same recipe as a MealSlotComponent at portionScale 1.0.
+        let componentPlan = makeWeekPlan(in: context, household: household)
+        let cslot = MealSlot(context: context, dayOfWeek: .monday, mealType: .dinner, servingsPlanned: 6)
+        cslot.weekPlan = componentPlan
+        componentPlan.addToSlots(cslot)
+        _ = MealSlotComponent(context: context, slot: cslot, recipe: recipe, portionScale: 1.0)
+
+        let generator = GroceryListGenerator()
+        let legacyItems = generator.generateGroceryList(from: legacyPlan, context: context)
+        let componentItems = generator.generateGroceryList(from: componentPlan, context: context)
+
+        #expect(legacyItems.count == 1)
+        #expect(componentItems.count == 1)
+        #expect(legacyItems.first?.quantity == 300)          // 100 × (6/2)
+        #expect(componentItems.first?.quantity == legacyItems.first?.quantity)
+    }
+
+    @Test("Recipe component portionScale scales grocery quantities")
+    func componentPortionScaleScalesGrocery() throws {
+        let (context, household) = makeContext()
+        let rice = makeIngredient("rice", in: context, household: household)
+        let recipe = makeRecipe("Rice bowl", servings: 2, ingredient: rice, quantity: 100, unit: .gram, in: context, household: household)
+
+        let plan = makeWeekPlan(in: context, household: household)
+        let slot = MealSlot(context: context, dayOfWeek: .monday, mealType: .dinner, servingsPlanned: 2)
+        slot.weekPlan = plan
+        plan.addToSlots(slot)
+        // Half portion of a 2-serving recipe for 2 people: 100 × (2/2) × 0.5 = 50g.
+        _ = MealSlotComponent(context: context, slot: slot, recipe: recipe, portionScale: 0.5)
+
+        let items = GroceryListGenerator().generateGroceryList(from: plan, context: context)
+        #expect(items.count == 1)
+        #expect(items.first?.quantity == 50)
+    }
 }

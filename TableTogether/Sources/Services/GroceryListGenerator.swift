@@ -35,14 +35,18 @@ final class GroceryListGenerator {
         var ingredientAggregation: [AggregationKey: IngredientAggregation] = [:]
 
         for slot in weekPlan.slotsArray {
-            // Skip slots without recipes or that are explicitly skipped
-            guard !slot.isSkipped, !slot.recipesArray.isEmpty else {
-                continue
-            }
+            guard !slot.isSkipped else { continue }
 
-            for recipe in slot.recipesArray {
-                // Calculate serving multiplier
-                let servingMultiplier = Double(slot.servingsPlanned) / Double(max(recipe.servings, 1))
+            // Walk recipe items on the reconciled plate (portionScale carries the
+            // plate builder's half/double portions; 1.0 for legacy/migrated).
+            // Ingredient/foodItem side lines are added in a later stage.
+            for item in slot.plateItems where item.kind == .recipe {
+                guard let recipe = item.recipe else { continue }
+                // Recipe INGREDIENTS are stored per-full-recipe, so scale by
+                // servingsPlanned / recipe.servings (× portionScale). Recipe
+                // MACROS are per-serving and scaled separately in plannedMacros.
+                let servingMultiplier =
+                    Double(slot.servingsPlanned) / Double(max(recipe.servings, 1)) * item.portionScale
 
                 // Process each recipe ingredient
                 for recipeIngredient in recipe.recipeIngredientsArray {
