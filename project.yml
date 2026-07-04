@@ -19,7 +19,7 @@ targets:
         CODE_SIGN_STYLE: Automatic
         DEVELOPMENT_TEAM: N6BK2WX94Z
         CURRENT_PROJECT_VERSION: "1"
-        MARKETING_VERSION: "1.6"
+        MARKETING_VERSION: "1.7"
         VERSIONING_SYSTEM: apple-generic
         GENERATE_INFOPLIST_FILE: "YES"
         SWIFT_VERSION: "6.2"
