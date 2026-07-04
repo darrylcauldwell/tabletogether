@@ -134,3 +134,16 @@ every edited meal.
 Residual accepted risks: cross-device portionScale tiebreak nondeterminism (LWW settles it); `PlateItem` is non-Sendable (view-context only); bounded component-row bloat under repeated concurrent copies (read-dedup keeps numbers correct).
 
 No CloudKit schema change (CD_MealSlotComponent already in production).
+
+## Implementation status (2026-07-04): COMPLETE
+
+All five stages shipped on `main`, each an independently-green commit:
+1. `PlateItem` + reconciling `plateItems` read model.
+2. All consumers (incl. grocery, tvOS, planned-log) routed through it.
+3. Write paths: `ensureComponentsMigrated`, add/remove/portion mutators, copy-week.
+4. Plate-builder editor (dishes + portions).
+5. Sides (ingredient/foodItem) + grocery lines + SidePicker.
+
+312 tests green; iOS + tvOS build clean. No CloudKit schema change.
+Deferred (screenshot-only): demo-data mixed-plate seeding. Type-and-resolve
+typed sides deferred (library pick covers the case; USDA path is a future add).
