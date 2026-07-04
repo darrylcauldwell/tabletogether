@@ -13,6 +13,7 @@ struct MealSlotEditorSheet: View {
     @FetchRequest(sortDescriptors: [SortDescriptor(\.name)]) private var archetypes: FetchedResults<MealArchetype>
 
     @State private var showingRecipePicker = false
+    @State private var showingSidePicker = false
     @State private var customMealName: String = ""
     @State private var notes: String = ""
     @State private var servingsPlanned: Int = 2
@@ -40,6 +41,22 @@ struct MealSlotEditorSheet: View {
         case 2.0: return "2"
         default: return String(format: "%.1f", scale)
         }
+    }
+
+    /// A sensible starting amount for a side, per its unit: one of a countable
+    /// thing (naan, egg), else a modest mass/volume.
+    static func defaultSideQuantity(for unit: MeasurementUnit) -> Double {
+        switch unit {
+        case .piece, .slice, .clove, .bunch, .pinch, .toTaste: return 1
+        default: return 100
+        }
+    }
+
+    /// Compact "200g" / "1 naan" style quantity label for a side row.
+    private func sideQuantityLabel(_ item: PlateItem) -> String? {
+        guard item.kind != .recipe, let qty = item.quantity, let unit = item.unit else { return nil }
+        let amount = qty == qty.rounded() ? "\(Int(qty))" : String(format: "%.1f", qty)
+        return "\(amount)\(unit == .gram || unit == .milliliter ? unit.abbreviation : " " + unit.abbreviation)"
     }
 
     var body: some View {
@@ -92,6 +109,18 @@ struct MealSlotEditorSheet: View {
                     }
                 }
             }
+            .sheet(isPresented: $showingSidePicker) {
+                SidePickerSheet { choice in
+                    guard let user = currentUser else { return }
+                    switch choice {
+                    case .ingredient(let ingredient):
+                        let unit = ingredient.defaultUnit
+                        slot.addIngredientSide(ingredient, quantity: Self.defaultSideQuantity(for: unit), unit: unit, by: user)
+                    case .foodItem(let foodItem):
+                        slot.addFoodItemSide(foodItem, quantity: 100, unit: .gram, by: user)
+                    }
+                }
+            }
         }
     }
 
@@ -121,6 +150,12 @@ struct MealSlotEditorSheet: View {
                 showingRecipePicker = true
             } label: {
                 Label("Add dish", systemImage: "plus.circle")
+            }
+
+            Button {
+                showingSidePicker = true
+            } label: {
+                Label("Add side", systemImage: "leaf")
             }
 
             // Custom-meal escape hatch only when the plate is empty ("Friday: pub").
@@ -153,10 +188,17 @@ struct MealSlotEditorSheet: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(item.displayName)
                     .font(AppTypography.body)
-                if let cal = item.macrosForOneSlotServing?.calories {
-                    Text("≈\(Int(cal.rounded())) cal")
-                        .font(AppTypography.caption)
-                        .foregroundStyle(.secondary)
+                HStack(spacing: 6) {
+                    if let qty = sideQuantityLabel(item) {
+                        Text(qty)
+                            .font(AppTypography.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    if let cal = item.macrosForOneSlotServing?.calories {
+                        Text("≈\(Int(cal.rounded())) cal")
+                            .font(AppTypography.caption)
+                            .foregroundStyle(.secondary)
+                    }
                 }
             }
 

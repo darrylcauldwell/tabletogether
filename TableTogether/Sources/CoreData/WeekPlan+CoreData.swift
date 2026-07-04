@@ -275,20 +275,35 @@ public class WeekPlan: NSManagedObject {
         }
 
         var needed: [Key: (ingredient: Ingredient?, name: String?, quantity: Double, unit: MeasurementUnit, slots: [MealSlot])] = [:]
+        func add(ingredient: Ingredient?, name: String?, quantity: Double, unit: MeasurementUnit, slot: MealSlot) {
+            guard let id = identity(forIngredient: ingredient, name: name) else { return }
+            let key = Key(identity: id, unit: unit)
+            if var entry = needed[key] {
+                entry.quantity += quantity
+                entry.slots.append(slot)
+                needed[key] = entry
+            } else {
+                needed[key] = (ingredient, name, quantity, unit, [slot])
+            }
+        }
         for slot in plannedSlots {
-            for item in slot.plateItems where item.kind == .recipe {
-                guard let recipe = item.recipe else { continue }
-                for ri in recipe.recipeIngredientsArray {
-                    guard let id = identity(forIngredient: ri.ingredient, name: ri.customName) else { continue }
-                    let key = Key(identity: id, unit: ri.unit)
-                    let scaled = ri.scaledQuantity(originalServings: Int(recipe.servings), newServings: Int(slot.servingsPlanned)) * item.portionScale
-                    if var entry = needed[key] {
-                        entry.quantity += scaled
-                        entry.slots.append(slot)
-                        needed[key] = entry
-                    } else {
-                        needed[key] = (ri.ingredient, ri.customName, scaled, ri.unit, [slot])
+            for item in slot.plateItems {
+                switch item.kind {
+                case .recipe:
+                    guard let recipe = item.recipe else { continue }
+                    for ri in recipe.recipeIngredientsArray {
+                        let scaled = ri.scaledQuantity(originalServings: Int(recipe.servings), newServings: Int(slot.servingsPlanned)) * item.portionScale
+                        add(ingredient: ri.ingredient, name: ri.customName, quantity: scaled, unit: ri.unit, slot: slot)
                     }
+                case .ingredient:
+                    // A side (rice, naan): scale by servingsPlanned, merge with any
+                    // recipe-derived duplicate of the same ingredient+unit.
+                    guard let ingredient = item.ingredient, let qty = item.quantity, qty > 0, let unit = item.unit else { continue }
+                    add(ingredient: ingredient, name: ingredient.name, quantity: qty * Double(slot.servingsPlanned), unit: unit, slot: slot)
+                case .foodItem:
+                    // Branded/pre-made: a name-only reminder line (quantity 0).
+                    guard let foodItem = item.foodItem else { continue }
+                    add(ingredient: nil, name: foodItem.displayName, quantity: 0, unit: .piece, slot: slot)
                 }
             }
         }

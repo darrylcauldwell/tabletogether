@@ -79,6 +79,51 @@ final class GroceryListGenerator {
                     }
                 }
             }
+
+            // Ingredient sides (rice, naan) emit a direct line scaled by
+            // servingsPlanned — consistent with how their macros scale — merging
+            // with any recipe-derived duplicate of the same ingredient+unit.
+            for item in slot.plateItems where item.kind == .ingredient {
+                guard let ingredient = item.ingredient,
+                      let qty = item.quantity, qty > 0,
+                      let unit = item.unit,
+                      let identity = Self.identity(ingredient: ingredient, name: ingredient.name) else { continue }
+                let key = AggregationKey(identity: identity, unit: unit)
+                let sideQuantity = qty * Double(slot.servingsPlanned)
+                if var existing = ingredientAggregation[key] {
+                    existing.totalQuantity += sideQuantity
+                    existing.sourceSlots.append(slot)
+                    ingredientAggregation[key] = existing
+                } else {
+                    ingredientAggregation[key] = IngredientAggregation(
+                        ingredient: ingredient,
+                        fallbackName: nil,
+                        totalQuantity: sideQuantity,
+                        unit: unit,
+                        sourceSlots: [slot]
+                    )
+                }
+            }
+
+            // FoodItem sides (branded/pre-made) get a name-only reminder line so
+            // the shopper doesn't forget them; no quantity aggregation.
+            for item in slot.plateItems where item.kind == .foodItem {
+                guard let foodItem = item.foodItem,
+                      let identity = Self.identity(ingredient: nil, name: foodItem.displayName) else { continue }
+                let key = AggregationKey(identity: identity, unit: .piece)
+                if var existing = ingredientAggregation[key] {
+                    existing.sourceSlots.append(slot)
+                    ingredientAggregation[key] = existing
+                } else {
+                    ingredientAggregation[key] = IngredientAggregation(
+                        ingredient: nil,
+                        fallbackName: foodItem.displayName,
+                        totalQuantity: 0,
+                        unit: .piece,
+                        sourceSlots: [slot]
+                    )
+                }
+            }
         }
 
         // Convert aggregations to GroceryItems

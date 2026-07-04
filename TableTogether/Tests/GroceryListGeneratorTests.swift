@@ -238,4 +238,58 @@ struct GroceryListGeneratorTests {
         #expect(items.count == 1)
         #expect(items.first?.quantity == 50)
     }
+
+    // MARK: - Stage 5/6: ingredient & foodItem side grocery lines
+
+    // These target the LIVE generator (WeekPlan.generateGroceryList — the one the
+    // app actually calls), which writes GroceryItems onto the plan.
+
+    @Test("Ingredient side emits a grocery line scaled by servingsPlanned (live generator)")
+    func ingredientSideScalesByServings() throws {
+        let (context, household) = makeContext()
+        let naan = makeIngredient("naan", in: context, household: household)
+        let plan = makeWeekPlan(in: context, household: household)
+        let slot = MealSlot(context: context, dayOfWeek: .monday, mealType: .dinner, servingsPlanned: 3)
+        slot.weekPlan = plan; plan.addToSlots(slot)
+        // 1 naan per serving × 3 servings = 3.
+        _ = MealSlotComponent(context: context, slot: slot, ingredient: naan, quantity: 1, unit: .piece)
+
+        plan.generateGroceryList(context: context)
+        let line = try #require(plan.groceryItemsArray.first { $0.ingredient === naan })
+        #expect(line.quantity == 3)
+    }
+
+    @Test("Ingredient side merges with a recipe-derived duplicate (live generator)")
+    func ingredientSideMergesWithRecipeDuplicate() throws {
+        let (context, household) = makeContext()
+        let rice = makeIngredient("rice", in: context, household: household)
+        let recipe = makeRecipe("Curry", servings: 2, ingredient: rice, quantity: 100, unit: .gram, in: context, household: household)
+
+        let plan = makeWeekPlan(in: context, household: household)
+        let slot = MealSlot(context: context, dayOfWeek: .monday, mealType: .dinner, servingsPlanned: 2)
+        slot.weekPlan = plan; plan.addToSlots(slot)
+        _ = MealSlotComponent(context: context, slot: slot, recipe: recipe, portionScale: 1.0)   // 100 × (2/2) = 100g
+        _ = MealSlotComponent(context: context, slot: slot, ingredient: rice, quantity: 50, unit: .gram) // 50 × 2 = 100g
+
+        plan.generateGroceryList(context: context)
+        let riceLines = plan.groceryItemsArray.filter { $0.ingredient === rice }
+        #expect(riceLines.count == 1)              // merged into one line
+        #expect(riceLines.first?.quantity == 200)  // 100 (recipe) + 100 (side)
+    }
+
+    @Test("FoodItem side produces a name-only reminder line (live generator)")
+    func foodItemSideNameOnlyLine() throws {
+        let (context, household) = makeContext()
+        let potNoodle = FoodItem(
+            context: context, fdcId: 1, usdaDescription: "Pot Noodle", displayName: "Pot Noodle", dataType: "Branded",
+            caloriesPer100g: 450, proteinPer100g: 10, carbsPer100g: 60, fatPer100g: 18
+        )
+        let plan = makeWeekPlan(in: context, household: household)
+        let slot = MealSlot(context: context, dayOfWeek: .monday, mealType: .lunch, servingsPlanned: 1)
+        slot.weekPlan = plan; plan.addToSlots(slot)
+        _ = MealSlotComponent(context: context, slot: slot, foodItem: potNoodle, quantity: 100, unit: .gram)
+
+        plan.generateGroceryList(context: context)
+        #expect(plan.groceryItemsArray.contains { $0.displayName.localizedCaseInsensitiveContains("Pot Noodle") })
+    }
 }
