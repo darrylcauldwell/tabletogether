@@ -161,47 +161,157 @@ public class MealSlot: NSManagedObject {
 
     // MARK: - Methods
 
-    func addRecipe(_ recipe: Recipe, by user: User) {
-        addToRecipes(recipe)
-        self.customMealName = nil
-        self.isSkipped = false
+    /// Converts this slot's legacy `recipes` entries into recipe components
+    /// (portionScale 1.0), then clears `recipes` — so an edited slot becomes
+    /// component-based on this device. Idempotent and self-healing: only creates
+    /// components for recipes not already represented (tolerates a merged/split
+    /// slot that arrived with both stores populated), and clears `recipes` only
+    /// after the components exist. Deterministic ids so concurrent migration on
+    /// two devices converges (and read-side dedup collapses any stragglers).
+    /// `excluding` skips one recipe (used by removeRecipe so it never
+    /// create-then-deletes the recipe being removed — no CloudKit resurrection).
+    @discardableResult
+    func ensureComponentsMigrated(excluding excludedRecipe: Recipe? = nil) -> Bool {
+        guard let context = managedObjectContext else { return false }
+        let legacy = recipesArray
+        guard !legacy.isEmpty else { return false }
+
+        let existingRecipeIDs = Set(storedComponents.compactMap { $0.recipe?.id })
+        var order = (storedComponents.map { Int($0.order) }.max() ?? -1) + 1
+        for recipe in legacy {
+            if recipe.id == excludedRecipe?.id { continue }
+            if existingRecipeIDs.contains(recipe.id) { continue }
+            let component = MealSlotComponent(context: context, slot: self, recipe: recipe, portionScale: 1.0, order: order)
+            component.id = MealSlotComponent.deterministicID(slotID: id, kind: .recipe, entityID: recipe.id)
+            order += 1
+        }
+        self.recipes = NSSet() // cleared last, after components exist
+        return true
+    }
+
+    private func deleteAllComponents() {
+        guard let context = managedObjectContext else { return }
+        for component in storedComponents {
+            context.delete(component)
+        }
+        self.components = NSSet()
+    }
+
+    private func nextComponentOrder() -> Int {
+        (storedComponents.map { Int($0.order) }.max() ?? -1) + 1
+    }
+
+    private func touch(by user: User) {
         self.modifiedAt = Date()
         self.modifiedBy = user
+    }
+
+    func addRecipe(_ recipe: Recipe, by user: User) {
+        guard let context = managedObjectContext else { return }
+        ensureComponentsMigrated()
+        // One entry per entity: if this recipe is already on the plate, keep its
+        // existing portion (reads dedup by entity id, so a second row would be
+        // silently dropped).
+        if !storedComponents.contains(where: { $0.recipe?.id == recipe.id }) {
+            _ = MealSlotComponent(context: context, slot: self, recipe: recipe, portionScale: 1.0, order: nextComponentOrder())
+        }
+        self.customMealName = nil
+        self.isSkipped = false
+        touch(by: user)
+    }
+
+    /// Adds an ingredient side (rice, naan, veg) with a quantity. Updates in place
+    /// if the same ingredient is already on the plate.
+    func addIngredientSide(_ ingredient: Ingredient, quantity: Double, unit: MeasurementUnit, by user: User) {
+        guard let context = managedObjectContext else { return }
+        ensureComponentsMigrated()
+        if let existing = storedComponents.first(where: { $0.ingredient?.id == ingredient.id }) {
+            existing.quantity = NSNumber(value: quantity)
+            existing.unit = unit.rawValue
+            existing.modifiedAt = Date()
+        } else {
+            _ = MealSlotComponent(context: context, slot: self, ingredient: ingredient, quantity: quantity, unit: unit, order: nextComponentOrder())
+        }
+        self.isSkipped = false
+        touch(by: user)
+    }
+
+    /// Adds a branded/packaged food side (Pot Noodle, Big Mac) with a quantity.
+    func addFoodItemSide(_ foodItem: FoodItem, quantity: Double, unit: MeasurementUnit = .gram, portionLabel: String? = nil, by user: User) {
+        guard let context = managedObjectContext else { return }
+        ensureComponentsMigrated()
+        if let existing = storedComponents.first(where: { $0.foodItem?.id == foodItem.id }) {
+            existing.quantity = NSNumber(value: quantity)
+            existing.unit = unit.rawValue
+            existing.portionLabel = portionLabel
+            existing.modifiedAt = Date()
+        } else {
+            _ = MealSlotComponent(context: context, slot: self, foodItem: foodItem, quantity: quantity, unit: unit, portionLabel: portionLabel, order: nextComponentOrder())
+        }
+        self.isSkipped = false
+        touch(by: user)
     }
 
     func removeRecipe(_ recipe: Recipe, by user: User) {
-        removeFromRecipes(recipe)
-        self.modifiedAt = Date()
-        self.modifiedBy = user
+        guard let context = managedObjectContext else { return }
+        // Migrate everything EXCEPT the one being removed, so no component for it
+        // is ever created-then-deleted (avoids CloudKit delete-vs-recreate).
+        ensureComponentsMigrated(excluding: recipe)
+        for component in storedComponents where component.recipe?.id == recipe.id {
+            context.delete(component)
+        }
+        touch(by: user)
+    }
+
+    /// Removes any plate item (recipe / ingredient / foodItem) by its PlateItem id.
+    func removePlateItem(id: String, by user: User) {
+        guard let context = managedObjectContext else { return }
+        // A legacy recipe not yet a component: migrate all others, drop this one.
+        if let recipe = recipesArray.first(where: { "recipe:\($0.id.uuidString)" == id }) {
+            removeRecipe(recipe, by: user)
+            return
+        }
+        for component in storedComponents {
+            if let item = PlateItem(component: component), item.id == id {
+                context.delete(component)
+            }
+        }
+        touch(by: user)
     }
 
     func setCustomMeal(_ name: String, by user: User) {
-        self.customMealName = name
+        deleteAllComponents()
         self.recipes = NSSet()
+        self.customMealName = name
         self.isSkipped = false
-        self.modifiedAt = Date()
-        self.modifiedBy = user
+        touch(by: user)
     }
 
     func skip(by user: User) {
-        self.isSkipped = true
+        deleteAllComponents()
         self.recipes = NSSet()
         self.customMealName = nil
-        self.modifiedAt = Date()
-        self.modifiedBy = user
+        self.isSkipped = true
+        touch(by: user)
     }
 
     func clear(by user: User) {
+        deleteAllComponents()
         self.recipes = NSSet()
         self.customMealName = nil
         self.isSkipped = false
-        // Delete any plate components too, otherwise they're orphaned but still shown.
-        for component in storedComponents {
-            managedObjectContext?.delete(component)
+        touch(by: user)
+    }
+
+    /// Sets the portion scale on the recipe component for `recipe` (½/1/1½/2 from
+    /// the plate builder). Migrates first so the edit lands on a component.
+    func setPortionScale(_ scale: Double, forRecipe recipe: Recipe, by user: User) {
+        ensureComponentsMigrated()
+        for component in storedComponents where component.recipe?.id == recipe.id {
+            component.portionScale = scale
+            component.modifiedAt = Date()
         }
-        self.components = NSSet()
-        self.modifiedAt = Date()
-        self.modifiedBy = user
+        touch(by: user)
     }
 
     func assignUsers(_ users: [User], by modifier: User) {

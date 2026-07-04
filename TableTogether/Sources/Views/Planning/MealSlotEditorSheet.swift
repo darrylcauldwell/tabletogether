@@ -28,6 +28,20 @@ struct MealSlotEditorSheet: View {
         _selectedUserIds = State(initialValue: Set(slot.assignedToArray.map { $0.id }))
     }
 
+    private var currentUser: User? { User.current(in: users) }
+
+    /// Discrete portion steps for a recipe on the plate (½/1/1½/2 servings).
+    private static let portionSteps: [Double] = [0.5, 1.0, 1.5, 2.0]
+    private func portionLabel(_ scale: Double) -> String {
+        switch scale {
+        case 0.5: return "½"
+        case 1.0: return "1"
+        case 1.5: return "1½"
+        case 2.0: return "2"
+        default: return String(format: "%.1f", scale)
+        }
+    }
+
     var body: some View {
         NavigationStack {
             Form {
@@ -69,16 +83,13 @@ struct MealSlotEditorSheet: View {
                 // Shared picker (also used by the week list's Add meal). Apply
                 // the choice to this slot; the editor saves on Done.
                 RecipePickerSheet { choice in
+                    guard let user = currentUser else { return }
                     switch choice {
                     case .recipe(let recipe):
-                        slot.addToRecipes(recipe)
-                        slot.customMealName = nil
+                        slot.addRecipe(recipe, by: user)
                     case .custom(let name):
-                        slot.customMealName = name
-                        slot.recipes = NSSet()
+                        slot.setCustomMeal(name, by: user)
                     }
-                    slot.isSkipped = false
-                    slot.modifiedAt = Date()
                 }
             }
         }
@@ -101,45 +112,81 @@ struct MealSlotEditorSheet: View {
     }
 
     private var mealSection: some View {
-        Section("Meal") {
-            if !slot.recipesArray.isEmpty {
-                ForEach(slot.recipesArray) { recipe in
-                    HStack {
-                        VStack(alignment: .leading) {
-                            Text(recipe.title)
-                                .font(AppTypography.body)
-                            if let time = recipe.formattedTotalTime {
-                                Text(time)
-                                    .font(AppTypography.caption)
-                                    .foregroundStyle(.secondary)
-                            }
-                        }
-                        Spacer()
-                        Button(role: .destructive) {
-                            slot.removeFromRecipes(recipe)
-                            slot.modifiedAt = Date()
-                        } label: {
-                            Image(systemName: "minus.circle")
-                                .foregroundStyle(.red)
-                        }
-                        .buttonStyle(.plain)
-                    }
-                }
+        Section("Plate") {
+            ForEach(slot.plateItems) { item in
+                plateItemRow(item)
             }
 
             Button {
                 showingRecipePicker = true
             } label: {
-                Label("Add Recipe", systemImage: "plus.circle")
+                Label("Add dish", systemImage: "plus.circle")
             }
 
-            if slot.recipesArray.isEmpty {
+            // Custom-meal escape hatch only when the plate is empty ("Friday: pub").
+            if slot.plateItems.isEmpty {
                 TextField("Or enter custom meal", text: $customMealName)
                     .onChange(of: customMealName) { _, newValue in
                         slot.customMealName = newValue.isEmpty ? nil : newValue
                         slot.modifiedAt = Date()
                     }
             }
+
+            // A single quiet per-serving total — informational, no judgement.
+            if let macros = slot.plannedMacros, let cal = macros.calories {
+                let perServing = Int((cal / Double(max(slot.servingsPlanned, 1))).rounded())
+                HStack {
+                    Text("Per serving")
+                        .font(AppTypography.caption)
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                    Text("≈\(perServing) cal")
+                        .font(AppTypography.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+        }
+    }
+
+    private func plateItemRow(_ item: PlateItem) -> some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(item.displayName)
+                    .font(AppTypography.body)
+                if let cal = item.macrosForOneSlotServing?.calories {
+                    Text("≈\(Int(cal.rounded())) cal")
+                        .font(AppTypography.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+
+            Spacer()
+
+            // Recipe rows get a discrete portion menu (½/1/1½/2).
+            if item.kind == .recipe, let recipe = item.recipe {
+                Menu {
+                    ForEach(Self.portionSteps, id: \.self) { scale in
+                        Button(portionLabel(scale)) {
+                            guard let user = currentUser else { return }
+                            slot.setPortionScale(scale, forRecipe: recipe, by: user)
+                        }
+                    }
+                } label: {
+                    Text(portionLabel(item.portionScale))
+                        .font(AppTypography.caption)
+                        .foregroundStyle(Theme.Colors.primary)
+                        .frame(minWidth: 28)
+                }
+            }
+
+            Button(role: .destructive) {
+                guard let user = currentUser else { return }
+                slot.removePlateItem(id: item.id, by: user)
+            } label: {
+                Image(systemName: "minus.circle")
+                    .foregroundStyle(.red)
+            }
+            .buttonStyle(.plain)
         }
     }
 

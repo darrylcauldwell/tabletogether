@@ -294,4 +294,146 @@ struct MealSlotComponentTests {
         #expect(!slot.isEmpty)
         #expect(slot.displayTitle == "Component Only")
     }
+
+    // MARK: - Stage 3: write paths & migration
+
+    private func makeUser(in context: NSManagedObjectContext) -> User {
+        User(context: context, displayName: "Tester")
+    }
+
+    @Test("ensureComponentsMigrated converts legacy recipes to components, clears recipes, and is idempotent")
+    func migrationIdempotent() {
+        let context = makeContext()
+        let slot = makeSlot(in: context, servingsPlanned: 1)
+        let recipe = makeRecipe(in: context, title: "Legacy", servings: 4, chickenGrams: 400)
+        slot.addToRecipes(recipe)
+
+        #expect(slot.ensureComponentsMigrated() == true)
+        #expect(slot.recipesArray.isEmpty)
+        #expect(slot.storedComponents.count == 1)
+        let idAfterFirst = slot.storedComponents.first?.id
+
+        // Second call is a no-op (guard: legacy empty) and doesn't duplicate.
+        #expect(slot.ensureComponentsMigrated() == false)
+        #expect(slot.storedComponents.count == 1)
+        #expect(slot.storedComponents.first?.id == idAfterFirst)
+    }
+
+    @Test("Migration uses deterministic ids so two contexts produce the same component id")
+    func migrationDeterministicIDs() {
+        let c1 = makeContext(); let c2 = makeContext()
+        // Same slot id + same recipe id on two independent stores.
+        let slotID = UUID(); let recipeID = UUID()
+        func build(_ ctx: NSManagedObjectContext) -> MealSlot {
+            let slot = MealSlot(context: ctx, id: slotID, dayOfWeek: .monday, mealType: .dinner)
+            let r = Recipe(context: ctx, title: "R", servings: 4); r.id = recipeID
+            slot.addToRecipes(r); slot.ensureComponentsMigrated()
+            return slot
+        }
+        let a = build(c1); let b = build(c2)
+        #expect(a.storedComponents.first?.id == b.storedComponents.first?.id)
+    }
+
+    @Test("addRecipe migrates a legacy slot then appends without double-counting")
+    func addRecipeMigratesThenAppends() {
+        let context = makeContext()
+        let user = makeUser(in: context)
+        let slot = makeSlot(in: context, servingsPlanned: 1)
+        let first = makeRecipe(in: context, title: "First", servings: 4, chickenGrams: 400)  // 200/serving
+        let second = makeRecipe(in: context, title: "Second", servings: 4, chickenGrams: 400) // 200/serving
+        slot.addToRecipes(first)                 // legacy
+
+        slot.addRecipe(second, by: user)         // triggers migration + append
+        #expect(slot.recipesArray.isEmpty)
+        #expect(slot.plateItems.count == 2)
+        #expect(abs((slot.plannedMacros?.calories ?? 0) - 400) < 0.01) // 200 + 200, no double-count
+    }
+
+    @Test("addRecipe twice for the same recipe keeps one entry (one-entity invariant)")
+    func addRecipeOneEntityInvariant() {
+        let context = makeContext()
+        let user = makeUser(in: context)
+        let slot = makeSlot(in: context, servingsPlanned: 1)
+        let recipe = makeRecipe(in: context, title: "Once", servings: 4, chickenGrams: 400)
+
+        slot.addRecipe(recipe, by: user)
+        slot.addRecipe(recipe, by: user)
+        #expect(slot.plateItems.count == 1)
+        #expect(abs((slot.plannedMacros?.calories ?? 0) - 200) < 0.01)
+    }
+
+    @Test("removeRecipe drops the right component when duplicate recipes are present, no resurrection")
+    func removeRecipeMigrateExcept() {
+        let context = makeContext()
+        let user = makeUser(in: context)
+        let slot = makeSlot(in: context, servingsPlanned: 1)
+        let keep = makeRecipe(in: context, title: "Keep", servings: 4, chickenGrams: 400)
+        let drop = makeRecipe(in: context, title: "Drop", servings: 4, chickenGrams: 400)
+        slot.addToRecipes(keep)
+        slot.addToRecipes(drop)
+
+        slot.removeRecipe(drop, by: user)        // migrate-all-except-drop, then ensure gone
+        #expect(slot.recipesArray.isEmpty)
+        #expect(slot.plateItems.count == 1)
+        #expect(slot.plateItems.first?.recipe?.id == keep.id)
+        // No component was ever created for `drop`.
+        #expect(!slot.storedComponents.contains { $0.recipe?.id == drop.id })
+    }
+
+    @Test("setCustomMeal and skip leave zero components")
+    func customAndSkipClearComponents() {
+        let context = makeContext()
+        let user = makeUser(in: context)
+        let slot = makeSlot(in: context, servingsPlanned: 1)
+        let recipe = makeRecipe(in: context, title: "X", servings: 4, chickenGrams: 400)
+        slot.addRecipe(recipe, by: user)
+        #expect(slot.storedComponents.count == 1)
+
+        slot.setCustomMeal("Pub dinner", by: user)
+        #expect(slot.storedComponents.isEmpty)
+        #expect(slot.recipesArray.isEmpty)
+        #expect(slot.displayTitle == "Pub dinner")
+
+        slot.addRecipe(recipe, by: user)
+        slot.skip(by: user)
+        #expect(slot.storedComponents.isEmpty)
+        #expect(slot.isSkipped)
+    }
+
+    @Test("setPortionScale changes plannedMacros proportionally")
+    func portionScaleAffectsMacros() {
+        let context = makeContext()
+        let user = makeUser(in: context)
+        let slot = makeSlot(in: context, servingsPlanned: 1)
+        let recipe = makeRecipe(in: context, title: "Half", servings: 4, chickenGrams: 400) // 200/serving
+        slot.addRecipe(recipe, by: user)
+        #expect(abs((slot.plannedMacros?.calories ?? 0) - 200) < 0.01)
+
+        slot.setPortionScale(0.5, forRecipe: recipe, by: user)
+        #expect(abs((slot.plannedMacros?.calories ?? 0) - 100) < 0.01)
+    }
+
+    @Test("copyFrom carries a legacy-only source into components and keeps recipes for old clients")
+    func copyFromLegacySource() {
+        let context = makeContext()
+        let user = makeUser(in: context)
+        let household = Household(context: context, name: "H")
+
+        let sourcePlan = WeekPlan(context: context, weekStartDate: Date()); sourcePlan.household = household
+        let sourceSlot = MealSlot(context: context, dayOfWeek: .monday, mealType: .dinner, servingsPlanned: 2)
+        sourceSlot.weekPlan = sourcePlan; sourcePlan.addToSlots(sourceSlot)
+        let recipe = makeRecipe(in: context, title: "Carried", servings: 4, chickenGrams: 400)
+        sourceSlot.addToRecipes(recipe)   // legacy-only source
+
+        let destPlan = WeekPlan(context: context, weekStartDate: Calendar.current.date(byAdding: .weekOfYear, value: 1, to: Date())!)
+        destPlan.household = household
+        destPlan.copyFrom(sourcePlan, by: user)
+
+        let destSlot = destPlan.slotsArray.first { $0.dayOfWeek == .monday && $0.mealType == .dinner }
+        #expect(destSlot != nil)
+        #expect(destSlot?.plateItems.count == 1)
+        #expect(destSlot?.plateItems.first?.recipe?.id == recipe.id)
+        // Old-client visibility preserved: recipes relationship carried too.
+        #expect(destSlot?.recipesArray.contains { $0.id == recipe.id } == true)
+    }
 }

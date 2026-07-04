@@ -174,16 +174,41 @@ public class WeekPlan: NSManagedObject {
         modifiedAt = Date()
     }
 
-    /// Replaces the destination slot's plate components with deep copies of the source's,
-    /// so copy-week carries multi-component meals over instead of dropping them.
+    /// Carries the source slot's plate components onto the destination, diffing by
+    /// (kind, entity) rather than delete-then-recreate — so a repeated copy of the
+    /// same week doesn't churn CloudKit records (MealSlotComponent is dedup-
+    /// excluded, so delete-then-recreate with deterministic ids risks resurrection
+    /// / bloat). Updates matching components in place, adds missing ones, removes
+    /// only those no longer in the source.
     private func copyComponents(from source: MealSlot, to destination: MealSlot) {
         guard let context = managedObjectContext else { return }
-        for existing in destination.storedComponents {
-            context.delete(existing)
+
+        var destByEntity: [String: MealSlotComponent] = [:]
+        for component in destination.storedComponents {
+            if let entityID = component.entityID {
+                destByEntity["\(component.kind):\(entityID.uuidString)"] = component
+            }
         }
-        destination.components = NSSet()
+
+        var keptKeys = Set<String>()
         for component in source.storedComponents {
-            component.copy(to: destination, in: context)
+            guard let entityID = component.entityID else { continue }
+            let key = "\(component.kind):\(entityID.uuidString)"
+            keptKeys.insert(key)
+            if let existing = destByEntity[key] {
+                existing.portionScale = component.portionScale
+                existing.quantity = component.quantity
+                existing.unit = component.unit
+                existing.portionLabel = component.portionLabel
+                existing.modifiedAt = Date()
+            } else {
+                component.copy(to: destination, in: context)
+            }
+        }
+
+        // Remove destination components the source no longer has.
+        for (key, component) in destByEntity where !keptKeys.contains(key) {
+            context.delete(component)
         }
     }
 

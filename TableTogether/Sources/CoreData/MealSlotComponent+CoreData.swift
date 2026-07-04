@@ -96,15 +96,48 @@ public class MealSlotComponent: NSManagedObject {
         }
     }
 
+    /// The id of the underlying entity for this component's kind (recipe /
+    /// ingredient / foodItem), or nil for an empty/corrupt row. Used as the plate
+    /// dedup key and for deterministic component ids.
+    var entityID: UUID? {
+        switch kind {
+        case .recipe: return recipe?.id
+        case .ingredient: return ingredient?.id
+        case .foodItem: return foodItem?.id
+        case .empty: return nil
+        }
+    }
+
+    /// Deterministic component id keyed by (slot, kind, entity) — NOT order, so
+    /// divergent legacy membership across devices can't fork the id. Used by
+    /// migration and copy-week so re-creating the same logical component
+    /// produces the same id (and read-side dedup collapses any stragglers).
+    static func deterministicID(slotID: UUID, kind: Kind, entityID: UUID) -> UUID {
+        let kindKey: String
+        switch kind {
+        case .recipe: kindKey = "recipe"
+        case .ingredient: kindKey = "ingredient"
+        case .foodItem: kindKey = "foodItem"
+        case .empty: kindKey = "empty"
+        }
+        return UUID.deterministic(from: "component:\(slotID.uuidString):\(kindKey):\(entityID.uuidString)")
+    }
+
     // MARK: - Copy
 
     /// Creates a deep copy of this component attached to another slot (for copy-week).
     /// Setting `slot` updates the inverse `components` relationship automatically.
+    /// Uses a deterministic id so a repeated copy of the same source onto the same
+    /// destination converges instead of accumulating duplicate rows.
     @discardableResult
     func copy(to destinationSlot: MealSlot, in context: NSManagedObjectContext) -> MealSlotComponent {
         let entity = NSEntityDescription.entity(forEntityName: "MealSlotComponent", in: context)!
         let copy = MealSlotComponent(entity: entity, insertInto: context)
-        copy.id = UUID()
+        if let entityID = self.entityID {
+            copy.id = MealSlotComponent.deterministicID(slotID: destinationSlot.id, kind: self.kind, entityID: entityID)
+        } else {
+            copy.id = UUID()
+        }
         copy.slot = destinationSlot
         copy.recipe = self.recipe
         copy.ingredient = self.ingredient

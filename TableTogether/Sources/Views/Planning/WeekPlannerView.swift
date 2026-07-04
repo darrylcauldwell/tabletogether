@@ -172,16 +172,16 @@ struct WeekPlannerView: View {
     /// sheet's presentation on Catalyst (#Change2 regression). A canceled
     /// picker therefore leaves nothing behind.
     private func handleMealChosen(day: DayOfWeek, mealType: MealType, choice: MealChoice) {
+        guard let user = currentUser else { return }
         let plan = currentWeekPlan ?? WeekPlan.fetchOrCreate(
             for: currentWeekStart, household: households.first, in: viewContext)
         let slot = plan.fetchOrCreateSlot(day: day, mealType: mealType, in: viewContext)
         switch choice {
         case .recipe(let recipe):
-            slot.addToRecipes(recipe)
+            slot.addRecipe(recipe, by: user)
         case .custom(let name):
-            slot.customMealName = name
+            slot.setCustomMeal(name, by: user)
         }
-        slot.modifiedAt = Date()
         viewContext.saveWithLogging(context: "meal choice")
     }
 
@@ -203,12 +203,11 @@ struct WeekPlannerView: View {
     private func handleRecipeDropped(_ recipeId: String, _ slot: MealSlot) {
         // Look up recipe by UUID string
         guard let uuid = UUID(uuidString: recipeId),
-              let recipe = recipes.first(where: { $0.id == uuid }) else {
+              let recipe = recipes.first(where: { $0.id == uuid }),
+              let user = currentUser else {
             return
         }
-        slot.addToRecipes(recipe)
-        slot.customMealName = nil
-        slot.modifiedAt = Date()
+        slot.addRecipe(recipe, by: user)
         viewContext.saveWithLogging(context: "recipe drop to slot")
     }
 
