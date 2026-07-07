@@ -301,4 +301,25 @@ struct FoodItemImporterTests {
         #expect(codable.fiberPer100g == 3)
         #expect(codable.userAliases?.count == 2)
     }
+
+    @Test("A barcode-sized fdcId maps to the 0 sentinel instead of trapping")
+    func barcodeSizedFdcIdDoesNotTrap() {
+        // Open Food Facts maps product barcodes into fdcId; an EAN-13
+        // (13 digits) exceeds Int32.max and used to crash the app in
+        // FoodItem.init / IngredientResolverService.createFoodItem.
+        let (context, household) = makeContext()
+        let item = FoodItem(
+            context: context,
+            fdcId: 5_000_169_005_535,
+            usdaDescription: "Barcode product",
+            displayName: "Barcode product",
+            dataType: "Branded",
+            caloriesPer100g: 100,
+            proteinPer100g: 1,
+            carbsPer100g: 1,
+            fatPer100g: 1
+        )
+        item.household = household
+        #expect(item.fdcId == 0)
+    }
 }

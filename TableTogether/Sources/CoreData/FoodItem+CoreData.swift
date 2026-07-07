@@ -92,7 +92,9 @@ public class FoodItem: NSManagedObject {
         let entity = NSEntityDescription.entity(forEntityName: "FoodItem", in: context)!
         self.init(entity: entity, insertInto: context)
         self.id = UUID()
-        self.fdcId = Int32(fdcId)
+        // Non-trapping: values that don't fit Int32 (e.g. a barcode passed
+        // through as an fdcId) become the 0 sentinel instead of crashing.
+        self.fdcId = Int32(exactly: fdcId) ?? 0
         self.usdaDescription = usdaDescription
         self.displayName = displayName
         self.normalizedName = displayName.lowercased()

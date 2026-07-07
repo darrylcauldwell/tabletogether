@@ -145,8 +145,9 @@ final class FoodItemImporter {
 
             progress = "Importing \(index + 1) of \(foodItems.count)..."
 
-            // Dedup primary: fdcId
-            if let fdc = codable.fdcId, fdc > 0, fdcIdIndex[Int32(fdc)] != nil {
+            // Dedup primary: fdcId. Int32(exactly:) so a barcode-sized id in
+            // the JSON falls through to name+brand dedup instead of trapping.
+            if let fdc = codable.fdcId, fdc > 0, let fdc32 = Int32(exactly: fdc), fdcIdIndex[fdc32] != nil {
                 skipped += 1
                 continue
             }

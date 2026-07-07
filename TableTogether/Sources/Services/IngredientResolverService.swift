@@ -204,7 +204,7 @@ final class IngredientResolverService {
         // default to 0. Deduping on it would collide every sentinel food onto the
         // first one (returning the wrong product with the wrong macros), so only
         // dedup when we have a real, unique fdcId.
-        let fdcId = Int32(result.fdcId)
+        let fdcId = Int32(exactly: result.fdcId) ?? 0
         if fdcId != 0 {
             let request = NSFetchRequest<FoodItem>(entityName: "FoodItem")
             request.predicate = NSPredicate(format: "fdcId == %d", fdcId)

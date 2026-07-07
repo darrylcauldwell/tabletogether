@@ -288,8 +288,14 @@ final class USDAFoodService {
                 foodNutrients.append(USDANutrient(nutrientId: 1093, nutrientName: "Sodium, Na", value: sodium * 1000, unitName: "MG"))
             }
 
+            // Barcodes are not USDA fdcIds. FoodItem.fdcId is Int32 in the
+            // Core Data model, and any standard EAN-13/UPC-A barcode
+            // (12–13 digits) exceeds Int32.max — converting one used to trap
+            // at the Int32() sites. Map every code that can't fit to the 0
+            // sentinel ("no real fdcId, skip dedup"), same as non-numeric codes.
+            let barcode = Int(product.code ?? "0") ?? 0
             return USDAFoodResult(
-                fdcId: Int(product.code ?? "0") ?? 0,
+                fdcId: Int32(exactly: barcode).map(Int.init) ?? 0,
                 description: name,
                 dataType: "Branded",
                 brandOwner: product.brands,
