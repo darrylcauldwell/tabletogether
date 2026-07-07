@@ -92,6 +92,44 @@ struct MealEstimatorServiceTests {
         #expect(ipa < strong)
     }
 
+    @Test("Units without an ABV come from typical-strength tiers")
+    func tierEstimatedUnits() {
+        let estimator = MealEstimatorService()
+        // 2 pints of ~4.5% lager: (4.5 × 568 × 2) ÷ 1000 ≈ 5.1 units.
+        let lager = estimator.estimatedAlcoholUnits(from: "2 pints of lager") ?? 0
+        #expect(lager > 4.5 && lager < 5.7, "expected ~5.1, got \(lager)")
+        // A 175ml glass of ~13% wine ≈ 2.3 units.
+        let wine = estimator.estimatedAlcoholUnits(from: "glass of red wine") ?? 0
+        #expect(wine > 2.0 && wine < 2.6, "expected ~2.3, got \(wine)")
+        // A single 25ml measure of 40% spirit = 1 unit.
+        let gnt = estimator.estimatedAlcoholUnits(from: "gin and tonic") ?? 0
+        #expect(gnt > 0.9 && gnt < 1.1, "expected ~1, got \(gnt)")
+    }
+
+    @Test("An explicit ABV wins over the tier estimate")
+    func preciseUnitsBeatTiers() {
+        // (8% × 440ml × 4) ÷ 1000 = 14.08 units.
+        let units = MealEstimatorService().estimatedAlcoholUnits(from: "4x 440ml 8% DIPA") ?? 0
+        #expect(units > 13.9 && units < 14.3, "expected ~14.1, got \(units)")
+    }
+
+    @Test("Cooking mentions of drinks don't count as units")
+    func cookingMentionsAreNotDrinks() {
+        let estimator = MealEstimatorService()
+        #expect(estimator.estimatedAlcoholUnits(from: "beer battered fish and chips") == nil)
+        // Recipe titles never use tiers, even with a vessel word in the name.
+        #expect(estimator.estimatedAlcoholUnits(from: "Beer Can Chicken", allowTiers: false) == nil)
+    }
+
+    @Test("A bare drink name counts as one typical serving")
+    func bareDrinkNameCounts() {
+        let estimator = MealEstimatorService()
+        // One pint at ~4.5% ≈ 2.6 units.
+        let beer = estimator.estimatedAlcoholUnits(from: "a beer") ?? 0
+        #expect(beer > 2.0 && beer < 3.0, "expected ~2.6, got \(beer)")
+        #expect(estimator.estimatedAlcoholUnits(from: "red wine") != nil)
+    }
+
     @Test("'chips and gravy' estimates both components")
     func chipsAndGravy() {
         let estimate = MealEstimatorService().estimate(description: "chips and gravy")

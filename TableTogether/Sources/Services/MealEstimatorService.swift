@@ -161,6 +161,104 @@ final class MealEstimatorService {
         )
     }
 
+    // MARK: - Tier-Estimated Alcohol Units (no explicit ABV)
+
+    /// A drink family with a typical strength, used when the text names a
+    /// drink without an explicit ABV. Tiers mirror the food database's
+    /// strength-tiered calorie entries.
+    private struct DrinkTier {
+        let aliases: [String]
+        let abv: Double
+        /// Volume in ml when no vessel is named ("2 lagers" → pints).
+        let defaultVolume: Double
+        /// Volume in ml when "bottle" is named — a wine bottle is 750ml,
+        /// a spirit bottle 700ml, a beer bottle ~330ml.
+        let bottleVolume: Double
+    }
+
+    /// Compound aliases ("gin and tonic") come before their bare spirit, and
+    /// specific beer tiers before bare "beer" — first containment match wins.
+    private static let drinkTiers: [DrinkTier] = [
+        DrinkTier(aliases: ["gin and tonic", "gin & tonic", "g&t", "vodka and coke", "rum and coke", "spirit and mixer"],
+                  abv: 40, defaultVolume: 25, bottleVolume: 700),
+        DrinkTier(aliases: ["session ipa", "session beer", "light beer", "low alcohol beer"],
+                  abv: 3.5, defaultVolume: 568, bottleVolume: 330),
+        DrinkTier(aliases: ["double ipa", "dipa", "imperial stout", "strong ale", "strong beer", "craft beer", "tripel"],
+                  abv: 7.5, defaultVolume: 568, bottleVolume: 330),
+        DrinkTier(aliases: ["ipa", "pale ale"],
+                  abv: 5.5, defaultVolume: 568, bottleVolume: 330),
+        DrinkTier(aliases: ["lager", "beer", "ale", "bitter", "stout", "cider"],
+                  abv: 4.5, defaultVolume: 568, bottleVolume: 330),
+        DrinkTier(aliases: ["prosecco", "champagne", "sparkling wine", "fizz"],
+                  abv: 12, defaultVolume: 125, bottleVolume: 750),
+        DrinkTier(aliases: ["wine", "rosé", "rose"],
+                  abv: 13, defaultVolume: 175, bottleVolume: 750),
+        DrinkTier(aliases: ["vodka", "gin", "whisky", "whiskey", "rum", "spirit", "shot"],
+                  abv: 40, defaultVolume: 25, bottleVolume: 700)
+    ]
+
+    /// Total UK alcohol units for a description: the precise explicit-ABV
+    /// parse when a % is present, otherwise a typical-strength tier estimate
+    /// ("2 pints of lager" → ~5.1 units). `allowTiers: false` restricts to the
+    /// precise parse — used for recipe titles, where a drink keyword is
+    /// usually an ingredient ("Beer Can Chicken"), not a drink.
+    func estimatedAlcoholUnits(from description: String, allowTiers: Bool = true) -> Double? {
+        let input = description.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
+        if let precise = alcoholComponent(from: input)?.alcoholUnits {
+            return precise
+        }
+        guard allowTiers else { return nil }
+        return tierEstimatedUnits(from: input)
+    }
+
+    /// Tier-based units for drinks named without an ABV. To avoid counting
+    /// cooking mentions ("beer battered fish"), the text must carry a serving
+    /// signal — a vessel word or a count — unless the whole input is just the
+    /// drink's name ("red wine", "a beer").
+    private func tierEstimatedUnits(from input: String) -> Double? {
+        guard let tier = Self.drinkTiers.first(where: { t in t.aliases.contains { input.contains($0) } }) else {
+            return nil
+        }
+
+        let hasVessel = matches(input, pattern: "\\b(pints?|cans?|bottles?|glass(es)?|shots?|measures?)\\b")
+            || matches(input, pattern: "\\d\\s*(ml|cl)\\b")
+        let hasCount = matches(input, pattern: "^\\s*\\d") || matches(input, pattern: "\\d\\s*x|x\\s*\\d")
+
+        if !hasVessel && !hasCount {
+            // Bare drink name, allowing an article and common modifiers.
+            var stripped = input.trimmingCharacters(in: .whitespacesAndNewlines)
+            for prefix in ["a ", "an ", "the ", "red ", "white ", "dry ", "sparkling ", "cold "]
+            where stripped.hasPrefix(prefix) {
+                stripped = String(stripped.dropFirst(prefix.count))
+            }
+            guard tier.aliases.contains(stripped) else { return nil }
+        }
+
+        let volumePerServing: Double
+        if let ml = firstNumber(in: input, pattern: "(\\d+(?:\\.\\d+)?)\\s*ml") {
+            volumePerServing = ml
+        } else if let cl = firstNumber(in: input, pattern: "(\\d+(?:\\.\\d+)?)\\s*cl") {
+            volumePerServing = cl * 10
+        } else if input.contains("pint") {
+            volumePerServing = 568
+        } else if input.contains("bottle") {
+            volumePerServing = tier.bottleVolume
+        } else if input.contains("can") {
+            volumePerServing = 440
+        } else {
+            volumePerServing = tier.defaultVolume
+        }
+
+        let quantity = firstNumber(in: input, pattern: "(\\d+)\\s*x")
+            ?? firstNumber(in: input, pattern: "x\\s*(\\d+)")
+            ?? firstNumber(in: input, pattern: "(\\d+)\\s*(?:cans|bottles|pints|glasses|shots|drinks|beers|lagers|ciders|wines)")
+            ?? firstNumber(in: input, pattern: "^\\s*(\\d+)\\b")
+            ?? 1
+
+        // UK units: (ABV% × volume_ml) ÷ 1000, across all servings.
+        return (tier.abv * volumePerServing * quantity) / 1000.0
+    }
+
     /// A tidy display name for a parsed alcohol entry, from known keywords.
     private func alcoholDisplayName(from input: String) -> String {
         let keywords: [(String, String)] = [

@@ -370,8 +370,11 @@ struct QuickLogSheet: View {
 
         // Capture alcohol units from the drink description, if any, so the
         // Nutrition tab can total units per day/week (informational only).
+        // Recipe titles only count with an explicit ABV — a drink keyword
+        // there is usually an ingredient ("Beer Can Chicken"), not a drink.
         let unitsSource = entryMode == .describeIt ? smartMealDescription : (mealName ?? "")
-        if let units = estimator.alcoholComponent(from: unitsSource.lowercased())?.alcoholUnits, units > 0 {
+        if let units = estimator.estimatedAlcoholUnits(from: unitsSource, allowTiers: entryMode != .fromRecipes),
+           units > 0 {
             log.alcoholUnits = units
         }
 
