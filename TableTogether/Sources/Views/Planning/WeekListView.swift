@@ -197,7 +197,7 @@ struct DayRowView: View {
             isPresented: $showingAddMealMenu,
             titleVisibility: .visible
         ) {
-            ForEach(MealType.allCases, id: \.self) { mealType in
+            ForEach(MealType.defaultPlannedMeals, id: \.self) { mealType in
                 Button(mealTypeButtonLabel(mealType)) {
                     // A plain value — the slot materializes only when a meal
                     // choice lands, never at presentation time (#Change2).

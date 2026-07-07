@@ -87,12 +87,7 @@ struct DayDetailCard: View {
     }
 
     private func mealTypeOrder(_ type: MealType) -> Int {
-        switch type {
-        case .breakfast: return 0
-        case .lunch: return 1
-        case .dinner: return 2
-        case .snack: return 3
-        }
+        type.sortOrder
     }
 
     var body: some View {
@@ -191,12 +186,7 @@ struct MealLogRow: View {
     }
 
     private var mealTypeIcon: String {
-        switch log.mealType {
-        case .breakfast: return "sunrise"
-        case .lunch: return "sun.max"
-        case .dinner: return "moon.stars"
-        case .snack: return "leaf"
-        }
+        log.mealType.outlineIconName
     }
 
     var body: some View {

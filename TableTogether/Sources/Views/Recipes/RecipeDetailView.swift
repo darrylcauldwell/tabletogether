@@ -552,7 +552,7 @@ struct AddToPlanSheet: View {
 
                 Section("Meal") {
                     Picker("Meal type", selection: $selectedMealType) {
-                        ForEach(MealType.allCases, id: \.self) { type in
+                        ForEach(MealType.defaultPlannedMeals, id: \.self) { type in
                             Label(type.displayName, systemImage: type.iconName)
                                 .tag(type)
                         }

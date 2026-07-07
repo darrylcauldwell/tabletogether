@@ -34,12 +34,7 @@ struct MealTypeButton: View {
     let action: () -> Void
 
     private var icon: String {
-        switch type {
-        case .breakfast: return "sunrise"
-        case .lunch: return "sun.max"
-        case .dinner: return "moon.stars"
-        case .snack: return "leaf"
-        }
+        type.outlineIconName
     }
 
     var body: some View {

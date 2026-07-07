@@ -64,6 +64,9 @@ struct AmbientView: View {
             case .lunch: return hour < 14
             case .dinner: return hour < 20
             case .snack: return hour < 16
+            // Drinks is logging-only; the planner never creates a drinks
+            // slot, so these cases exist only for exhaustiveness.
+            case .drinks: return hour < 22
             }
         }
     }
@@ -79,6 +82,7 @@ struct AmbientView: View {
         case .lunch: targetHour = 12
         case .dinner: targetHour = 18
         case .snack: targetHour = 15
+        case .drinks: targetHour = 19
         }
 
         let hoursUntil = targetHour - hour

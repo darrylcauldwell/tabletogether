@@ -490,6 +490,9 @@ final class CalendarService {
         case .lunch: return (12, 0)
         case .dinner: return (18, 0)
         case .snack: return (15, 0)
+        // Drinks is a logging-only category — the planner never creates a
+        // drinks slot, so this exists only for exhaustiveness.
+        case .drinks: return (19, 0)
         }
     }
 
@@ -512,6 +515,7 @@ final class CalendarService {
         case .lunch: return 30
         case .dinner: return 60
         case .snack: return 15
+        case .drinks: return 60
         }
     }
 

@@ -302,6 +302,7 @@ enum MealType: String, Codable, CaseIterable, Hashable, Sendable {
     case lunch
     case dinner
     case snack
+    case drinks
 
     /// Human-readable display name for the meal type.
     var displayName: String {
@@ -310,6 +311,7 @@ enum MealType: String, Codable, CaseIterable, Hashable, Sendable {
         case .lunch: return "Lunch"
         case .dinner: return "Dinner"
         case .snack: return "Snack"
+        case .drinks: return "Drinks"
         }
     }
 
@@ -320,11 +322,24 @@ enum MealType: String, Codable, CaseIterable, Hashable, Sendable {
         case .lunch: return "sun.max.fill"
         case .dinner: return "moon.fill"
         case .snack: return "carrot.fill"
+        case .drinks: return "wineglass.fill"
         }
     }
 
     /// Alias for iconName for compatibility.
     var icon: String { iconName }
+
+    /// Outline variant of the SF Symbol, used in log rows and pickers where
+    /// the filled icons read too heavy.
+    var outlineIconName: String {
+        switch self {
+        case .breakfast: return "sunrise"
+        case .lunch: return "sun.max"
+        case .dinner: return "moon.stars"
+        case .snack: return "leaf"
+        case .drinks: return "wineglass"
+        }
+    }
 
     /// Typical sort order for displaying meals chronologically.
     var sortOrder: Int {
@@ -333,13 +348,17 @@ enum MealType: String, Codable, CaseIterable, Hashable, Sendable {
         case .lunch: return 1
         case .dinner: return 2
         case .snack: return 3
+        case .drinks: return 4
         }
     }
 
     /// The default set of meal types used when creating a new week plan.
     /// Single source of truth — used by both TableTogetherApp.initializeDataIfNeeded
     /// and WeekPlannerView.ensureWeekPlanExists to keep slot counts consistent.
-    static let defaultPlannedMeals: [MealType] = MealType.allCases
+    ///
+    /// Deliberately excludes `.drinks`: drinks is a logging-only category for
+    /// the private meal log, never a shared planner slot.
+    static let defaultPlannedMeals: [MealType] = [.breakfast, .lunch, .dinner, .snack]
 }
 
 // MARK: - CookingStyle

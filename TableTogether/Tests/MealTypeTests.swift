@@ -14,12 +14,14 @@ struct MealTypeTests {
     @Test("Sort order is monotonic")
     func sortOrderMonotonic() {
         let sorted = MealType.allCases.sorted { $0.sortOrder < $1.sortOrder }
-        #expect(sorted == [.breakfast, .lunch, .dinner, .snack])
+        #expect(sorted == [.breakfast, .lunch, .dinner, .snack, .drinks])
     }
 
-    @Test("Default planned meals includes all meal types")
-    func defaultPlannedMealsIncludesAll() {
-        #expect(Set(MealType.defaultPlannedMeals) == Set(MealType.allCases))
+    @Test("Default planned meals excludes the logging-only drinks category")
+    func defaultPlannedMealsExcludesDrinks() {
+        #expect(MealType.defaultPlannedMeals == [.breakfast, .lunch, .dinner, .snack])
+        #expect(!MealType.defaultPlannedMeals.contains(.drinks))
+        #expect(MealType.allCases.contains(.drinks))
     }
 
     @Test("Display name is non-empty for all cases")

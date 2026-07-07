@@ -21,6 +21,9 @@ struct TVMealCard: View {
         case .lunch: return "12:00 PM"
         case .dinner: return "6:00 PM"
         case .snack: return "3:00 PM"
+        // Drinks is logging-only; the planner never creates a drinks slot,
+        // so this exists only for exhaustiveness.
+        case .drinks: return "7:00 PM"
         }
     }
 

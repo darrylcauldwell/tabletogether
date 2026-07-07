@@ -22,12 +22,7 @@ struct PlannedMealRow: View {
     }
 
     private var mealTypeIcon: String {
-        switch log.mealType {
-        case .breakfast: return "sunrise"
-        case .lunch: return "sun.max"
-        case .dinner: return "moon.stars"
-        case .snack: return "leaf"
-        }
+        log.mealType.outlineIconName
     }
 
     var body: some View {
@@ -99,12 +94,7 @@ struct SkippedMealLogRow: View {
     }
 
     private var mealTypeIcon: String {
-        switch log.mealType {
-        case .breakfast: return "sunrise"
-        case .lunch: return "sun.max"
-        case .dinner: return "moon.stars"
-        case .snack: return "leaf"
-        }
+        log.mealType.outlineIconName
     }
 
     var body: some View {

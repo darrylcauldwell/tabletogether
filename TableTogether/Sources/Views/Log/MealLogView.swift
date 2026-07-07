@@ -365,12 +365,7 @@ struct MealLogView: View {
     }
 
     private func mealTypeOrder(_ type: MealType) -> Int {
-        switch type {
-        case .breakfast: return 0
-        case .lunch: return 1
-        case .dinner: return 2
-        case .snack: return 3
-        }
+        type.sortOrder
     }
 }
 

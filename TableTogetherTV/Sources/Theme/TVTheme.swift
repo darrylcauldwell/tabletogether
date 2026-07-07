@@ -46,6 +46,7 @@ enum TVTheme {
         static let lunch = Color(hex: "81C784")        // Fresh green
         static let dinner = Color(hex: "64B5F6")       // Cool blue
         static let snack = Color(hex: "FFB74D")        // Orange
+        static let drinks = Color(hex: "B39DDB")       // Muted plum
 
         static func mealTypeColor(_ type: MealType) -> Color {
             switch type {
@@ -53,6 +54,9 @@ enum TVTheme {
             case .lunch: return lunch
             case .dinner: return dinner
             case .snack: return snack
+            // Drinks logs are private and never shown on tvOS; the case
+            // exists only so the shared enum stays exhaustive here.
+            case .drinks: return drinks
             }
         }
     }
